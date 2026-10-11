@@ -321,4 +321,127 @@ class PlaybackControllerTest {
         assertTrue(controller.queueState.value.isEmpty)
         assertEquals(null, queueStore.load())
     }
+
+    @Test
+    fun moveItemIgnoresOutOfBoundsAndEqualIndexes() = runBlocking {
+        val controller = controller(FakePlayerEngine())
+        controller.setQueue(listOf(item("a"), item("b"), item("c")), startIndex = 1)
+
+        controller.moveItem(0, 99)
+        controller.moveItem(-1, 1)
+        controller.moveItem(1, 1)
+
+        assertEquals(listOf("a", "b", "c"), controller.queueState.value.items.map { it.id })
+        assertEquals("b", controller.queueState.value.current?.id)
+    }
+
+    @Test
+    fun moveItemReordersPersistsAndKeepsCurrentValid() = runBlocking {
+        val settings = MapSettings()
+        val queueStore = PlayQueueStore(settings, Json)
+        val controller = controller(FakePlayerEngine(), settings)
+        controller.setQueue(listOf(item("a"), item("b"), item("c")), startIndex = 1)
+
+        controller.moveItem(0, 2)
+
+        val state = controller.queueState.value
+        assertEquals(listOf("b", "c", "a"), state.items.map { it.id })
+        assertEquals("b", state.current?.id)
+        assertEquals(0, state.currentIndex)
+        val persisted = queueStore.load()
+        assertEquals(listOf("b", "c", "a"), persisted?.items?.map { it.id })
+        assertEquals(0, persisted?.currentIndex)
+    }
+
+    @Test
+    fun removeItemDropsNonCurrentItemAndPersists() = runBlocking {
+        val settings = MapSettings()
+        val queueStore = PlayQueueStore(settings, Json)
+        val controller = controller(FakePlayerEngine(), settings)
+        controller.setQueue(listOf(item("a"), item("b"), item("c")), startIndex = 1)
+
+        controller.removeItem(2)
+
+        assertEquals(listOf("a", "b"), controller.queueState.value.items.map { it.id })
+        assertEquals("b", controller.queueState.value.current?.id)
+        assertEquals(listOf("a", "b"), queueStore.load()?.items?.map { it.id })
+    }
+
+    @Test
+    fun removeItemOnCurrentItemKeepsPlaybackAliveAndQueueAdvances() = runBlocking {
+        val engine = FakePlayerEngine()
+        val controller = controller(engine)
+        controller.setQueue(listOf(item("a"), item("b"), item("c")), startIndex = 1)
+        engine.play()
+
+        controller.removeItem(1)
+
+        assertEquals(listOf("a", "c"), controller.queueState.value.items.map { it.id })
+        assertEquals("c", controller.queueState.value.current?.id)
+        assertTrue(engine.state.value.isPlaying, "removing the current item must not stop playback")
+    }
+
+    @Test
+    fun saveQueueAsPlaylistPersistsQueueAndFailsWhenEmpty() = runBlocking {
+        val settings = MapSettings()
+        val controller = controller(FakePlayerEngine(), settings)
+
+        assertFalse(controller.saveQueueAsPlaylist(), "an empty queue cannot be saved")
+
+        controller.setQueue(listOf(item("a"), item("b")))
+
+        assertTrue(controller.saveQueueAsPlaylist())
+        val stored = PlaylistStore(settings, Json).loadAll()?.playlists.orEmpty()
+        assertEquals(1, stored.size)
+        assertEquals(listOf("a", "b"), stored.first().items.map { it.id })
+        assertEquals(1, controller.savedPlaylists.value.size)
+    }
+
+    @Test
+    fun restorePlaylistReplacesQueueAndStartsFirstItem() = runBlocking {
+        val settings = MapSettings()
+        val saver = controller(FakePlayerEngine(), settings)
+        saver.setQueue(listOf(item("a"), item("b")))
+        saver.saveQueueAsPlaylist()
+        val saved = saver.savedPlaylists.value.first()
+
+        val engine = FakePlayerEngine()
+        val restored = controller(engine, settings)
+        restored.setQueue(listOf(item("x"), item("y")))
+
+        restored.restorePlaylist(saved)
+
+        assertEquals(listOf("a", "b"), restored.queueState.value.items.map { it.id })
+        assertEquals("a", restored.queueState.value.current?.id)
+        assertEquals("a", engine.prepared.last().id)
+    }
+
+    @Test
+    fun skipUnavailableInQueueDropsMissingReferences() = runBlocking {
+        val settings = MapSettings()
+        val queueStore = PlayQueueStore(settings, Json)
+        val controller = controller(FakePlayerEngine(), settings)
+        val missing = MediaItem(id = "missing", title = "missing")
+        controller.setQueue(listOf(item("a"), missing, item("c")))
+
+        controller.skipUnavailableInQueue()
+
+        assertEquals(listOf("a", "c"), controller.queueState.value.items.map { it.id })
+        assertEquals("a", controller.queueState.value.current?.id)
+        assertEquals(listOf("a", "c"), queueStore.load()?.items?.map { it.id })
+    }
+
+    @Test
+    fun skipUnavailableInQueueReplaysNextWhenCurrentIsMissing() = runBlocking {
+        val engine = FakePlayerEngine()
+        val controller = controller(engine)
+        val missing = MediaItem(id = "missing", title = "missing")
+        controller.setQueue(listOf(missing, item("a")))
+
+        controller.skipUnavailableInQueue()
+
+        assertEquals(listOf("a"), controller.queueState.value.items.map { it.id })
+        assertEquals("a", controller.queueState.value.current?.id)
+        assertEquals("a", engine.prepared.last().id)
+    }
 }

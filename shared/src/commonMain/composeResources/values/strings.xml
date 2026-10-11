@@ -223,4 +223,53 @@
     <string name="library_no_matches_title">No matches</string>
     <string name="library_no_matches_message">Nothing in your library matches the current search or filter.</string>
 
+    <!-- Player: queue panel -->
+    <string name="player_queue_title">Queue</string>
+    <string name="player_queue_save_playlist">Save as playlist</string>
+    <string name="player_queue_saved">Playlist saved</string>
+    <string name="player_queue_empty_title">Queue is empty</string>
+    <string name="player_queue_empty_message">Play something to fill the queue.</string>
+    <string name="player_queue_move_up">Move up</string>
+    <string name="player_queue_move_down">Move down</string>
+    <string name="player_queue_remove">Remove from queue</string>
+    <string name="player_queue_play_now">Play now</string>
+    <string name="player_queue_restore_playlist">Restore saved playlist</string>
+    <string name="player_queue_restored">Playlist restored</string>
+    <string name="player_queue_skipped_unavailable">Unavailable item skipped</string>
+    <string name="player_queue_skip_unavailable">Skip unavailable</string>
+    <string name="player_queue_current">Playing</string>
+
+    <!-- Downloads: format/quality, duplicates, reorder -->
+    <string name="downloads_quality_original">Original</string>
+    <string name="downloads_quality_high">High</string>
+    <string name="downloads_quality_medium">Medium</string>
+    <string name="downloads_quality_low">Low</string>
+    <string name="downloads_duplicate_title">Already in queue</string>
+    <string name="downloads_duplicate_message">This URL is already queued or downloading.</string>
+    <string name="downloads_reorder_hint">Reorder queued tasks; active downloads keep their slot.</string>
+    <string name="downloads_format_hint">Format is recorded as metadata; the desktop engine downloads the raw stream.</string>
+    <string name="downloads_reorder_move_up">Move task up</string>
+    <string name="downloads_reorder_move_down">Move task down</string>
+
+    <!-- Workspace / adaptive layout -->
+    <string name="layout_compact">Compact</string>
+    <string name="layout_balanced">Balanced</string>
+    <string name="layout_expanded">Expanded</string>
+    <string name="sidebar_collapse">Collapse sidebar</string>
+    <string name="sidebar_expand">Expand sidebar</string>
+    <string name="sidebar_icon_only">Icon-only sidebar</string>
+    <string name="grid_density">Grid density</string>
+
+    <!-- Library: derived views -->
+    <string name="library_view_recently_played">Recently played</string>
+    <string name="library_view_continue_watching">Continue watching</string>
+    <string name="library_view_downloaded">Downloaded</string>
+    <string name="recently_played_empty_title">Nothing played yet</string>
+    <string name="recently_played_empty_message">Music and videos you watch will appear here.</string>
+    <string name="continue_watching_empty_title">No in-progress media</string>
+    <string name="continue_watching_empty_message">Media you pause will appear here so you can resume.</string>
+    <string name="downloaded_empty_title">No downloads</string>
+    <string name="downloaded_empty_message">Completed downloads appear here.</string>
+    <string name="library_recently_played_cap">Keeping the most recent 50 items.</string>
+
 </resources>

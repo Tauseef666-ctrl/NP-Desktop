@@ -17,6 +17,8 @@ enum class DownloadState { QUEUED, DOWNLOADING, PAUSED, COMPLETED, FAILED }
  * @param id Stable identity used to address the mission (also the resume key).
  * @param destinationPath Final absolute file path (the engine writes a sibling `.part` file while
  *   in progress and renames it on success).
+ * @param format Requested quality label, recorded as metadata only (the engine downloads the raw
+ *   stream and never re-encodes). `null` means "not recorded".
  */
 @Serializable
 data class DownloadRequest(
@@ -25,7 +27,8 @@ data class DownloadRequest(
     val destinationPath: String,
     val title: String = "",
     val mimeType: String? = null,
-    val expectedSizeBytes: Long = 0L
+    val expectedSizeBytes: Long = 0L,
+    val format: String? = null
 )
 
 /**

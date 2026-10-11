@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import net.newpipe.app.preferences.PlayerPreferences
 import org.koin.core.annotation.Singleton
 
@@ -48,8 +49,13 @@ class PlaybackController(
 
     private val callScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
 
+    private val playlists = PlaylistStore(settings, Json)
+
     private val _queueState = MutableStateFlow(PlayerQueueState())
     val queueState: StateFlow<PlayerQueueState> = _queueState.asStateFlow()
+
+    private val _savedPlaylists = MutableStateFlow(loadSavedPlaylists())
+    val savedPlaylists: StateFlow<List<SavedPlaylist>> = _savedPlaylists.asStateFlow()
 
     init {
         queueStore.load()?.let { restored ->
@@ -126,6 +132,64 @@ class PlaybackController(
     fun clearQueue() {
         queue.clear()
         publishQueue()
+    }
+
+    /**
+     * Reorder the queue (F6). Invalid indexes and equal from/to are ignored. The currently-playing
+     * item is preserved by identity, so moving it keeps playback on the same track. Persists on success.
+     */
+    fun moveItem(fromIndex: Int, toIndex: Int) {
+        if (!queue.move(fromIndex, toIndex)) return
+        publishQueue()
+    }
+
+    /**
+     * Drop the queued item at [index] (F6). Removing the current item does not stop the engine —
+     * [PlayQueue] semantics move the current selection to the following item (or the previous one
+     * when the removed item was last). Persists on success.
+     */
+    fun removeItem(index: Int) {
+        if (queue.removeAt(index) == null) return
+        publishQueue()
+    }
+
+    /** Save the current queue as a named playlist (F6). Returns false when the queue is empty. */
+    suspend fun saveQueueAsPlaylist(): Boolean {
+        if (queue.isEmpty) return false
+        playlists.save(queue.toSavedPlaylist(name = QUEUE_PLAYLIST_NAME, id = QUEUE_PLAYLIST_ID))
+        refreshSavedPlaylists()
+        return true
+    }
+
+    /** Replace the queue with [saved]'s items and start its first item (F6). */
+    suspend fun restorePlaylist(saved: SavedPlaylist) {
+        val rebuilt = saved.toPlayQueue()
+        queue.replaceAll(rebuilt.items, rebuilt.currentIndex)
+        publishQueue()
+        queue.current?.let { prepareResumed(it) }
+    }
+
+    /**
+     * Drop every queued item that has no playable URL (F6). Keeps the current item when it survived;
+     * otherwise replays the new current so playback does not silently point at a removed item.
+     */
+    suspend fun skipUnavailableInQueue() {
+        val currentBefore = queue.current
+        val available = queue.items.skipUnavailable { it.isAvailable() }
+        if (available.size == queue.items.size) {
+            publishQueue()
+            return
+        }
+        queue.items.withIndex()
+            .filter { (_, item) -> !item.isAvailable() }
+            .map { it.index }
+            .sortedDescending()
+            .forEach { queue.removeAt(it) }
+        publishQueue()
+        val currentAfter = queue.current
+        if (currentAfter != null && currentAfter != currentBefore) {
+            prepareResumed(currentAfter)
+        }
     }
 
     /** Explicitly persist the current position (used by periodic/exit-point observers). */
@@ -219,7 +283,16 @@ class PlaybackController(
         }
     }
 
+    private fun loadSavedPlaylists(): List<SavedPlaylist> =
+        playlists.loadAll()?.playlists.orEmpty()
+
+    private fun refreshSavedPlaylists() {
+        _savedPlaylists.value = loadSavedPlaylists()
+    }
+
     private companion object {
         const val SAVE_INTERVAL_MS = 5_000L
+        const val QUEUE_PLAYLIST_ID = "queue"
+        const val QUEUE_PLAYLIST_NAME = "Queue"
     }
 }

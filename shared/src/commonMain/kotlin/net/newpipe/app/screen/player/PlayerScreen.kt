@@ -32,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
@@ -49,6 +48,7 @@ import net.newpipe.app.component.StatusKind
 import net.newpipe.app.component.TopToolbar
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.platform.PopOutCoordinator
+import net.newpipe.app.player.PlaybackController
 import net.newpipe.app.player.PlaybackState
 import net.newpipe.app.player.PlaybackStatus
 import net.newpipe.app.player.PlayerAction
@@ -77,10 +77,12 @@ fun PlayerScreen(
     navigator: Navigator = koinInject(),
     viewModel: PlayerViewModel = koinViewModel(),
     engine: PlayerEngine = koinInject(),
-    popOut: PopOutCoordinator = koinInject()
+    popOut: PopOutCoordinator = koinInject(),
+    controller: PlaybackController = koinInject()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val queue by viewModel.queueState.collectAsStateWithLifecycle()
+    val savedPlaylists by controller.savedPlaylists.collectAsStateWithLifecycle()
     PlayerScreenContent(
         state = state,
         queue = queue,
@@ -99,7 +101,24 @@ fun PlayerScreen(
         onToggleShuffle = viewModel::toggleShuffle,
         onRepeatMode = viewModel::setRepeatMode,
         onSeekStepMillis = viewModel::seekStepMillis,
-        onNavigateUp = { navigator.navigateUp() }
+        onNavigateUp = { navigator.navigateUp() },
+        queueCanRestore = savedPlaylists.isNotEmpty(),
+        onQueuePlayNow = { index ->
+            controller.queueState.value.items.getOrNull(index)?.let { controller.playItem(it) }
+        },
+        onQueueMoveUp = { index -> controller.moveItem(index, index - 1) },
+        onQueueMoveDown = { index -> controller.moveItem(index, index + 1) },
+        onQueueRemove = controller::removeItem,
+        onQueueSavePlaylist = { controller.saveQueueAsPlaylist() },
+        onQueueRestorePlaylist = {
+            val saved = controller.savedPlaylists.value.lastOrNull()
+            if (saved == null) false else { controller.restorePlaylist(saved); true }
+        },
+        onQueueSkipUnavailable = {
+            val before = controller.queueState.value.items.size
+            controller.skipUnavailableInQueue()
+            controller.queueState.value.items.size < before
+        }
     )
 }
 
@@ -123,7 +142,15 @@ fun PlayerScreenContent(
     onToggleShuffle: () -> Unit = {},
     onRepeatMode: (RepeatMode) -> Unit = {},
     onSeekStepMillis: (Boolean) -> Long = { PlayerShortcuts.seekStepMillis(it) },
-    onNavigateUp: () -> Unit = {}
+    onNavigateUp: () -> Unit = {},
+    queueCanRestore: Boolean = false,
+    onQueuePlayNow: suspend (Int) -> Unit = {},
+    onQueueMoveUp: (Int) -> Unit = {},
+    onQueueMoveDown: (Int) -> Unit = {},
+    onQueueRemove: (Int) -> Unit = {},
+    onQueueSavePlaylist: suspend () -> Boolean = { false },
+    onQueueRestorePlaylist: suspend () -> Boolean = { false },
+    onQueueSkipUnavailable: suspend () -> Boolean = { false }
 ) {
     PlusScaffold(
         toolbar = {
@@ -223,8 +250,17 @@ fun PlayerScreenContent(
                         onToggleMute = onToggleMute,
                         onQuality = onQuality
                     )
-                    SectionHeader(title = "Up next")
-                    QueueList(queue = queue)
+                    PlayerQueuePanel(
+                        queue = queue,
+                        canRestore = queueCanRestore,
+                        onPlayNow = onQueuePlayNow,
+                        onMoveUp = onQueueMoveUp,
+                        onMoveDown = onQueueMoveDown,
+                        onRemove = onQueueRemove,
+                        onSavePlaylist = onQueueSavePlaylist,
+                        onRestorePlaylist = onQueueRestorePlaylist,
+                        onSkipUnavailable = onQueueSkipUnavailable
+                    )
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(spaceLarge),
                         horizontalArrangement = Arrangement.spacedBy(spaceSmall)
@@ -390,40 +426,6 @@ private fun PlaybackSettings(
             onSelect = { onQuality(qualities[it]) },
             contentPadding = PaddingValues(0.dp)
         )
-    }
-}
-
-@Composable
-private fun QueueList(queue: PlayerQueueState) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = spaceLarge)) {
-        queue.items.forEachIndexed { index, item ->
-            val isCurrent = index == queue.currentIndex
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = spaceSmall),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = (index + 1).toString(),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (isCurrent) plusColors().accent else plusColors().textMuted,
-                    modifier = Modifier.width(28.dp)
-                )
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (isCurrent) plusColors().textPrimary else plusColors().textSecondary,
-                    modifier = Modifier.weight(1f)
-                )
-                if (item.durationMs > 0L) {
-                    Text(
-                        text = formatDuration(item.durationMs / 1000L),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = plusColors().textMuted
-                    )
-                }
-            }
-        }
     }
 }
 

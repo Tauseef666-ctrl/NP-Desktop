@@ -11,24 +11,53 @@ import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import net.newpipe.app.download.DownloadEngine
+import net.newpipe.app.download.DownloadTask
 import net.newpipe.app.player.LocalMediaFile
 import net.newpipe.app.player.LocalMediaScanner
+import net.newpipe.app.player.MediaItem
 import net.newpipe.app.player.PlaybackController
+import net.newpipe.app.player.PlaybackResumeStore
+import net.newpipe.app.player.RecentlyPlayedEntry
+import net.newpipe.app.player.RecentlyPlayedStore
+import net.newpipe.app.player.ResumeEntry
 import net.newpipe.app.preferences.LibraryPreferences
+import net.newpipe.app.screen.library.DerivedViewItem
 import org.koin.core.annotation.KoinViewModel
 
 /**
  * Drives the local-media library: the set of indexed folders (persisted), folder scanning via the
  * platform [LocalMediaScanner], and hand-off of a scanned list to the shared [PlaybackController].
+ *
+ * It also exposes the raw inputs for the three derived views: [recentEntries] (newest first, live),
+ * [resumeEntries] (Continue watching inputs) and [downloadTasks] (Downloaded inputs).
  */
 @KoinViewModel
 class LibraryViewModel(
     private val scanner: LocalMediaScanner,
     private val settings: Settings,
-    private val playback: PlaybackController
+    private val playback: PlaybackController,
+    private val resumeStore: PlaybackResumeStore,
+    recentlyPlayedStore: RecentlyPlayedStore,
+    downloadEngine: DownloadEngine
 ) : ViewModel() {
 
     val isScannerAvailable: Boolean = scanner.isAvailable
+
+    /** Newest-first playback history; emits whenever something new starts playing. */
+    val recentEntries: StateFlow<List<RecentlyPlayedEntry>> = recentlyPlayedStore.entries
+
+    /** Stored resume positions, refreshed on load and whenever the history changes. */
+    val resumeEntries: StateFlow<List<ResumeEntry>>
+        field = MutableStateFlow(resumeStore.entries())
+
+    /** Live download missions; the Downloaded view filters these to completed ones. */
+    val downloadTasks: StateFlow<List<DownloadTask>> = downloadEngine.tasks
+
+    /** Re-read the (non-observable) resume store, e.g. when the library screen is shown. */
+    fun refreshResumeEntries() {
+        resumeEntries.value = resumeStore.entries()
+    }
 
     val folders: StateFlow<List<String>>
         field = MutableStateFlow(loadFolders())
@@ -99,6 +128,23 @@ class LibraryViewModel(
         if (index < 0) return
         viewModelScope.launch {
             playback.setQueue(current.map { it.toMediaItem() }, index)
+        }
+    }
+
+    /**
+     * Play one derived-view item (Recently played / Continue watching / Downloaded). Continue
+     * watching resumes at the stored position; everything else starts from the beginning.
+     */
+    fun playDerived(item: DerivedViewItem) {
+        viewModelScope.launch {
+            playback.playItem(
+                MediaItem(
+                    id = item.id,
+                    title = item.title,
+                    url = item.url,
+                    resumePositionMs = item.playablePositionMs
+                )
+            )
         }
     }
 }

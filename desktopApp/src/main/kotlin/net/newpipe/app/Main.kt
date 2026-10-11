@@ -5,9 +5,13 @@
 
 package net.newpipe.app
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -26,7 +30,10 @@ import kotlin.math.roundToInt
 import kotlinx.serialization.json.Json
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.platform.DesktopMiniPlayerBridge
+import net.newpipe.app.platform.LocalWorkspaceMode
+import net.newpipe.app.platform.LocalWorkspaceModeChange
 import net.newpipe.app.platform.WindowBounds
+import net.newpipe.app.platform.WorkspaceMode
 import net.newpipe.app.platform.WorkspacePreferences
 import net.newpipe.app.player.PlaybackController
 import org.koin.compose.koinInject
@@ -102,15 +109,26 @@ fun main() = application {
         icon = rememberVectorPainter(AppIcon),
         state = windowState
     ) {
-        App(
-            startDestination = Destination.Home,
-            onCloseRequest = ::exitApplication,
-            withKoin = {
-                // Share the same singleton controller with the floating mini-player window.
-                val playback: PlaybackController = koinInject()
-                LaunchedEffect(playback) { DesktopMiniPlayerBridge.controller.value = playback }
+        var workspaceMode by remember {
+            mutableStateOf(workspace?.mode() ?: WorkspaceMode.BALANCED)
+        }
+        CompositionLocalProvider(
+            LocalWorkspaceMode provides workspaceMode,
+            LocalWorkspaceModeChange provides { changed ->
+                workspaceMode = changed
+                workspace?.setMode(changed)
             }
-        )
+        ) {
+            App(
+                startDestination = Destination.Home,
+                onCloseRequest = ::exitApplication,
+                withKoin = {
+                    // Share the same singleton controller with the floating mini-player window.
+                    val playback: PlaybackController = koinInject()
+                    LaunchedEffect(playback) { DesktopMiniPlayerBridge.controller.value = playback }
+                }
+            )
+        }
     }
 
     if (isMiniPlayerOpen) {

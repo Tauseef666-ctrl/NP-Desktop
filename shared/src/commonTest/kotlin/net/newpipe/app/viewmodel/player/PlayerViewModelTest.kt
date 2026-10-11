@@ -6,10 +6,17 @@
 package net.newpipe.app.viewmodel.player
 
 import com.russhwolf.settings.MapSettings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.Json
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import net.newpipe.app.player.MediaItem
@@ -20,6 +27,7 @@ import net.newpipe.app.player.PlaybackResumeStore
 import net.newpipe.app.player.PlayQueueStore
 import net.newpipe.app.player.PlaybackStatus
 import net.newpipe.app.player.Quality
+import net.newpipe.app.player.RecentlyPlayedStore
 import net.newpipe.app.preferences.VideoAudioPreferences
 
 private class StubPlayerEngine : PlayerEngine {
@@ -49,13 +57,32 @@ private fun playback(settings: MapSettings): PlaybackController =
             settings
         )
 
+private fun playerViewModel(settings: MapSettings): PlayerViewModel =
+        PlayerViewModel(
+            playback(settings),
+            settings,
+            RecentlyPlayedStore(settings, Json),
+            PlaybackResumeStore(settings)
+        )
+
+@OptIn(ExperimentalCoroutinesApi::class)
 class PlayerViewModelTest {
+
+    @BeforeTest
+    fun setUp() {
+        Dispatchers.setMain(StandardTestDispatcher())
+    }
+
+    @AfterTest
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
 
     @Test
     fun seekStepUsesConfiguredSkipIntervalFromSettings() {
         val settings = MapSettings()
         settings.putString(VideoAudioPreferences.KEY_SEEK_DURATION, "25000")
-        val viewModel = PlayerViewModel(playback(settings), settings)
+        val viewModel = playerViewModel(settings)
 
         assertEquals(25_000L, viewModel.seekStepMillis(isShiftPressed = false))
         assertEquals(60_000L, viewModel.seekStepMillis(isShiftPressed = true))
@@ -64,10 +91,10 @@ class PlayerViewModelTest {
     @Test
     fun seekStepFallsBackToDefaultWhenPreferenceIsUnsetOrGarbage() {
         val empty = MapSettings()
-        assertEquals(10_000L, PlayerViewModel(playback(empty), empty).seekStepMillis(isShiftPressed = false))
+        assertEquals(10_000L, playerViewModel(empty).seekStepMillis(isShiftPressed = false))
 
         val garbage = MapSettings()
         garbage.putString(VideoAudioPreferences.KEY_SEEK_DURATION, "not-a-number")
-        assertEquals(10_000L, PlayerViewModel(playback(garbage), garbage).seekStepMillis(isShiftPressed = false))
+        assertEquals(10_000L, playerViewModel(garbage).seekStepMillis(isShiftPressed = false))
     }
 }

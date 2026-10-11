@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
@@ -34,14 +35,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
+import net.newpipe.app.platform.LocalWorkspaceMode
+import net.newpipe.app.platform.isCompactSidebar
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.theme.spaceSmall
 import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.ic_arrow_back
 import newpipe.shared.generated.resources.ic_history
 import newpipe.shared.generated.resources.ic_search
+import newpipe.shared.generated.resources.sidebar_collapse
+import newpipe.shared.generated.resources.sidebar_expand
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 private val NavRailShape = RoundedCornerShape(8.dp)
 private val NavItemHeight = 44.dp
@@ -62,7 +69,12 @@ data class NavEntry(
  * Desktop navigation sidebar. Collapses to an icon-only rail; entries without an icon fall back
  * to their initial when collapsed.
  *
+ * The default [expanded] value is derived from [LocalWorkspaceMode]: [WorkspaceMode.COMPACT]
+ * renders icon-only while every other mode shows labels.
+ *
  * @param expanded When true shows labels; when false only icons/initials.
+ * @param onToggleExpanded Optional collapse/expand affordance rendered above the footer. The label
+ *   follows the current state ("Collapse sidebar" when expanded, "Expand sidebar" when collapsed).
  * @param header Optional slot pinned above the entries (logo, account, ...).
  * @param entries Destinations, in order.
  * @param footer Optional slot pinned to the bottom (settings, version, ...).
@@ -71,7 +83,8 @@ data class NavEntry(
 fun NavRail(
     entries: List<NavEntry>,
     modifier: Modifier = Modifier,
-    expanded: Boolean = true,
+    expanded: Boolean = !LocalWorkspaceMode.current.isCompactSidebar,
+    onToggleExpanded: (() -> Unit)? = null,
     header: (@Composable () -> Unit)? = null,
     footer: (@Composable () -> Unit)? = null
 ) {
@@ -95,8 +108,51 @@ fun NavRail(
         ) {
             entries.forEach { entry -> NavRailItem(entry = entry, expanded = expanded) }
         }
+        if (onToggleExpanded != null) {
+            NavRailToggle(expanded = expanded, onToggle = onToggleExpanded)
+        }
         if (footer != null) {
             Box(Modifier.fillMaxWidth().padding(spaceSmall)) { footer() }
+        }
+    }
+}
+
+@Composable
+private fun NavRailToggle(expanded: Boolean, onToggle: () -> Unit) {
+    val colors = plusColors()
+    val label = stringResource(
+        if (expanded) Res.string.sidebar_collapse else Res.string.sidebar_expand
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spaceSmall, vertical = spaceSmall)
+            .height(NavItemHeight)
+            .clip(NavRailShape)
+            .plusClickable(NavRailShape, onClick = onToggle)
+            .padding(horizontal = spaceNormal),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(modifier = Modifier.size(NavIconSize), contentAlignment = Alignment.Center) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_arrow_back),
+                contentDescription = label,
+                tint = colors.textSecondary,
+                modifier = Modifier
+                    .size(NavIconSize)
+                    .rotate(if (expanded) 0f else 180f)
+            )
+        }
+        if (expanded) {
+            Spacer(Modifier.width(spaceNormal))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.textSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }

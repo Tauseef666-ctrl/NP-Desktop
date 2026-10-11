@@ -49,8 +49,24 @@ class DownloadStore(
         settings.remove(KEY)
     }
 
+    /**
+     * Persist the user's preferred mission order as a list of ids. Stored separately from the task
+     * snapshot so the engine overwriting [KEY] on progress updates never drops the order.
+     */
+    fun saveOrder(ids: List<String>) {
+        settings.putString(KEY_ORDER, ids.joinToString("\n"))
+    }
+
+    /** @return the last saved order, or an empty list when none was stored. */
+    fun loadOrder(): List<String> =
+        settings.getStringOrNull(KEY_ORDER)
+            ?.split('\n')
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
+
     companion object {
         const val KEY = "npp_download_tasks"
+        const val KEY_ORDER = "npp_download_order"
 
         /** Prepare a stored snapshot for reloading into an engine (see the contract above). */
         fun restoreTasks(snapshot: DownloadSnapshot): List<DownloadTask> =

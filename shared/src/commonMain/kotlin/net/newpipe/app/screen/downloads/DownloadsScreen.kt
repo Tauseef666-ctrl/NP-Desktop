@@ -7,6 +7,7 @@ package net.newpipe.app.screen.downloads
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,8 +40,11 @@ import net.newpipe.app.component.FilterChipRow
 import net.newpipe.app.component.PlusScaffold
 import net.newpipe.app.component.SectionHeader
 import net.newpipe.app.component.TopToolbar
+import net.newpipe.app.download.DownloadFormat
 import net.newpipe.app.download.DownloadState
 import net.newpipe.app.download.DownloadTask
+import net.newpipe.app.download.isReorderable
+import net.newpipe.app.download.reorder
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.platform.openDownloadedFile
 import net.newpipe.app.platform.openDownloadedFileFolder
@@ -51,8 +55,18 @@ import net.newpipe.app.theme.spaceSmall
 import net.newpipe.app.util.formatBytes
 import net.newpipe.app.viewmodel.downloads.DownloadsViewModel
 import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.downloads_duplicate_message
+import newpipe.shared.generated.resources.downloads_duplicate_title
+import newpipe.shared.generated.resources.downloads_format_hint
 import newpipe.shared.generated.resources.downloads_open_file
 import newpipe.shared.generated.resources.downloads_open_folder
+import newpipe.shared.generated.resources.downloads_quality_high
+import newpipe.shared.generated.resources.downloads_quality_low
+import newpipe.shared.generated.resources.downloads_quality_medium
+import newpipe.shared.generated.resources.downloads_quality_original
+import newpipe.shared.generated.resources.downloads_reorder_hint
+import newpipe.shared.generated.resources.downloads_reorder_move_down
+import newpipe.shared.generated.resources.downloads_reorder_move_up
 import newpipe.shared.generated.resources.downloads_tab_all
 import newpipe.shared.generated.resources.downloads_tab_completed
 import newpipe.shared.generated.resources.downloads_tab_downloading
@@ -71,6 +85,7 @@ fun DownloadsScreen(
     viewModel: DownloadsViewModel = koinViewModel()
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val duplicateRejected by viewModel.lastAddRejectedDuplicate.collectAsStateWithLifecycle()
     var selectedCategory by remember { mutableStateOf(DownloadCategory.ALL) }
     DownloadsScreenContent(
         tasks = tasks,
@@ -78,7 +93,10 @@ fun DownloadsScreen(
         onCategorySelect = { selectedCategory = it },
         isEngineAvailable = viewModel.isEngineAvailable,
         defaultDirectory = viewModel.defaultDirectory,
-        onDownload = viewModel::download,
+        lastAddRejectedDuplicate = duplicateRejected,
+        onAdd = { url, folder, format -> viewModel.addFromUrl(url, folder, format) },
+        onDismissDuplicate = viewModel::dismissDuplicate,
+        onReorder = viewModel::reorder,
         onStart = viewModel::start,
         onPause = viewModel::pause,
         onCancel = viewModel::cancel,
@@ -97,7 +115,10 @@ fun DownloadsScreenContent(
     onCategorySelect: (DownloadCategory) -> Unit = {},
     isEngineAvailable: Boolean = true,
     defaultDirectory: String = "",
-    onDownload: (String, String, String) -> Unit = { _, _, _ -> },
+    lastAddRejectedDuplicate: Boolean = false,
+    onAdd: (String, String, DownloadFormat) -> Unit = { _, _, _ -> },
+    onDismissDuplicate: () -> Unit = {},
+    onReorder: (Int, Int) -> Unit = { _, _ -> },
     onStart: (String) -> Unit = {},
     onPause: (String) -> Unit = {},
     onCancel: (String) -> Unit = {},
@@ -107,6 +128,7 @@ fun DownloadsScreenContent(
     onOpenFolder: (DownloadTask) -> Unit = {},
     onNavigateUp: () -> Unit = {}
 ) {
+    val colors = plusColors()
     PlusScaffold(
         toolbar = {
             TopToolbar(
@@ -133,7 +155,9 @@ fun DownloadsScreenContent(
             NewDownloadSection(
                 defaultDirectory = defaultDirectory,
                 enabled = isEngineAvailable,
-                onDownload = onDownload
+                lastAddRejectedDuplicate = lastAddRejectedDuplicate,
+                onDismissDuplicate = onDismissDuplicate,
+                onAdd = onAdd
             )
             val tabs = DownloadCategory.tabsInOrder
             val counts = tabCounts(tasks)
@@ -147,6 +171,14 @@ fun DownloadsScreenContent(
                 onSelect = { index -> onCategorySelect(tabs[index]) }
             )
             SectionHeader(title = "Missions")
+            if (tasks.any { it.isReorderable() }) {
+                Text(
+                    text = stringResource(Res.string.downloads_reorder_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textSecondary,
+                    modifier = Modifier.padding(horizontal = spaceNormal, vertical = spaceSmall)
+                )
+            }
             val visibleTasks = selectedCategory.select(tasks)
             when {
                 !isEngineAvailable -> ErrorState(
@@ -161,8 +193,15 @@ fun DownloadsScreenContent(
                     message = stringResource(Res.string.downloads_tab_empty_message)
                 )
                 else -> visibleTasks.forEach { task ->
+                    val index = tasks.indexOfFirst { it.id == task.id }
+                    val canMoveUp = index > 0 && reorder(tasks, index, index - 1) != tasks
+                    val canMoveDown = reorder(tasks, index, index + 1) != tasks
                     DownloadRow(
                         task = task,
+                        canMoveUp = canMoveUp,
+                        canMoveDown = canMoveDown,
+                        onMoveUp = { if (canMoveUp) onReorder(index, index - 1) },
+                        onMoveDown = { if (canMoveDown) onReorder(index, index + 1) },
                         onStart = onStart,
                         onPause = onPause,
                         onCancel = onCancel,
@@ -181,11 +220,14 @@ fun DownloadsScreenContent(
 private fun NewDownloadSection(
     defaultDirectory: String,
     enabled: Boolean,
-    onDownload: (String, String, String) -> Unit
+    lastAddRejectedDuplicate: Boolean,
+    onDismissDuplicate: () -> Unit,
+    onAdd: (String, String, DownloadFormat) -> Unit
 ) {
     val colors = plusColors()
     var url by remember { mutableStateOf("") }
     var destination by remember { mutableStateOf(defaultDirectory) }
+    var format by remember { mutableStateOf(DownloadFormat.ORIGINAL) }
 
     SectionHeader(title = "New download")
     Text(
@@ -207,11 +249,49 @@ private fun NewDownloadSection(
     ) {
         OutlinedTextField(
             value = url,
-            onValueChange = { url = it },
+            onValueChange = {
+                url = it
+                if (lastAddRejectedDuplicate) onDismissDuplicate()
+            },
             singleLine = true,
             label = { Text("File URL") },
             modifier = Modifier.weight(1f)
         )
+    }
+    val formatLabels = mutableListOf<String>()
+    for (option in DownloadFormat.entries) {
+        formatLabels += option.label()
+    }
+    FilterChipRow(
+        options = formatLabels,
+        selectedIndex = format.ordinal,
+        onSelect = { index -> format = DownloadFormat.entries[index] },
+        contentPadding = PaddingValues(horizontal = spaceNormal)
+    )
+    Text(
+        text = stringResource(Res.string.downloads_format_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = colors.textSecondary,
+        modifier = Modifier.padding(horizontal = spaceNormal, vertical = spaceSmall)
+    )
+    if (lastAddRejectedDuplicate) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spaceNormal, vertical = spaceSmall)
+        ) {
+            Text(
+                text = stringResource(Res.string.downloads_duplicate_title),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.danger
+            )
+            Text(
+                text = stringResource(Res.string.downloads_duplicate_message),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textSecondary
+            )
+        }
     }
     Row(
         modifier = Modifier
@@ -229,9 +309,11 @@ private fun NewDownloadSection(
         )
         Button(
             onClick = {
-                val fileName = (url.substringBefore('?').substringAfterLast('/').substringAfterLast('\\').trim())
-                    .ifBlank { "download" }
-                onDownload(url, fileName, if (destination.isBlank()) defaultDirectory else destination)
+                onAdd(
+                    url.trim(),
+                    destination.ifBlank { defaultDirectory },
+                    format
+                )
             },
             enabled = enabled && url.isNotBlank() && destination.isNotBlank()
         ) {
@@ -241,8 +323,22 @@ private fun NewDownloadSection(
 }
 
 @Composable
+private fun DownloadFormat.label(): String = stringResource(
+    when (this) {
+        DownloadFormat.ORIGINAL -> Res.string.downloads_quality_original
+        DownloadFormat.HIGH -> Res.string.downloads_quality_high
+        DownloadFormat.MEDIUM -> Res.string.downloads_quality_medium
+        DownloadFormat.LOW -> Res.string.downloads_quality_low
+    }
+)
+
+@Composable
 private fun DownloadRow(
     task: DownloadTask,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
     onStart: (String) -> Unit,
     onPause: (String) -> Unit,
     onCancel: (String) -> Unit,
@@ -263,6 +359,14 @@ private fun DownloadRow(
         speedText = if (task.bytesPerSecond > 0L) "${formatBytes(task.bytesPerSecond)}/s" else null,
         sizeText = sizeText,
         actions = {
+            if (task.isReorderable()) {
+                TextButton(onClick = onMoveUp, enabled = canMoveUp) {
+                    Text(stringResource(Res.string.downloads_reorder_move_up))
+                }
+                TextButton(onClick = onMoveDown, enabled = canMoveDown) {
+                    Text(stringResource(Res.string.downloads_reorder_move_down))
+                }
+            }
             when (task.status) {
                 DownloadState.DOWNLOADING -> TextButton(onClick = { onPause(task.id) }) { Text("Pause") }
                 DownloadState.PAUSED, DownloadState.QUEUED -> TextButton(onClick = { onStart(task.id) }) { Text("Resume") }

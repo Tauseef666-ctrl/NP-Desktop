@@ -20,3 +20,6 @@ fun SavedPlaylist.toPlayQueue(): PlayQueue = PlayQueue(items)
 /** Keep [list] order while dropping every item for which [isAvailable] is false. */
 fun List<MediaItem>.skipUnavailable(isAvailable: (MediaItem) -> Boolean): List<MediaItem> =
     filter(isAvailable)
+
+/** An item is playable only when it carries a resolved stream URL; a blank URL cannot be played. */
+fun MediaItem.isAvailable(): Boolean = url.isNotBlank()
