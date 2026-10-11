@@ -24,6 +24,9 @@ sealed interface Destination : NavKey {
     data object Library : Destination
 
     @Serializable
+    data object Playlists : Destination
+
+    @Serializable
     data object Downloads : Destination
 
     @Serializable
@@ -49,6 +52,12 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data object BackupRestore : Destination
+
+    @Serializable
+    data object DownloadsSettings : Destination
+
+    @Serializable
+    data object HistorySettings : Destination
 
     @Serializable
     data object About : Destination

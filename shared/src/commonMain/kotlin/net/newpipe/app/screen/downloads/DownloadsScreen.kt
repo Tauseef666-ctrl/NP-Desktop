@@ -92,7 +92,7 @@ fun DownloadsScreen(
         selectedCategory = selectedCategory,
         onCategorySelect = { selectedCategory = it },
         isEngineAvailable = viewModel.isEngineAvailable,
-        defaultDirectory = viewModel.defaultDirectory,
+        defaultDirectory = viewModel.defaultDirectory.collectAsStateWithLifecycle().value,
         lastAddRejectedDuplicate = duplicateRejected,
         onAdd = { url, folder, format -> viewModel.addFromUrl(url, folder, format) },
         onDismissDuplicate = viewModel::dismissDuplicate,

@@ -29,6 +29,7 @@ import net.newpipe.app.player.RepeatMode
 import net.newpipe.app.player.VideoSettings
 import net.newpipe.app.player.VideoSettingsStore
 import net.newpipe.app.player.normalize
+import net.newpipe.app.preferences.HistoryPreferences
 import net.newpipe.app.preferences.VideoAudioPreferences
 import org.koin.core.annotation.KoinViewModel
 
@@ -71,7 +72,7 @@ class PlayerViewModel(
                 if (id == lastRecordedId) return@collect
                 // Prefer the queue's MediaItem for title/url/duration; skip until it is available.
                 val item = playback.queueState.value.items.firstOrNull { it.id == id } ?: return@collect
-                recentlyPlayed.record(item)
+                if (watchHistoryEnabled()) recentlyPlayed.record(item)
                 resumeStore.rememberMetadata(item.id, item.title, item.url)
                 lastRecordedId = id
             }
@@ -82,6 +83,12 @@ class PlayerViewModel(
         recordScope.cancel()
         super.onCleared()
     }
+
+    /** Read live so toggling "Remember watch history" applies immediately, without a restart. */
+    private fun watchHistoryEnabled(): Boolean = preferences.getBoolean(
+        HistoryPreferences.KEY_WATCH_HISTORY,
+        HistoryPreferences.DEFAULT_WATCH_HISTORY
+    )
 
     /** Milliseconds per seek (F2): the configured `seek_duration`, Shift = large skip. */
     fun seekStepMillis(isShiftPressed: Boolean): Long {

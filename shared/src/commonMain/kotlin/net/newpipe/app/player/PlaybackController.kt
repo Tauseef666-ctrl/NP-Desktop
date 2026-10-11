@@ -169,6 +169,12 @@ class PlaybackController(
         queue.current?.let { prepareResumed(it) }
     }
 
+    /** Remove a saved playlist by [id] (F6). Other playlists are untouched. */
+    fun deletePlaylist(id: String) {
+        playlists.delete(id)
+        refreshSavedPlaylists()
+    }
+
     /**
      * Drop every queued item that has no playable URL (F6). Keeps the current item when it survived;
      * otherwise replays the new current so playback does not silently point at a removed item.

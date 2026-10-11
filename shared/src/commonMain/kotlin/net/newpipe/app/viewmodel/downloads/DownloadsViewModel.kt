@@ -7,6 +7,7 @@ package net.newpipe.app.viewmodel.downloads
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +23,7 @@ import net.newpipe.app.download.formatLabel
 import net.newpipe.app.download.isDuplicate
 import net.newpipe.app.download.reorder as reorderTasks
 import net.newpipe.app.platform.defaultDownloadDirectory
+import net.newpipe.app.preferences.DownloadsPreferences
 import org.koin.core.annotation.KoinViewModel
 
 /**
@@ -34,13 +36,34 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class DownloadsViewModel(
     private val engine: DownloadEngine,
-    private val store: DownloadStore
+    private val store: DownloadStore,
+    private val settings: Settings
 ) : ViewModel() {
 
     val isEngineAvailable: Boolean = engine.isAvailable
 
-    /** Default destination folder for new downloads (may be empty on some platforms). */
-    val defaultDirectory: String = defaultDownloadDirectory()
+    private val _defaultDirectory = MutableStateFlow(
+        settings
+            .getString(
+                DownloadsPreferences.KEY_DOWNLOAD_DIRECTORY,
+                DownloadsPreferences.DEFAULT_DOWNLOAD_DIRECTORY
+            )
+            .ifBlank { defaultDownloadDirectory() }
+    )
+
+    /**
+     * Effective destination folder for new downloads: the persisted override when set, otherwise the
+     * platform default. Updated by [setDefaultDirectory] so the downloads screen reflects changes
+     * made on the settings screen without a restart.
+     */
+    val defaultDirectory: StateFlow<String> = _defaultDirectory.asStateFlow()
+
+    /** Persist the preferred download directory; a blank [path] resets to the platform default. */
+    fun setDefaultDirectory(path: String) {
+        val trimmed = path.trim()
+        settings.putString(DownloadsPreferences.KEY_DOWNLOAD_DIRECTORY, trimmed)
+        _defaultDirectory.value = trimmed.ifBlank { defaultDownloadDirectory() }
+    }
 
     private val persistedOrder = MutableStateFlow(store.loadOrder())
 

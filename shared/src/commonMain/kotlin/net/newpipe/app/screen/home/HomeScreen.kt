@@ -62,6 +62,7 @@ import newpipe.shared.generated.resources.layout_expanded
 import newpipe.shared.generated.resources.nav_history
 import newpipe.shared.generated.resources.nav_search
 import newpipe.shared.generated.resources.nav_trending
+import newpipe.shared.generated.resources.playlists_screen_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -119,6 +120,12 @@ fun HomeScreenContent(
             selected = selectedDestination == Destination.Library,
             onClick = { onNavigate(Destination.Library) },
             icon = painterResource(Res.drawable.ic_file_download)
+        ),
+        NavEntry(
+            label = stringResource(Res.string.playlists_screen_title),
+            selected = selectedDestination == Destination.Playlists,
+            onClick = { onNavigate(Destination.Playlists) },
+            icon = painterResource(Res.drawable.ic_headset)
         ),
         NavEntry(
             label = "Downloads",

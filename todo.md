@@ -77,11 +77,11 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 ## 4. Phase 4 — Screen redesign (desktop-first)
 
 - [~] Home: desktop shell (NavRail + top toolbar + hero + honest empty rails) via `screen/home/HomeScreen.kt`; real data rails pending.
-- [~] Search: `screen/search/SearchScreen.kt` + `Destination.Search` + NavRail entry (live input, honest empty state, 3 UI tests); results/suggestions/history pending.
+- [~] Search: `screen/search/SearchScreen.kt` + `Destination.Search` + NavRail entry (live input, honest empty state); **search history + suggestions done** (`search/SearchHistoryStore.kt` persisted `npp_search_history`/cap 15 + pure `pureAdd`, pure `search/SearchSuggestions.kt` `matchSuggestions`, `SearchViewModel`; recent-search list + live suggestions + clear-history in the screen; 19 new tests). Provider-backed results still pending.
 - [ ] Subscriptions + Feed (groups).
 - [~] Trending / Popular: `screen/trending/TrendingScreen.kt` + `Destination.Trending` + NavRail entry (honest empty state, 1 UI test); ranking/kiosk wiring pending.
 - [ ] Channels (tabs).
-- [ ] Playlists (remote + local).
+- [~] Playlists: **local playlists screen done** (`screen/playlists/PlaylistsScreen.kt` + `viewmodel/playlists/PlaylistsViewModel.kt`, list/expand/play/delete with confirm; `PlaybackController.deletePlaylist`; route `Destination.Playlists` + Home rail entry); remote (provider) playlists pending.
 - [~] History: `screen/history/HistoryScreen.kt` + `Destination.History` + NavRail entry (honest empty state, 1 UI test); playback-history recording pending.
 - [~] Downloads: `screen/downloads/DownloadsScreen.kt` + `Destination.Downloads` + Home entry (real missions via the JVM engine; §6).
 - [~] Local Media: `screen/library/LibraryScreen.kt` (indexed folders + scanned list + play), route `Destination.Library` registered + Home entry.
@@ -130,7 +130,7 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 
 ## 8. Phase 8 — Settings & Backup/Restore center
 
-- [ ] Preserve **all** existing settings (Android 234 keys) and add desktop equivalents with the same semantics.
+- [~] Preserve **all** existing settings (Android 234 keys) and add desktop equivalents with the same semantics; **Downloads/Storage** (`screen/settings/downloads/DownloadsSettingsScreen.kt` + VM, persisted default folder `npp_default_download_directory` really consumed by `DownloadsScreen`) and **History/Privacy** (`screen/settings/history/HistorySettingsScreen.kt` + VM, `npp_watch_history_enabled` gates `RecentlyPlayedStore.record`, resume toggle + clear history/resume) done; remaining categories pending.
 - [ ] Settings categories: General, Player, Downloads/Storage, Local Media, Subs/Playlists, Search/Services, Privacy, Appearance, Notifications, Network, Advanced/Debug, Backup & Restore, About.
 - [ ] Every setting: accurate value, correct control, persists, affects real behaviour.
 - [x] Backup: create, choose location, status, dated files (no overwrite), list contents — common `backup/` package (`BackupManifest` @Serializable, pure `BackupOps`, `BackupRepository` seam) + JVM `JVMBackupRepository` (real java.util.zip archive, manifest first, never throws; 12 ops + 5 content + 8 JVM repo round-trip tests) + honest unavailable Android no-op; `BackupRestoreScreen` + VM + `Destination.BackupRestore` registered + Settings entry; `chooseDirectory()` expect/actual (JVM `JFileChooser`, android/iOS no-ops).
@@ -171,7 +171,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 ### F6 — Smart queue & playlist system
 - [x] Android: `PlayQueue` + local playlists — keep.
 - [x] Shared: `player/PlayQueue.kt` (order/repeat/shuffle/insert/remove/move) with tests; **queue persistence done** — `MediaItem` `@Serializable`, `PlayQueue.restore()`, `player/PlayQueueStore.kt` (`@Serializable PlayQueueSnapshot`, save/load/clear on `npp_persisted_queue`, corrupt/blank → null, empty → cleared), `PlaybackController` restores on init + saves on every mutation + `clearQueue()` (7 store tests + 3 controller tests; 107 total green). **Save-as-playlist/restore/skip-unavailable infrastructure done** — `player/PlaylistStore.kt` (`SavedPlaylist`/`PlaylistSnapshot`, save/load/delete/clear on `npp_saved_playlists`) + `player/PlaylistOps.kt` (`toSavedPlaylist`/`toPlayQueue`/`skipUnavailable`, 17 tests); **desktop queue panel done** (`screen/player/PlayerQueuePanel.kt` — current-item highlight, play/move-up/move-down/remove per row, save/restore/skip-unavailable footer with honest status; `PlaybackController.moveItem/removeItem/saveQueueAsPlaylist/restorePlaylist/skipUnavailableInQueue` persist on success, current item preserved by identity; PlayQueueMoveTest 5 + PlaybackControllerTest 25).
-- [~] Desktop: queue build/reorder/next-prev/save-as-playlist/restore/skip-unavailable. (reorder/next-prev/save/restore/skip done in the panel above; **next-prev transport still engine-wired only**.)
+- [~] Desktop: queue build/reorder/next-prev/save-as-playlist/restore/skip-unavailable. (reorder/next-prev/save/restore/skip done in the panel above; **next-prev transport still engine-wired only**; **saved-playlists screen done** — list/expand/play/delete via `PlaylistsScreen`.)
 
 ### F7 — Custom keyboard shortcuts
 - [x] Android: hardware-media-button pref (`ignore_hardware_media_buttons_key`).
@@ -204,7 +204,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 
 - [ ] Run lint/checkstyle/ktlint/dependency-order.
 - [ ] Android unit + (emulator) instrumented tests green.
-- [ ] `:shared:jvmTest` green; add tests for new components/VMs. → currently **300 tests, 0 failures** (PlayQueue 12, PlaybackController 25, PlayerShortcuts 13, PlayQueueStore 7, PlaylistStore 9, PlaylistOps 8, VideoSettingsStore 10, DownloadStore 6, downloads engine 7, DownloadOps 18, scanner 11, resume store 10, RecentlyPlayedStore 13, AdaptiveLayout 7, PlayQueueMove 5, LibraryViews 15, Format 8, DownloadCategory 7, WorkspacePreferences 8, LibraryFilter 12, BackupOps 12, BackupContent 5, JVMBackupRepository 8, AppShortcutScope 7, scaffold screens 5 (Search 3/Trending 1/History 1), + UI/settings suites incl. DownloadsTabs 3/LibrarySearch 2/PlayerSettingsPanel 2/ShortcutReferenceSection 3).
+- [ ] `:shared:jvmTest` green; add tests for new components/VMs. → currently **340 tests, 0 failures** (PlayQueue 12, PlaybackController 25, PlayerShortcuts 13, PlayQueueStore 7, PlaylistStore 9, PlaylistOps 8, VideoSettingsStore 10, DownloadStore 6, downloads engine 7, DownloadOps 18, scanner 11, resume store 10, RecentlyPlayedStore 13, AdaptiveLayout 7, PlayQueueMove 5, LibraryViews 15, Format 8, DownloadCategory 7, WorkspacePreferences 8, LibraryFilter 12, BackupOps 12, BackupContent 5, JVMBackupRepository 8, AppShortcutScope 7, SearchHistoryStore 10, SearchSuggestions 5, SearchViewModel 4, PlaylistsViewModel 6, DownloadsSettingsViewModel 6, HistorySettingsViewModel 6, scaffold screens 5 (Search 6/Trending 1/History 1), + UI/settings suites incl. DownloadsTabs 3/LibrarySearch 2/PlayerSettingsPanel 2/ShortcutReferenceSection 3).
 - [ ] Playback/download tests (desktop engine on a real machine).
 - [ ] Backup: create → inspect → restore → verify data; invalid/corrupt/incompatible backups.
 - [ ] Data-integrity: no silent loss; backward-compatible migrations; old data still reads.

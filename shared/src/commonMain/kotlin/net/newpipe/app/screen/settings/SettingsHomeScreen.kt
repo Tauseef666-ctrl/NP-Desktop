@@ -64,6 +64,14 @@ fun SettingsHomeScreen(
                             Destination.BackupRestore
                         )
 
+                        SettingsCategoryType.DOWNLOADS -> navigator.navigateTo(
+                            Destination.DownloadsSettings
+                        )
+
+                        SettingsCategoryType.HISTORY -> navigator.navigateTo(
+                            Destination.HistorySettings
+                        )
+
                         // TODO: wire remaining sub-screens as they are migrated
                         else -> Unit
                     }

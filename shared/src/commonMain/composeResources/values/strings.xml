@@ -330,4 +330,41 @@
     <string name="library_missing_file">Missing file</string>
     <string name="library_thumbnail_pending">Preview</string>
 
+    <!-- Playlists screen (workstream A) -->
+    <string name="playlists_screen_title">Playlists</string>
+    <string name="playlists_track_count">%1$d track(s)</string>
+    <string name="playlists_tracks_label">Tracks</string>
+    <string name="playlists_play">Play</string>
+    <string name="playlists_delete">Delete</string>
+    <string name="playlists_delete_confirm_title">Delete this playlist?</string>
+    <string name="playlists_delete_confirm_message">The playlist will be removed. This cannot be undone.</string>
+    <string name="playlists_deleted">Playlist deleted</string>
+
+    <!-- Search history & suggestions (workstream B) -->
+    <string name="search_history_title">Recent searches</string>
+    <string name="search_history_clear">Clear history</string>
+    <string name="search_history_empty">Your recent searches will appear here.</string>
+    <string name="search_history_cleared">Search history cleared</string>
+    <string name="search_suggestions_title">Suggestions</string>
+
+    <!-- Downloads & storage settings (workstream C) -->
+    <string name="downloads_settings_title">Downloads</string>
+    <string name="downloads_settings_folder_title">Default download folder</string>
+    <string name="downloads_settings_folder_choose">Choose folder...</string>
+    <string name="downloads_settings_folder_reset">Reset to default</string>
+    <string name="downloads_settings_open_folder">Open folder</string>
+    <string name="downloads_settings_clear_completed">Clear completed downloads</string>
+    <string name="downloads_settings_engine_unavailable">Downloads are not available on this platform yet.</string>
+    <string name="downloads_settings_saved">Saved</string>
+
+    <!-- History & privacy settings (workstream D) -->
+    <string name="history_settings_title">History</string>
+    <string name="history_settings_remember">Remember watch history</string>
+    <string name="history_settings_remember_summary">When off, new items are not added to Recently played.</string>
+    <string name="history_settings_clear_history">Clear watch history</string>
+    <string name="history_settings_resume_toggle">Resume playback</string>
+    <string name="history_settings_clear_resume">Clear saved resume positions</string>
+    <string name="history_settings_items_count">%1$d item(s)</string>
+    <string name="history_settings_cleared">Cleared</string>
+
 </resources>
