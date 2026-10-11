@@ -19,4 +19,13 @@ object PlayerPreferences {
 
     /** Items shorter than this are clips; resuming a clip is pointless. */
     const val SHORT_CLIP_MAX_MS = 60_000L
+
+    /** Persisted default playback speed applied to every newly prepared item (additive key). */
+    const val KEY_DEFAULT_PLAYBACK_SPEED = "npp_default_playback_speed"
+
+    /** Fallback speed when nothing valid is stored. */
+    const val DEFAULT_PLAYBACK_SPEED = 1.0f
+
+    /** Supported playback-speed presets, ascending. */
+    val SUPPORTED_PLAYBACK_SPEEDS = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
 }

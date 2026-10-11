@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import net.newpipe.app.preferences.PlayerPreferences
 import org.koin.core.annotation.Singleton
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /**
  * Single shared owner of the play [PlayQueue] and the [PlayerEngine]. Any screen (player, library,
@@ -43,6 +45,16 @@ class PlaybackController(
         get() = settings.getBoolean(
             PlayerPreferences.KEY_RESUME_PLAYBACK,
             PlayerPreferences.DEFAULT_RESUME_PLAYBACK
+        )
+
+    /**
+     * Persisted default playback speed, resolved to a supported preset on every read so a corrupt
+     * or missing value can never reach the engine. Applied to each newly prepared item (see
+     * [prepareResumed]); the player UI may still override the speed for the current session.
+     */
+    val defaultPlaybackSpeed: Float
+        get() = resolveDefaultSpeed(
+            settings.getStringOrNull(PlayerPreferences.KEY_DEFAULT_PLAYBACK_SPEED)
         )
 
     private val queue = PlayQueue()
@@ -218,10 +230,22 @@ class PlaybackController(
         settings.putBoolean(PlayerPreferences.KEY_RESUME_PLAYBACK, enabled)
     }
 
+    /**
+     * Persist the default speed applied to future items. [speed] is clamped to the nearest
+     * supported preset and stored in its canonical form (e.g. `1.5`).
+     */
+    fun setDefaultSpeed(speed: Float) {
+        settings.putString(
+            PlayerPreferences.KEY_DEFAULT_PLAYBACK_SPEED,
+            canonicalSpeed(speed)
+        )
+    }
+
     private suspend fun prepareResumed(item: MediaItem) {
         val resumePosition = resumePositionFor(item)
         val prepared = if (resumePosition > 0L) item.copy(resumePositionMs = resumePosition) else item
         engine.prepare(prepared)
+        engine.setSpeed(defaultPlaybackSpeed)
     }
 
     private fun resumePositionFor(item: MediaItem): Long {
@@ -296,9 +320,43 @@ class PlaybackController(
         _savedPlaylists.value = loadSavedPlaylists()
     }
 
-    private companion object {
-        const val SAVE_INTERVAL_MS = 5_000L
-        const val QUEUE_PLAYLIST_ID = "queue"
-        const val QUEUE_PLAYLIST_NAME = "Queue"
+    companion object {
+        private const val SAVE_INTERVAL_MS = 5_000L
+        private const val QUEUE_PLAYLIST_ID = "queue"
+        private const val QUEUE_PLAYLIST_NAME = "Queue"
+
+        /**
+         * Resolve a persisted speed string to a supported preset. Blank, corrupt, or unsupported
+         * values fall back to [PlayerPreferences.DEFAULT_PLAYBACK_SPEED], so playback is never
+         * left at a nonsensical rate.
+         */
+        fun resolveDefaultSpeed(raw: String?): Float {
+            val parsed = raw?.trim()?.toFloatOrNull() ?: return PlayerPreferences.DEFAULT_PLAYBACK_SPEED
+            return PlayerPreferences.SUPPORTED_PLAYBACK_SPEEDS.firstOrNull { it == parsed }
+                ?: PlayerPreferences.DEFAULT_PLAYBACK_SPEED
+        }
+
+        /** Clamp any [speed] to the closest supported preset. */
+        fun nearestSupportedSpeed(speed: Float): Float {
+            if (speed.isNaN()) return PlayerPreferences.DEFAULT_PLAYBACK_SPEED
+            return PlayerPreferences.SUPPORTED_PLAYBACK_SPEEDS.minByOrNull { abs(it - speed) }
+                ?: PlayerPreferences.DEFAULT_PLAYBACK_SPEED
+        }
+
+        /**
+         * Canonical persisted representation of [speed], e.g. `0.5`, `1.0`, `0.75`. The value is
+         * first clamped to a supported preset, so the result always round-trips through
+         * [resolveDefaultSpeed].
+         */
+        fun canonicalSpeed(speed: Float): String {
+            val hundredths = (nearestSupportedSpeed(speed) * 100f).roundToInt()
+            val whole = hundredths / 100
+            val remainder = hundredths % 100
+            return when {
+                remainder == 0 -> "$whole.0"
+                remainder % 10 == 0 -> "$whole.${remainder / 10}"
+                else -> "$whole.${remainder.toString().padStart(2, '0')}"
+            }
+        }
     }
 }

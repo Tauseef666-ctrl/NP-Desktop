@@ -76,6 +76,18 @@ fun SettingsHomeScreen(
                             Destination.ContentSettings
                         )
 
+                        SettingsCategoryType.LOCAL_MEDIA -> navigator.navigateTo(
+                            Destination.LocalMediaSettings
+                        )
+
+                        SettingsCategoryType.SEARCH_SERVICES -> navigator.navigateTo(
+                            Destination.SearchServicesSettings
+                        )
+
+                        SettingsCategoryType.ADVANCED -> navigator.navigateTo(
+                            Destination.AdvancedSettings
+                        )
+
                         // TODO: wire remaining sub-screens as they are migrated
                         else -> Unit
                     }

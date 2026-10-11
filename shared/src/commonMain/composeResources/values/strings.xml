@@ -412,4 +412,56 @@
     <string name="home_empty_title">Nothing here yet</string>
     <string name="home_empty_message">Play something, add subscriptions, or download media to see it here.</string>
 
+    <!-- Settings parity: new categories (milestone 7) -->
+    <string name="settings_category_local_media_title">Local media</string>
+    <string name="settings_category_search_services_title">Search and services</string>
+    <string name="settings_category_advanced_title">Advanced</string>
+    <string name="settings_category_playback_defaults_title">Playback defaults</string>
+
+    <!-- Local media settings (workstream A) -->
+    <string name="local_media_settings_folders_title">Indexed folders</string>
+    <string name="local_media_settings_folders_empty">No folders indexed yet.</string>
+    <string name="local_media_settings_add_folder">Add folder</string>
+    <string name="local_media_settings_remove_folder">Remove folder</string>
+    <string name="local_media_settings_rescan">Rescan</string>
+    <string name="local_media_settings_rescan_summary">Re-scan every indexed folder.</string>
+    <string name="local_media_settings_file_count">%1$d files indexed</string>
+    <string name="local_media_settings_no_files">No media files found.</string>
+    <string name="local_media_settings_scan_unavailable">Folder scanning is not available on this platform.</string>
+
+    <!-- Advanced settings (workstream B) -->
+    <string name="advanced_settings_log_level_title">Log level</string>
+    <string name="advanced_settings_log_level_summary">How much this app writes to the log.</string>
+    <string name="advanced_settings_log_level_verbose">Verbose</string>
+    <string name="advanced_settings_log_level_debug">Debug</string>
+    <string name="advanced_settings_log_level_info">Info</string>
+    <string name="advanced_settings_log_level_warning">Warning</string>
+    <string name="advanced_settings_log_level_error">Error</string>
+    <string name="advanced_settings_build_info_title">Build information</string>
+    <string name="advanced_settings_variant_title">Build variant</string>
+    <string name="advanced_settings_variant_debug">Debug</string>
+    <string name="advanced_settings_variant_release">Release</string>
+    <string name="advanced_settings_variant_development">Development</string>
+
+    <!-- Search and services settings (workstream C) -->
+    <string name="search_services_history_title">Search history</string>
+    <string name="search_services_history_count">%1$d saved searches</string>
+    <string name="search_services_clear_history_title">Clear search history</string>
+    <string name="search_services_clear_history_summary">Forget every recent search.</string>
+    <string name="search_services_cleared">Search history cleared</string>
+    <string name="search_services_providers_title">Connected services</string>
+    <string name="search_services_providers_empty">No services connected. Add one in Content settings.</string>
+    <string name="search_services_providers_count">%1$d connected</string>
+
+    <!-- Player playback defaults (workstream D) -->
+    <string name="player_default_speed_title">Default playback speed</string>
+    <string name="player_default_speed_summary">Applied when a new item starts playing.</string>
+    <string name="player_default_speed_0_5">0.5x</string>
+    <string name="player_default_speed_0_75">0.75x</string>
+    <string name="player_default_speed_1_0">Normal (1x)</string>
+    <string name="player_default_speed_1_25">1.25x</string>
+    <string name="player_default_speed_1_5">1.5x</string>
+    <string name="player_default_speed_1_75">1.75x</string>
+    <string name="player_default_speed_2_0">2x</string>
+
 </resources>

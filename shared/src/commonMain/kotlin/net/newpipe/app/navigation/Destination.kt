@@ -66,6 +66,15 @@ sealed interface Destination : NavKey {
     data object ContentSettings : Destination
 
     @Serializable
+    data object LocalMediaSettings : Destination
+
+    @Serializable
+    data object SearchServicesSettings : Destination
+
+    @Serializable
+    data object AdvancedSettings : Destination
+
+    @Serializable
     data object About : Destination
 }
 

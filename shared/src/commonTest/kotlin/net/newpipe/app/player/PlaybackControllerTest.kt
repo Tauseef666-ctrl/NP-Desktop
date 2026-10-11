@@ -18,13 +18,16 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-private class FakePlayerEngine : PlayerEngine {
+internal class FakePlayerEngine : PlayerEngine {
     override val isAvailable: Boolean = true
 
     private val _state = MutableStateFlow(PlaybackState())
     override val state: StateFlow<PlaybackState> = _state.asStateFlow()
 
     val prepared = mutableListOf<MediaItem>()
+
+    /** Every speed passed to [setSpeed], in call order. */
+    val speeds = mutableListOf<Float>()
 
     fun setState(state: PlaybackState) {
         _state.value = state
@@ -48,7 +51,10 @@ private class FakePlayerEngine : PlayerEngine {
         _state.value = _state.value.copy(positionMs = positionMs)
     }
 
-    override fun setSpeed(speed: Float) = Unit
+    override fun setSpeed(speed: Float) {
+        speeds += speed
+    }
+
     override fun setVolume(volume: Float) = Unit
 
     override fun setMuted(muted: Boolean) {
@@ -443,5 +449,78 @@ class PlaybackControllerTest {
         assertEquals(listOf("a"), controller.queueState.value.items.map { it.id })
         assertEquals("a", controller.queueState.value.current?.id)
         assertEquals("a", engine.prepared.last().id)
+    }
+
+    @Test
+    fun newItemsUsePersistedDefaultSpeed() = runBlocking {
+        val engine = FakePlayerEngine()
+        val settings = MapSettings()
+        settings.putString(PlayerPreferences.KEY_DEFAULT_PLAYBACK_SPEED, "2.0")
+        val controller = controller(engine, settings)
+
+        controller.setQueue(listOf(item("a")))
+
+        assertEquals(2.0f, engine.speeds.last())
+    }
+
+    @Test
+    fun defaultSpeedIsNormalWhenUnset() = runBlocking {
+        val engine = FakePlayerEngine()
+        val controller = controller(engine)
+
+        controller.playItem(item("a"))
+
+        assertEquals(PlayerPreferences.DEFAULT_PLAYBACK_SPEED, engine.speeds.last())
+    }
+
+    @Test
+    fun defaultSpeedAppliesToEveryNewItem() = runBlocking {
+        val engine = FakePlayerEngine()
+        val settings = MapSettings()
+        settings.putString(PlayerPreferences.KEY_DEFAULT_PLAYBACK_SPEED, "1.25")
+        val controller = controller(engine, settings)
+
+        controller.setQueue(listOf(item("a"), item("b"), item("c")))
+        controller.next()
+        controller.previous()
+
+        assertEquals(listOf(1.25f, 1.25f, 1.25f), engine.speeds)
+    }
+
+    @Test
+    fun newItemAfterSetDefaultSpeedUsesThatSpeed() = runBlocking {
+        val engine = FakePlayerEngine()
+        val controller = controller(engine)
+        controller.setQueue(listOf(item("a")))
+
+        controller.setDefaultSpeed(1.5f)
+        controller.playItem(item("b"))
+
+        assertEquals(1.5f, engine.speeds.last())
+    }
+
+    @Test
+    fun setDefaultSpeedPersistsClampedCanonicalValue() {
+        val settings = MapSettings()
+        val controller = controller(FakePlayerEngine(), settings)
+
+        controller.setDefaultSpeed(1.4f)
+
+        assertEquals(
+            "1.5",
+            settings.getString(PlayerPreferences.KEY_DEFAULT_PLAYBACK_SPEED, "")
+        )
+    }
+
+    @Test
+    fun corruptPersistedSpeedFallsBackToNormal() = runBlocking {
+        val engine = FakePlayerEngine()
+        val settings = MapSettings()
+        settings.putString(PlayerPreferences.KEY_DEFAULT_PLAYBACK_SPEED, "not-a-speed")
+        val controller = controller(engine, settings)
+
+        controller.setQueue(listOf(item("a")))
+
+        assertEquals(PlayerPreferences.DEFAULT_PLAYBACK_SPEED, engine.speeds.last())
     }
 }

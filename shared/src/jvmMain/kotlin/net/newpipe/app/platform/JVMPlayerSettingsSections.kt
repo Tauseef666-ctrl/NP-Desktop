@@ -6,6 +6,7 @@
 package net.newpipe.app.platform
 
 import androidx.compose.runtime.Composable
+import net.newpipe.app.screen.settings.PlayerDefaultsSettingsSection
 import net.newpipe.app.screen.settings.PlayerResumeSettingsSection
 import net.newpipe.app.screen.settings.ShortcutReferenceSection
 import org.koin.core.annotation.Singleton
@@ -14,9 +15,14 @@ import org.koin.core.annotation.Singleton
 class JVMPlayerSettingsSections : PlayerSettingsSections {
     override val isAvailable = true
 
+    /**
+     * JVM-rendered player settings extras. [PlayerDefaultsSettingsSection] is shared commonMain UI
+     * surfaced here because the desktop platform owns this section list.
+     */
     @Composable
     override fun Render() {
         PlayerResumeSettingsSection()
+        PlayerDefaultsSettingsSection()
         ShortcutReferenceSection()
     }
 }
