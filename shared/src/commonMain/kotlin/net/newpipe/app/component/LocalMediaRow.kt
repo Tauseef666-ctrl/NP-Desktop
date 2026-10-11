@@ -37,6 +37,9 @@ import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.theme.spaceSmall
 import net.newpipe.app.theme.spaceXXSmall
+import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.library_thumbnail_pending
+import org.jetbrains.compose.resources.stringResource
 
 private val LocalRowThumbShape = RoundedCornerShape(8.dp)
 
@@ -52,6 +55,7 @@ fun LocalMediaRow(
     sizeText: String? = null,
     thumbnail: Painter? = null,
     isPlaying: Boolean = false,
+    showThumbnailPlaceholder: Boolean = false,
     onClick: () -> Unit = {}
 ) {
     val colors = plusColors()
@@ -67,7 +71,8 @@ fun LocalMediaRow(
                 .width(96.dp)
                 .aspectRatio(16f / 9f)
                 .clip(LocalRowThumbShape)
-                .background(colors.surfaceElevated)
+                .background(colors.surfaceElevated),
+            contentAlignment = Alignment.Center
         ) {
             if (thumbnail != null) {
                 Image(
@@ -75,6 +80,14 @@ fun LocalMediaRow(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
+                )
+            } else if (showThumbnailPlaceholder) {
+                Text(
+                    text = stringResource(Res.string.library_thumbnail_pending),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

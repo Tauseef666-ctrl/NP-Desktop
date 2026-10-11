@@ -9,3 +9,6 @@ package net.newpipe.app.platform
 actual fun openDownloadedFile(path: String): Boolean = false
 
 actual fun openDownloadedFileFolder(path: String): Boolean = false
+
+/** Android has no synchronous folder chooser in the shared UI yet. */
+actual fun chooseDirectory(): String? = null

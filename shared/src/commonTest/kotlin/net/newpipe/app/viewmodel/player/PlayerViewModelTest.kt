@@ -28,6 +28,8 @@ import net.newpipe.app.player.PlayQueueStore
 import net.newpipe.app.player.PlaybackStatus
 import net.newpipe.app.player.Quality
 import net.newpipe.app.player.RecentlyPlayedStore
+import net.newpipe.app.player.VideoSettings
+import net.newpipe.app.player.VideoSettingsStore
 import net.newpipe.app.preferences.VideoAudioPreferences
 
 private class StubPlayerEngine : PlayerEngine {
@@ -57,12 +59,16 @@ private fun playback(settings: MapSettings): PlaybackController =
             settings
         )
 
-private fun playerViewModel(settings: MapSettings): PlayerViewModel =
+private fun playerViewModel(
+    settings: MapSettings,
+    videoSettingsStore: VideoSettingsStore = VideoSettingsStore(settings, Json)
+): PlayerViewModel =
         PlayerViewModel(
             playback(settings),
             settings,
             RecentlyPlayedStore(settings, Json),
-            PlaybackResumeStore(settings)
+            PlaybackResumeStore(settings),
+            videoSettingsStore
         )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -96,5 +102,59 @@ class PlayerViewModelTest {
         val garbage = MapSettings()
         garbage.putString(VideoAudioPreferences.KEY_SEEK_DURATION, "not-a-number")
         assertEquals(10_000L, playerViewModel(garbage).seekStepMillis(isShiftPressed = false))
+    }
+
+    @Test
+    fun setAutoplayNextPersistsThroughStoreAndUpdatesFlow() {
+        val settings = MapSettings()
+        val store = VideoSettingsStore(settings, Json)
+        val viewModel = playerViewModel(settings, store)
+
+        viewModel.setAutoplayNext(true)
+
+        assertEquals(true, viewModel.settings.value.autoplayNextEnabled)
+        assertEquals(
+            true,
+            store.load(VideoSettingsStore.GLOBAL_MEDIA_ID)?.autoplayNextEnabled
+        )
+    }
+
+    @Test
+    fun settingsFlowIsSeededFromStore() {
+        val settings = MapSettings()
+        val store = VideoSettingsStore(settings, Json)
+        store.save(
+            VideoSettingsStore.GLOBAL_MEDIA_ID,
+            VideoSettings(subtitlesEnabled = true, audioTrack = "en")
+        )
+
+        val viewModel = playerViewModel(settings, store)
+
+        assertEquals(true, viewModel.settings.value.subtitlesEnabled)
+        assertEquals("en", viewModel.settings.value.audioTrack)
+    }
+
+    @Test
+    fun setSubtitlesPersistsThroughStore() {
+        val settings = MapSettings()
+        val store = VideoSettingsStore(settings, Json)
+        val viewModel = playerViewModel(settings, store)
+
+        viewModel.setSubtitles(true)
+
+        assertEquals(true, viewModel.settings.value.subtitlesEnabled)
+        assertEquals(true, store.load(VideoSettingsStore.GLOBAL_MEDIA_ID)?.subtitlesEnabled)
+    }
+
+    @Test
+    fun setAudioTrackPersistsThroughStore() {
+        val settings = MapSettings()
+        val store = VideoSettingsStore(settings, Json)
+        val viewModel = playerViewModel(settings, store)
+
+        viewModel.setAudioTrack("en")
+
+        assertEquals("en", viewModel.settings.value.audioTrack)
+        assertEquals("en", store.load(VideoSettingsStore.GLOBAL_MEDIA_ID)?.audioTrack)
     }
 }

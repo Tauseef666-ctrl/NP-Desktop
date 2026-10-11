@@ -12,16 +12,29 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Singleton
 
+/** Sentinel [VideoSettings.audioTrack] meaning the engine picks the track automatically. */
+const val AUDIO_TRACK_AUTO = "auto"
+
+/** Sentinel [VideoSettings.audioTrack] meaning no audio track is requested. */
+const val AUDIO_TRACK_NONE = "none"
+
 /**
  * Per-media playback overrides (F2), keyed by [MediaItem.id]. A `null` [quality] means automatic
  * selection and neutral defaults mirror the engine's baseline.
+ *
+ * [autoplayNextEnabled], [subtitlesEnabled] and [audioTrack] are player-level preferences that are
+ * persisted through [VideoSettingsStore] under [VideoSettingsStore.GLOBAL_MEDIA_ID] as well as
+ * being available per media.
  */
 @Serializable
 data class VideoSettings(
     val speed: Float = 1.0f,
     val volumePercent: Int = 100,
     val muted: Boolean = false,
-    val quality: Quality? = null
+    val quality: Quality? = null,
+    val autoplayNextEnabled: Boolean = false,
+    val subtitlesEnabled: Boolean = false,
+    val audioTrack: String = AUDIO_TRACK_AUTO
 )
 
 /** Serializable wrapper so the whole media->settings map is stored under a single key. */
@@ -31,12 +44,14 @@ data class VideoSettingsSnapshot(
 )
 
 /**
- * Clamps a [VideoSettings] into the supported ranges (speed `0.25f..3.0f`, volume `0..100`).
- * Pure and side-effect free so both the store and the future UI can rely on it.
+ * Clamps a [VideoSettings] into the supported ranges (speed `0.25f..3.0f`, volume `0..100`) and
+ * normalizes [VideoSettings.audioTrack] (blank/whitespace falls back to [AUDIO_TRACK_AUTO]).
+ * Pure and side-effect free so both the store and the UI can rely on it.
  */
 fun normalize(v: VideoSettings): VideoSettings = v.copy(
     speed = v.speed.coerceIn(0.25f, 3.0f),
-    volumePercent = v.volumePercent.coerceIn(0, 100)
+    volumePercent = v.volumePercent.coerceIn(0, 100),
+    audioTrack = v.audioTrack.trim().ifBlank { AUDIO_TRACK_AUTO }
 )
 
 /**
@@ -84,5 +99,8 @@ class VideoSettingsStore(
 
     companion object {
         const val KEY = "npp_video_settings"
+
+        /** Reserved media id under which player-level preferences (autoplay/subtitles/audio) live. */
+        const val GLOBAL_MEDIA_ID = "__player_global__"
     }
 }

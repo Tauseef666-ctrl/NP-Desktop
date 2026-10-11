@@ -92,4 +92,35 @@ class VideoSettingsStoreTest {
         assertEquals(0, normalize(VideoSettings(volumePercent = 0)).volumePercent)
         assertEquals(100, normalize(VideoSettings(volumePercent = 150)).volumePercent)
     }
+
+    @Test
+    fun newPreferencesDefaultToNeutral() {
+        val defaults = VideoSettings()
+        assertEquals(false, defaults.autoplayNextEnabled)
+        assertEquals(false, defaults.subtitlesEnabled)
+        assertEquals(AUDIO_TRACK_AUTO, defaults.audioTrack)
+    }
+
+    @Test
+    fun newPreferencesRoundTripThroughStore() {
+        val s = store()
+        val video = VideoSettings(
+            autoplayNextEnabled = true,
+            subtitlesEnabled = true,
+            audioTrack = "en"
+        )
+        s.save("m1", video)
+
+        val loaded = s.load("m1")
+        assertEquals(true, loaded?.autoplayNextEnabled)
+        assertEquals(true, loaded?.subtitlesEnabled)
+        assertEquals("en", loaded?.audioTrack)
+    }
+
+    @Test
+    fun normalizeFallsBackToAutoForBlankAudioTrack() {
+        assertEquals(AUDIO_TRACK_AUTO, normalize(VideoSettings(audioTrack = "")).audioTrack)
+        assertEquals(AUDIO_TRACK_AUTO, normalize(VideoSettings(audioTrack = "   ")).audioTrack)
+        assertEquals("en", normalize(VideoSettings(audioTrack = " en ")).audioTrack)
+    }
 }

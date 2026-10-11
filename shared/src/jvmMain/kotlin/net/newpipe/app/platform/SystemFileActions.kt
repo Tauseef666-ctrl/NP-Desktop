@@ -7,6 +7,7 @@ package net.newpipe.app.platform
 
 import java.awt.Desktop
 import java.io.File
+import javax.swing.JFileChooser
 
 /** Desktop bridge to the OS file browser; never throws, reports success through the return value. */
 object SystemFileActions {
@@ -40,8 +41,30 @@ object SystemFileActions {
             false
         }
     }
+
+    /**
+     * Opens a modal, directories-only [JFileChooser] and returns the selected absolute path, or null
+     * when the user cancels or the environment has no display (headless). Never throws.
+     */
+    fun chooseFolder(): String? {
+        return try {
+            val chooser = JFileChooser().apply {
+                fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+                isMultiSelectionEnabled = false
+            }
+            if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                chooser.selectedFile?.absolutePath
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
 }
 
 actual fun openDownloadedFile(path: String): Boolean = SystemFileActions.openFile(path)
 
 actual fun openDownloadedFileFolder(path: String): Boolean = SystemFileActions.openFolder(path)
+
+actual fun chooseDirectory(): String? = SystemFileActions.chooseFolder()

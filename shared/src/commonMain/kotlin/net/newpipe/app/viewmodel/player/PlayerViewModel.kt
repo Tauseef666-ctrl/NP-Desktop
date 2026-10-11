@@ -12,7 +12,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.newpipe.app.player.MediaItem
 import net.newpipe.app.player.PlaybackController
@@ -24,6 +26,9 @@ import net.newpipe.app.player.PlayerShortcuts
 import net.newpipe.app.player.Quality
 import net.newpipe.app.player.RecentlyPlayedStore
 import net.newpipe.app.player.RepeatMode
+import net.newpipe.app.player.VideoSettings
+import net.newpipe.app.player.VideoSettingsStore
+import net.newpipe.app.player.normalize
 import net.newpipe.app.preferences.VideoAudioPreferences
 import org.koin.core.annotation.KoinViewModel
 
@@ -38,14 +43,19 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class PlayerViewModel(
     private val playback: PlaybackController,
-    private val settings: Settings,
+    private val preferences: Settings,
     private val recentlyPlayed: RecentlyPlayedStore,
-    private val resumeStore: PlaybackResumeStore
+    private val resumeStore: PlaybackResumeStore,
+    private val videoSettingsStore: VideoSettingsStore
 ) : ViewModel() {
 
     val isEngineAvailable: Boolean = playback.isEngineAvailable
     val state: StateFlow<PlaybackState> = playback.state
     val queueState: StateFlow<PlayerQueueState> = playback.queueState
+
+    // Player-level preferences, seeded from the store and written back on every change.
+    private val _settings: MutableStateFlow<VideoSettings> = MutableStateFlow(loadGlobalSettings())
+    val settings: StateFlow<VideoSettings> = _settings.asStateFlow()
 
     private var lastRecordedId: String? = null
 
@@ -75,7 +85,7 @@ class PlayerViewModel(
 
     /** Milliseconds per seek (F2): the configured `seek_duration`, Shift = large skip. */
     fun seekStepMillis(isShiftPressed: Boolean): Long {
-        val configuredMs = settings.getString(
+        val configuredMs = preferences.getString(
             VideoAudioPreferences.KEY_SEEK_DURATION,
             VideoAudioPreferences.DEFAULT_SEEK_DURATION_MS
         ).toLongOrNull() ?: PlayerShortcuts.DEFAULT_SEEK_STEP_MS
@@ -112,4 +122,22 @@ class PlayerViewModel(
     fun toggleShuffle() = playback.toggleShuffle()
 
     fun setRepeatMode(mode: RepeatMode) = playback.setRepeatMode(mode)
+
+    /** Persisted toggle: continue with the next queued item when the current one ends. */
+    fun setAutoplayNext(enabled: Boolean) = updateGlobal { it.copy(autoplayNextEnabled = enabled) }
+
+    /** Persisted toggle: request subtitles from the engine. */
+    fun setSubtitles(enabled: Boolean) = updateGlobal { it.copy(subtitlesEnabled = enabled) }
+
+    /** Persisted audio-track selection (see `AUDIO_TRACK_AUTO` / `AUDIO_TRACK_NONE`). */
+    fun setAudioTrack(track: String) = updateGlobal { it.copy(audioTrack = track) }
+
+    private fun loadGlobalSettings(): VideoSettings =
+        normalize(videoSettingsStore.load(VideoSettingsStore.GLOBAL_MEDIA_ID) ?: VideoSettings())
+
+    private fun updateGlobal(transform: (VideoSettings) -> VideoSettings) {
+        val updated = normalize(transform(_settings.value))
+        videoSettingsStore.save(VideoSettingsStore.GLOBAL_MEDIA_ID, updated)
+        _settings.value = updated
+    }
 }

@@ -9,3 +9,6 @@ package net.newpipe.app.platform
 actual fun openDownloadedFile(path: String): Boolean = false
 
 actual fun openDownloadedFileFolder(path: String): Boolean = false
+
+/** iOS has no shared folder chooser yet. */
+actual fun chooseDirectory(): String? = null

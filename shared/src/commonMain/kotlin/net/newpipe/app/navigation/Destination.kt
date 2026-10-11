@@ -48,6 +48,9 @@ sealed interface Destination : NavKey {
     data object Settings : Destination
 
     @Serializable
+    data object BackupRestore : Destination
+
+    @Serializable
     data object About : Destination
 }
 

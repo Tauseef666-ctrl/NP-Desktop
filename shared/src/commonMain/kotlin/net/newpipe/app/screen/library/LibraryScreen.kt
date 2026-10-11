@@ -84,6 +84,21 @@ import newpipe.shared.generated.resources.library_view_list
 import newpipe.shared.generated.resources.library_view_recently_played
 import newpipe.shared.generated.resources.recently_played_empty_message
 import newpipe.shared.generated.resources.recently_played_empty_title
+import newpipe.shared.generated.resources.library_view_videos
+import newpipe.shared.generated.resources.library_view_audio
+import newpipe.shared.generated.resources.library_view_folders
+import newpipe.shared.generated.resources.library_view_playlists
+import newpipe.shared.generated.resources.library_folder_root
+import newpipe.shared.generated.resources.videos_empty_title
+import newpipe.shared.generated.resources.videos_empty_message
+import newpipe.shared.generated.resources.audio_empty_title
+import newpipe.shared.generated.resources.audio_empty_message
+import newpipe.shared.generated.resources.folders_empty_title
+import newpipe.shared.generated.resources.folders_empty_message
+import newpipe.shared.generated.resources.playlists_empty_title
+import newpipe.shared.generated.resources.playlists_empty_message
+import newpipe.shared.generated.resources.library_thumbnail_pending
+import newpipe.shared.generated.resources.library_missing_file
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -114,6 +129,10 @@ fun LibraryScreen(
         continueWatching(resumeEntries, System.currentTimeMillis())
     }
     val downloadedItems = remember(downloadTasks) { downloadedTasks(downloadTasks) }
+    val videoItems = remember(items) { videoTracks(items) }
+    val audioItems = remember(items) { audioTracks(items) }
+    val folderGroupsList = remember(items) { folderGroups(items) }
+    val playlistItems = remember(viewModel.savedPlaylists) { playlistTracks(viewModel.savedPlaylists) }
 
     LibraryScreenContent(
         folders = folders,
@@ -136,6 +155,10 @@ fun LibraryScreen(
         recentlyPlayedItems = recentItems,
         continueWatchingItems = continueItems,
         downloadedItems = downloadedItems,
+        videoItems = videoItems,
+        audioItems = audioItems,
+        folderGroupsList = folderGroupsList,
+        playlistItems = playlistItems,
         onPlayDerived = { item ->
             viewModel.playDerived(item)
             navigator.navigateTo(Destination.Player)
@@ -162,6 +185,10 @@ fun LibraryScreenContent(
     recentlyPlayedItems: List<DerivedViewItem> = emptyList(),
     continueWatchingItems: List<DerivedViewItem> = emptyList(),
     downloadedItems: List<DerivedViewItem> = emptyList(),
+    videoItems: List<DerivedViewItem> = emptyList(),
+    audioItems: List<DerivedViewItem> = emptyList(),
+    folderGroupsList: List<FolderGroup> = emptyList(),
+    playlistItems: List<DerivedViewItem> = emptyList(),
     onPlayDerived: (DerivedViewItem) -> Unit = {}
 ) {
     PlusScaffold(
@@ -256,6 +283,34 @@ fun LibraryScreenContent(
                     emptyMessage = stringResource(Res.string.downloaded_empty_message),
                     onPlay = onPlayDerived
                 )
+
+                LibraryViewTab.VIDEOS -> DerivedViewList(
+                    items = videoItems,
+                    emptyTitle = stringResource(Res.string.videos_empty_title),
+                    emptyMessage = stringResource(Res.string.videos_empty_message),
+                    onPlay = onPlayDerived
+                )
+
+                LibraryViewTab.AUDIO -> DerivedViewList(
+                    items = audioItems,
+                    emptyTitle = stringResource(Res.string.audio_empty_title),
+                    emptyMessage = stringResource(Res.string.audio_empty_message),
+                    onPlay = onPlayDerived
+                )
+
+                LibraryViewTab.FOLDERS -> FolderGroupList(
+                    groups = folderGroupsList,
+                    emptyTitle = stringResource(Res.string.folders_empty_title),
+                    emptyMessage = stringResource(Res.string.folders_empty_message),
+                    onPlay = onPlayDerived
+                )
+
+                LibraryViewTab.PLAYLISTS -> DerivedViewList(
+                    items = playlistItems,
+                    emptyTitle = stringResource(Res.string.playlists_empty_title),
+                    emptyMessage = stringResource(Res.string.playlists_empty_message),
+                    onPlay = onPlayDerived
+                )
             }
             Spacer(Modifier.height(spaceNormal))
         }
@@ -281,6 +336,10 @@ private fun libraryViewLabel(tab: LibraryViewTab): String = when (tab) {
     LibraryViewTab.RECENT -> stringResource(Res.string.library_view_recently_played)
     LibraryViewTab.CONTINUE -> stringResource(Res.string.library_view_continue_watching)
     LibraryViewTab.DOWNLOADED -> stringResource(Res.string.library_view_downloaded)
+    LibraryViewTab.VIDEOS -> stringResource(Res.string.library_view_videos)
+    LibraryViewTab.AUDIO -> stringResource(Res.string.library_view_audio)
+    LibraryViewTab.FOLDERS -> stringResource(Res.string.library_view_folders)
+    LibraryViewTab.PLAYLISTS -> stringResource(Res.string.library_view_playlists)
 }
 
 @Composable
@@ -307,8 +366,33 @@ private fun DerivedViewList(
             LocalMediaRow(
                 title = item.title,
                 subtitle = item.subtitle.takeIf { it.isNotBlank() },
+                showThumbnailPlaceholder = true,
                 onClick = { onPlay(item) }
             )
+        }
+    }
+}
+
+@Composable
+private fun FolderGroupList(
+    groups: List<FolderGroup>,
+    emptyTitle: String,
+    emptyMessage: String,
+    onPlay: (DerivedViewItem) -> Unit
+) {
+    if (groups.isEmpty()) {
+        EmptyState(title = emptyTitle, message = emptyMessage)
+    } else {
+        groups.forEach { group ->
+            SectionHeader(title = group.folderName.ifBlank { stringResource(Res.string.library_folder_root) })
+            group.items.forEach { item ->
+                LocalMediaRow(
+                    title = item.title,
+                    subtitle = item.subtitle.takeIf { it.isNotBlank() },
+                    showThumbnailPlaceholder = true,
+                    onClick = { onPlay(item) }
+                )
+            }
         }
     }
 }

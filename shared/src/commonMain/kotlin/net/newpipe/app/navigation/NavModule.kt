@@ -18,6 +18,7 @@ import net.newpipe.app.screen.settings.AppearanceSettingsScreen
 import net.newpipe.app.screen.settings.PlayerSettingsScreen
 import net.newpipe.app.screen.settings.SettingsHomeScreen
 import net.newpipe.app.screen.settings.VideoAudioSettingsScreen
+import net.newpipe.app.screen.settings.backup.BackupRestoreScreen
 import net.newpipe.app.screen.trending.TrendingScreen
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.annotation.Provided
@@ -69,6 +70,10 @@ fun navModule() = module {
 
     navigation<Destination.Settings> {
         SettingsHomeScreen()
+    }
+
+    navigation<Destination.BackupRestore> {
+        BackupRestoreScreen()
     }
 
     navigation<Destination.AppearanceSettings> {

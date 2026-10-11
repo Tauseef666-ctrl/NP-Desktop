@@ -13,7 +13,8 @@ import androidx.compose.ui.input.key.Key
 data class ShortcutRow(
     val keyLabel: String,
     val actionLabel: String,
-    val description: String
+    val description: String,
+    val isAppWide: Boolean = false
 )
 
 /**
@@ -53,6 +54,7 @@ object ShortcutReference {
 
     fun rows(query: String, shortcuts: List<Shortcut> = PlayerShortcuts.defaults): List<ShortcutRow> {
         val normalized = query.trim().lowercase()
+        val resolver = ShortcutResolver(shortcuts)
         return shortcuts
             .asSequence()
             .filter { normalized.isEmpty() || it.matchesQuery(normalized) }
@@ -60,7 +62,13 @@ object ShortcutReference {
                 ShortcutRow(
                     keyLabel = shortcut.keyLabel(),
                     actionLabel = shortcut.action.label,
-                    description = shortcut.action.description
+                    description = shortcut.action.description,
+                    isAppWide = AppShortcutScope.appActionFor(
+                        resolver = resolver,
+                        key = shortcut.key,
+                        isCtrlPressed = shortcut.withCtrl,
+                        isShiftPressed = false
+                    ) == shortcut.action
                 )
             }
             .toList()

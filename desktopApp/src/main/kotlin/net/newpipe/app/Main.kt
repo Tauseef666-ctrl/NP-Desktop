@@ -5,6 +5,9 @@
 
 package net.newpipe.app
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -13,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -36,6 +40,10 @@ import net.newpipe.app.platform.WindowBounds
 import net.newpipe.app.platform.WorkspaceMode
 import net.newpipe.app.platform.WorkspacePreferences
 import net.newpipe.app.player.PlaybackController
+import net.newpipe.app.player.PlayerAction
+import net.newpipe.app.player.PlayerShortcuts
+import net.newpipe.app.player.ShortcutResolver
+import net.newpipe.app.player.plusAppShortcuts
 import org.koin.compose.koinInject
 
 /**
@@ -68,6 +76,51 @@ private val AppIcon: ImageVector = ImageVector.Builder(
         close()
     }
 }.build()
+
+/**
+ * Installs the app-wide keyboard-shortcut scope (F7) around the whole window content and routes
+ * the claimed transport actions to the shared [PlaybackController].
+ *
+ * Consumption order: [plusAppShortcuts] uses `onKeyEvent` (bubble phase) while the player screen
+ * consumes its keys with `onPreviewKeyEvent` (preview phase). On the player screen the focused
+ * descendant handles the key first and consumes it before bubbling reaches this ancestor, so the
+ * player and app scopes never double-fire. Inside a focused text field the field consumes Space and
+ * typing first, which is the intended honest guard.
+ *
+ * Only acts while something is queued (`queueState.current != null`). Seeks use the default step:
+ * the app-wide callback carries no modifier state, so Shift's large-step remains player-screen only.
+ */
+@Composable
+private fun AppShortcutHost(content: @Composable () -> Unit) {
+    val resolver = remember { ShortcutResolver() }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .plusAppShortcuts(resolver) { action ->
+                val controller = DesktopMiniPlayerBridge.controller.value
+                    ?: return@plusAppShortcuts
+                if (controller.queueState.value.current == null) return@plusAppShortcuts
+                when (action) {
+                    PlayerAction.PLAY_PAUSE -> controller.togglePlayPause()
+                    PlayerAction.STOP -> controller.stop()
+                    PlayerAction.NEXT -> controller.skipToNext()
+                    PlayerAction.PREVIOUS -> controller.skipToPrevious()
+                    PlayerAction.SEEK_FORWARD -> controller.seekTo(
+                        controller.state.value.positionMs +
+                            PlayerShortcuts.seekStepMillis(isShiftPressed = false)
+                    )
+                    PlayerAction.SEEK_BACKWARD -> controller.seekTo(
+                        (controller.state.value.positionMs -
+                            PlayerShortcuts.seekStepMillis(isShiftPressed = false))
+                            .coerceAtLeast(0L)
+                    )
+                    else -> Unit
+                }
+            }
+    ) {
+        content()
+    }
+}
 
 /**
  * Entry point for compose-related UI components on Desktop
@@ -119,15 +172,17 @@ fun main() = application {
                 workspace?.setMode(changed)
             }
         ) {
-            App(
-                startDestination = Destination.Home,
-                onCloseRequest = ::exitApplication,
-                withKoin = {
-                    // Share the same singleton controller with the floating mini-player window.
-                    val playback: PlaybackController = koinInject()
-                    LaunchedEffect(playback) { DesktopMiniPlayerBridge.controller.value = playback }
-                }
-            )
+            AppShortcutHost {
+                App(
+                    startDestination = Destination.Home,
+                    onCloseRequest = ::exitApplication,
+                    withKoin = {
+                        // Share the same singleton controller with the floating mini-player window.
+                        val playback: PlaybackController = koinInject()
+                        LaunchedEffect(playback) { DesktopMiniPlayerBridge.controller.value = playback }
+                    }
+                )
+            }
         }
     }
 

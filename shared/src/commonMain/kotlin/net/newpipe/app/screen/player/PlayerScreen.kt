@@ -59,6 +59,7 @@ import net.newpipe.app.player.PlayerVideoSurface
 import net.newpipe.app.player.Quality
 import net.newpipe.app.player.RepeatMode
 import net.newpipe.app.player.ShortcutResolver
+import net.newpipe.app.player.VideoSettings
 import net.newpipe.app.player.onPlayerKeyEvent
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.theme.plusColors
@@ -82,10 +83,12 @@ fun PlayerScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val queue by viewModel.queueState.collectAsStateWithLifecycle()
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
     val savedPlaylists by controller.savedPlaylists.collectAsStateWithLifecycle()
     PlayerScreenContent(
         state = state,
         queue = queue,
+        settings = settings,
         engine = engine,
         isEngineAvailable = viewModel.isEngineAvailable,
         popOut = popOut,
@@ -100,6 +103,9 @@ fun PlayerScreen(
         onQuality = viewModel::setQuality,
         onToggleShuffle = viewModel::toggleShuffle,
         onRepeatMode = viewModel::setRepeatMode,
+        onAutoplayNext = viewModel::setAutoplayNext,
+        onSubtitles = viewModel::setSubtitles,
+        onAudioTrack = viewModel::setAudioTrack,
         onSeekStepMillis = viewModel::seekStepMillis,
         onNavigateUp = { navigator.navigateUp() },
         queueCanRestore = savedPlaylists.isNotEmpty(),
@@ -126,6 +132,7 @@ fun PlayerScreen(
 fun PlayerScreenContent(
     state: PlaybackState = PlaybackState(),
     queue: PlayerQueueState = PlayerQueueState(),
+    settings: VideoSettings = VideoSettings(),
     engine: PlayerEngine? = null,
     isEngineAvailable: Boolean = true,
     popOut: PopOutCoordinator? = null,
@@ -141,6 +148,9 @@ fun PlayerScreenContent(
     onQuality: (Quality) -> Unit = {},
     onToggleShuffle: () -> Unit = {},
     onRepeatMode: (RepeatMode) -> Unit = {},
+    onAutoplayNext: (Boolean) -> Unit = {},
+    onSubtitles: (Boolean) -> Unit = {},
+    onAudioTrack: (String) -> Unit = {},
     onSeekStepMillis: (Boolean) -> Long = { PlayerShortcuts.seekStepMillis(it) },
     onNavigateUp: () -> Unit = {},
     queueCanRestore: Boolean = false,
@@ -152,6 +162,7 @@ fun PlayerScreenContent(
     onQueueRestorePlaylist: suspend () -> Boolean = { false },
     onQueueSkipUnavailable: suspend () -> Boolean = { false }
 ) {
+    var settingsExpanded by remember { mutableStateOf(false) }
     PlusScaffold(
         toolbar = {
             val miniPlayerOpen = popOut?.isOpen?.collectAsStateWithLifecycle()?.value ?: false
@@ -223,6 +234,21 @@ fun PlayerScreenContent(
                 }
             )
 
+            if (!queue.isEmpty) {
+                PlayerQuickSettings(
+                    state = state,
+                    repeatMode = queue.repeatMode,
+                    settings = settings,
+                    isEngineAvailable = isEngineAvailable,
+                    expanded = settingsExpanded,
+                    onToggleExpanded = { settingsExpanded = !settingsExpanded },
+                    onRepeatMode = onRepeatMode,
+                    onAutoplayNext = onAutoplayNext,
+                    onSubtitles = onSubtitles,
+                    onAudioTrack = onAudioTrack
+                )
+            }
+
             when {
                 !isEngineAvailable -> ErrorState(
                     message = state.error?.message
@@ -267,9 +293,6 @@ fun PlayerScreenContent(
                     ) {
                         TextButton(onClick = onToggleShuffle) {
                             Text(if (queue.isShuffled) "Shuffle: on" else "Shuffle: off")
-                        }
-                        TextButton(onClick = { onRepeatMode(queue.repeatMode.next()) }) {
-                            Text("Repeat: ${queue.repeatMode.name.lowercase()}")
                         }
                     }
                 }
@@ -449,12 +472,6 @@ private fun statusKind(status: PlaybackStatus): StatusKind = when (status) {
     PlaybackStatus.PAUSED, PlaybackStatus.READY -> StatusKind.INFO
     PlaybackStatus.ENDED -> StatusKind.SUCCESS
     PlaybackStatus.IDLE -> StatusKind.INFO
-}
-
-private fun RepeatMode.next(): RepeatMode = when (this) {
-    RepeatMode.OFF -> RepeatMode.ALL
-    RepeatMode.ALL -> RepeatMode.ONE
-    RepeatMode.ONE -> RepeatMode.OFF
 }
 
 @PreviewWrapper(ThemePreviewProvider::class)

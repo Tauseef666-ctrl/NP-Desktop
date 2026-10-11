@@ -272,4 +272,62 @@
     <string name="downloaded_empty_message">Completed downloads appear here.</string>
     <string name="library_recently_played_cap">Keeping the most recent 50 items.</string>
 
+    <!-- Backup & Restore center (workstream A) -->
+    <string name="backup_center_title">Backup &amp; Restore</string>
+    <string name="backup_create_label">Create backup</string>
+    <string name="backup_choose_location">Choose folder...</string>
+    <string name="backup_no_location">No folder chosen</string>
+    <string name="backup_created_status">Backup created: %1$s</string>
+    <string name="backup_create_failed">Backup failed</string>
+    <string name="backup_last_created">Last backup: %1$s</string>
+    <string name="backup_no_backups">No backups created yet</string>
+    <string name="backup_view_contents">View contents</string>
+    <string name="backup_contents_file_count">%1$d file(s)</string>
+    <string name="backup_restore_label">Restore from backup...</string>
+    <string name="backup_restore_confirm_title">Restore this backup?</string>
+    <string name="backup_restore_confirm_message">Current local data will be replaced. Existing data is not lost if the restore fails.</string>
+    <string name="backup_restore_complete">Restore complete</string>
+    <string name="backup_restore_failed">Restore failed</string>
+    <string name="backup_invalid_title">Invalid backup</string>
+    <string name="backup_invalid_message">This is not a NewPipe+ backup file.</string>
+    <string name="backup_contains_label">Contains</string>
+
+    <!-- Player quick settings & advanced panel (workstream B) -->
+    <string name="player_quick_settings">Quick settings</string>
+    <string name="player_expand_settings">More settings</string>
+    <string name="player_collapse_settings">Less settings</string>
+    <string name="player_loop">Loop</string>
+    <string name="player_autoplay_next">Autoplay next</string>
+    <string name="player_subtitles">Subtitles</string>
+    <string name="player_audio_track">Audio track</string>
+    <string name="player_picture_in_picture">Picture-in-picture</string>
+    <string name="player_background_playback">Background playback</string>
+    <string name="player_active_settings">Active</string>
+    <string name="player_track_auto">Auto</string>
+    <string name="player_none_option">None</string>
+    <string name="player_unavailable">Unavailable</string>
+
+    <!-- App-wide keyboard shortcuts (workstream C) -->
+    <string name="shortcuts_scope_app">App-wide</string>
+    <string name="shortcuts_scope_player">Player only</string>
+    <string name="shortcuts_global_hint">Playback shortcuts work across the whole app except inside text fields.</string>
+    <string name="shortcuts_media_keys_hint">Reserved media keys are conflict-checked.</string>
+
+    <!-- Library media views (workstream D) -->
+    <string name="library_view_audio">Audio</string>
+    <string name="library_view_videos">Videos</string>
+    <string name="library_view_folders">Folders</string>
+    <string name="library_view_playlists">Playlists</string>
+    <string name="library_folder_root">Root</string>
+    <string name="audio_empty_title">No audio files</string>
+    <string name="audio_empty_message">Indexed audio files will appear here.</string>
+    <string name="videos_empty_title">No video files</string>
+    <string name="videos_empty_message">Indexed video files will appear here.</string>
+    <string name="folders_empty_title">No folders indexed</string>
+    <string name="folders_empty_message">Add folders in Settings &gt; Local Media to index files.</string>
+    <string name="playlists_empty_title">No playlists</string>
+    <string name="playlists_empty_message">Playlists saved from the queue will appear here.</string>
+    <string name="library_missing_file">Missing file</string>
+    <string name="library_thumbnail_pending">Preview</string>
+
 </resources>

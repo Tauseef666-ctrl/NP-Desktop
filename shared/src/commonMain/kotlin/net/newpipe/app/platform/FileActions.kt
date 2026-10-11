@@ -16,3 +16,9 @@ expect fun openDownloadedFile(path: String): Boolean
  * Returns false when the path is unusable, missing or the platform cannot open folders.
  */
 expect fun openDownloadedFileFolder(path: String): Boolean
+
+/**
+ * Lets the user pick a folder (directories only). Returns the chosen absolute path, or null when the
+ * platform has no folder chooser or the user cancels. Never throws.
+ */
+expect fun chooseDirectory(): String?

@@ -27,6 +27,10 @@ import newpipe.shared.generated.resources.settings_category_shortcuts_title
 import newpipe.shared.generated.resources.settings_shortcuts_none_found
 import newpipe.shared.generated.resources.settings_shortcuts_reserved_note
 import newpipe.shared.generated.resources.settings_shortcuts_search_placeholder
+import newpipe.shared.generated.resources.shortcuts_global_hint
+import newpipe.shared.generated.resources.shortcuts_media_keys_hint
+import newpipe.shared.generated.resources.shortcuts_scope_app
+import newpipe.shared.generated.resources.shortcuts_scope_player
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -65,12 +69,14 @@ fun ShortcutReferenceSectionContent(
             rows.forEach { row ->
                 PreferenceRow(
                     title = "${row.keyLabel} — ${row.actionLabel}",
-                    summary = row.description,
+                    summary = "${stringResource(if (row.isAppWide) Res.string.shortcuts_scope_app else Res.string.shortcuts_scope_player)} · ${row.description}",
                     onClick = {}
                 )
             }
         }
         Spacer(Modifier.height(8.dp))
+        SectionHeader(stringResource(Res.string.shortcuts_global_hint), modifier = Modifier.padding(horizontal = 4.dp))
+        SectionHeader(stringResource(Res.string.shortcuts_media_keys_hint), modifier = Modifier.padding(horizontal = 4.dp))
         SectionHeader(stringResource(Res.string.settings_shortcuts_reserved_note), modifier = Modifier.padding(horizontal = 4.dp))
     }
 }

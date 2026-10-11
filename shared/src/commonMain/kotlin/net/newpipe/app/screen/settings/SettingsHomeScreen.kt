@@ -60,6 +60,10 @@ fun SettingsHomeScreen(
                             Destination.VideoAudioSettings
                         )
 
+                        SettingsCategoryType.BACKUP_RESTORE -> navigator.navigateTo(
+                            Destination.BackupRestore
+                        )
+
                         // TODO: wire remaining sub-screens as they are migrated
                         else -> Unit
                     }

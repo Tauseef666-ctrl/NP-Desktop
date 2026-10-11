@@ -102,7 +102,7 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 - [~] Timeline scrub, time, volume/mute, next/prev, queue (wired to engine + `PlayQueue`).
 - [ ] State preserved on panel open/close; settings change **real** playback.
 - [~] Buffering / loading / error states (`PlaybackStatus` chip + `ErrorState` for unavailable/errors).
-- [~] Keyboard shortcuts + accessibility: default bindings + conflict detection + reserved media keys (`player/PlayerShortcuts.kt`, 13 tests), wired into `PlayerScreen` via platform-normalized key interceptor (`player/KeyInput.kt` + jvm/android/ios actuals); **searchable reference UI in settings done** (`ShortcutReference` + `ShortcutReferenceSection`, wired into the JVM player-settings section; 9 pure + 3 UI tests); focus rings + tooltips on controls. App-wide scope, focus-search & mini-player keys pending.
+- [~] Keyboard shortcuts + accessibility: default bindings + conflict detection + reserved media keys (`player/PlayerShortcuts.kt`, 13 tests), wired into `PlayerScreen` via platform-normalized key interceptor (`player/KeyInput.kt` + jvm/android/ios actuals); **searchable reference UI in settings done** (`ShortcutReference` + `ShortcutReferenceSection`, wired into the JVM player-settings section; 9 pure + 3 UI tests); **app-wide scope done** (`player/AppShortcutScope.kt` — `isMediaKey`/`appActionFor`, `Modifier.plusAppShortcuts` bubble-phase `onKeyEvent`, wired into desktopApp `Main.kt` via `AppShortcutHost`, 7 tests; scope tags + hints in ShortcutsReference section). Focus-search & mini-player keys pending.
 - [~] Verify no control is a no-op (or mark unavailable) — controls disabled when engine unavailable; video surface explicitly honest.
 
 ---
@@ -121,7 +121,7 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 ## 7. Phase 7 — Local media library
 
 - [~] Indexed folders (user-selected, persisted via `LibraryPreferences.KEY_INDEXED_FOLDERS`), recursive scan, **never mutates files** (`player/LocalMedia.kt` + `platform/JVMLocalMediaScanner.kt`, 11 tests); incremental scan done (`ScanDiff` + pure `diffByPath` + `JVMLocalMediaScanner.incrementalScan(dir, previous)`, reports added/removed/changed/unchanged); Android/iOS scanners pending.
-- [~] Views: single list + **derived views done** (`screen/library/LibraryViews.kt` — `KIND`/`LibraryViewTab` RECENT/CONTINUE/DOWNLOADED, `DerivedViewItem`, pure `continueWatching`/`recentlyPlayed`/`downloadedTasks`, honest empty titles/messages, 10 tests): Videos/Audio/Playlists/Folders/Recently played/Continue watching/Downloaded; Recently-played history persists (`player/RecentlyPlayedStore.kt`, key `npp_recently_played`, cap 50, 13 tests); **Continue watching reuses the resume store** (`PlaybackResumeStore` now records title/url/updatedAt and exposes `entries()`, keeps near-end drop rule).
+- [~] Views: single list + **derived views done** (`screen/library/LibraryViews.kt` — `KIND`/`LibraryViewTab` RECENT/CONTINUE/DOWNLOADED, `DerivedViewItem`, pure `continueWatching`/`recentlyPlayed`/`downloadedTasks`, honest empty titles/messages, 10 tests): **Videos / Audio / Folders / Playlists views done** (`LibraryViews.kt` — `audioTracks`/`videoTracks`/`FolderGroup`+`folderGroups` w/ Root fallback /`playlistTracks`, tabs + empty states + thumbnail-pending + missing-file markers on `LocalMediaRow`, saved-playlist queue wiring; 15 tests); Recently-played history persists (`player/RecentlyPlayedStore.kt`, key `npp_recently_played`, cap 50, 13 tests); **Continue watching reuses the resume store** (`PlaybackResumeStore` now records title/url/updatedAt and exposes `entries()`, keeps near-end drop rule).
 - [~] Metadata: extension, MIME, **real** size (`formatBytes`), playable `file://` URL; duration intentionally null until learned at playback (never guessed). Resolution/artist/album/location pending.
 - [~] Search/filter/sort + list/grid done (`screen/library/LibraryFilter.kt` — pure `applyFilters`, query/path match, Videos/Audio/All, Name/Size/Date, stable order; 12 pure tests + 2 UI tests); thumbnail cache + missing-file detection pending (file removed mid-session surfaces via rescan error).
 - [~] Play via shared player: library hands the scanned list to the shared `PlaybackController` and navigates to the player; distinct from online content; unreadable folders reported (not swallowed).
@@ -133,8 +133,8 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 - [ ] Preserve **all** existing settings (Android 234 keys) and add desktop equivalents with the same semantics.
 - [ ] Settings categories: General, Player, Downloads/Storage, Local Media, Subs/Playlists, Search/Services, Privacy, Appearance, Notifications, Network, Advanced/Debug, Backup & Restore, About.
 - [ ] Every setting: accurate value, correct control, persists, affects real behaviour.
-- [ ] Backup: create, choose location, status, dated files (no overwrite), list contents.
-- [ ] Restore: validate + inspect + confirm + non-destructive-on-failure.
+- [x] Backup: create, choose location, status, dated files (no overwrite), list contents — common `backup/` package (`BackupManifest` @Serializable, pure `BackupOps`, `BackupRepository` seam) + JVM `JVMBackupRepository` (real java.util.zip archive, manifest first, never throws; 12 ops + 5 content + 8 JVM repo round-trip tests) + honest unavailable Android no-op; `BackupRestoreScreen` + VM + `Destination.BackupRestore` registered + Settings entry; `chooseDirectory()` expect/actual (JVM `JFileChooser`, android/iOS no-ops).
+- [x] Restore: validate + inspect + confirm + non-destructive-on-failure — archive inspection dialog (`backup_contents_file_count`), validation before apply, honest failure states; wiring into the store/restore pipeline + encrypted backups pending.
 - [ ] Preserve existing ZIP format (`newpipe.db` + prefs) where feasible; document contents.
 - [ ] Optional encrypted backup (authenticated encryption, KDF; no custom crypto).
 
@@ -152,8 +152,8 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 
 ### F2 — Advanced integrated player control center
 - [x] Android: full player UI (quality, speed, captions, repeat, popup) — keep.
-- [~] Desktop: control center screen (`screen/player/PlayerScreen.kt`) with transport, seek, volume/mute, speed, quality, queue; native video embedding + expandable panel pending.
-- [~] Add: **configurable skip intervals wired** (keyboard seek uses the `seek_duration` pref, Shift = large step; `PlayerShortcuts.seekStepMillis(isShift, configuredMs)` + `PlayerViewModel.seekStepMillis`, 2 VM tests + 2 shortcut tests). **Per-video prefs store done** (`player/VideoSettingsStore.kt` — `@Serializable VideoSettings`/map snapshot + pure `normalize()` clamp, key `npp_video_settings`, 7 tests); searchable advanced panel, quick menu, active-state indicators, UI wiring pending.
+- [~] Desktop: control center screen (`screen/player/PlayerScreen.kt`) with transport, seek, volume/mute, speed, quality, queue; native video embedding pending.
+- [~] Add: **configurable skip intervals wired** (keyboard seek uses the `seek_duration` pref, Shift = large step; `PlayerShortcuts.seekStepMillis(isShift, configuredMs)` + `PlayerViewModel.seekStepMillis`, 2 VM tests + 2 shortcut tests). **Per-video prefs store done** (`player/VideoSettingsStore.kt` — `@Serializable VideoSettings`/map snapshot + pure `normalize()` clamp, key `npp_video_settings`, 7 tests); **quick settings + expandable advanced panel done** (`screen/player/PlayerSettingsPanel.kt` — active-state `StatusChip` indicators for speed/quality/loop/autoplay/subtitles/audio-track, real loop/autoplay wires, engine-unavailable gating with honest WARNING chips, `autoplayNextEnabled`/`subtitlesEnabled`/`audioTrack` persisted via VideoSettingsStore, 2 UI tests). Picture-in-picture/background playback pending.
 
 ### F3 — Advanced download manager
 - [x] Android: giga engine + `MissionsFragment` — keep.
@@ -161,7 +161,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 
 ### F4 — Complete Backup & Restore center
 - [x] Android: `ImportExportManager` ZIP export/import — keep + preserve format.
-- [ ] Desktop: Backup & Restore UI + implementation (§8).
+- [x] Desktop: Backup & Restore UI + implementation (§8) — create/inspect/restore flow + JVM zip repository, Desktop-only (desktop milestone-4 workstream A).
 - [ ] Optional AES-GCM + PBKDF2/Argon2 encrypted backups.
 
 ### F5 — Unified local media library
@@ -175,7 +175,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 
 ### F7 — Custom keyboard shortcuts
 - [x] Android: hardware-media-button pref (`ignore_hardware_media_buttons_key`).
-- [~] Desktop: defaults (Space / media keys, ←→ seek 10s/60s, ↑↓ + media volume, M, S) via `PlayerShortcuts`; conflict detection + reserved media keys; **focus-aware** (`onPlayerKeyEvent` inside the player screen, consumes events). searchable reference UI done (ShortcutReference + ShortcutReferenceSection + JVM settings wiring, tests); app-wide scope pending.
+- [x] Desktop: defaults (Space / media keys, ←→ seek 10s/60s, ↑↓ + media volume, M, S) via `PlayerShortcuts`; conflict detection + reserved media keys; **focus-aware** (`onPlayerKeyEvent` inside the player screen, consumes events). searchable reference UI done (ShortcutReference + ShortcutReferenceSection + JVM settings wiring, tests); **app-wide scope done** (`AppShortcutScope` `plusAppShortcuts` bubble-phase host in desktopApp `Main.kt` + scope tags/hints in reference UI, 7 tests). Focus-search & mini-player keys pending.
 
 ### F8 — Adaptive desktop workspace
 - [~] **Window-size/bounds persistence done** (`platform/WorkspacePreferences.kt` — `WorkspaceMode` Compact/Balanced/Expanded setters, `WindowBounds` snapshot, key `npp_workspace`, corrupt/blank → defaults; desktopApp `Main.kt` restores window state + saves on close via `PreferencesSettings`; 8 tests). **Collapsible sidebar + grid density done** (`platform/AdaptiveLayout.kt` — `LocalWorkspaceMode`/`LocalWorkspaceModeChange` composition locals wired in desktopApp `Main.kt`, `isCompactSidebar` drives icon-only NavRail + collapse/expand toggle using `sidebar_collapse`/`sidebar_expand`, `homeColumns`/`gridDensity` snapshot flow qualifies dynamically, `MinHomeColumns=2`/`MaxHomeColumns=6`; 7 tests). Dense nav-rail hover behavior pending.
@@ -204,7 +204,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 
 - [ ] Run lint/checkstyle/ktlint/dependency-order.
 - [ ] Android unit + (emulator) instrumented tests green.
-- [ ] `:shared:jvmTest` green; add tests for new components/VMs. → currently **254 tests, 0 failures** (PlayQueue 12, PlaybackController 25, PlayerShortcuts 13, PlayQueueStore 7, PlaylistStore 9, PlaylistOps 8, VideoSettingsStore 7, DownloadStore 6, downloads engine 7, DownloadOps 18, scanner 11, resume store 10, RecentlyPlayedStore 13, AdaptiveLayout 7, PlayQueueMove 5, LibraryViews 10, Format 8, DownloadCategory 7, WorkspacePreferences 8, LibraryFilter 12, scaffold screens 5 (Search 3/Trending 1/History 1), + UI/settings suites incl. DownloadsTabs 3/LibrarySearch 2/ShortcutReferenceSection 3).
+- [ ] `:shared:jvmTest` green; add tests for new components/VMs. → currently **300 tests, 0 failures** (PlayQueue 12, PlaybackController 25, PlayerShortcuts 13, PlayQueueStore 7, PlaylistStore 9, PlaylistOps 8, VideoSettingsStore 10, DownloadStore 6, downloads engine 7, DownloadOps 18, scanner 11, resume store 10, RecentlyPlayedStore 13, AdaptiveLayout 7, PlayQueueMove 5, LibraryViews 15, Format 8, DownloadCategory 7, WorkspacePreferences 8, LibraryFilter 12, BackupOps 12, BackupContent 5, JVMBackupRepository 8, AppShortcutScope 7, scaffold screens 5 (Search 3/Trending 1/History 1), + UI/settings suites incl. DownloadsTabs 3/LibrarySearch 2/PlayerSettingsPanel 2/ShortcutReferenceSection 3).
 - [ ] Playback/download tests (desktop engine on a real machine).
 - [ ] Backup: create → inspect → restore → verify data; invalid/corrupt/incompatible backups.
 - [ ] Data-integrity: no silent loss; backward-compatible migrations; old data still reads.

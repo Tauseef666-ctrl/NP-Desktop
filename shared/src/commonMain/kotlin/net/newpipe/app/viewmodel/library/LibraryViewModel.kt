@@ -21,6 +21,7 @@ import net.newpipe.app.player.PlaybackResumeStore
 import net.newpipe.app.player.RecentlyPlayedEntry
 import net.newpipe.app.player.RecentlyPlayedStore
 import net.newpipe.app.player.ResumeEntry
+import net.newpipe.app.player.SavedPlaylist
 import net.newpipe.app.preferences.LibraryPreferences
 import net.newpipe.app.screen.library.DerivedViewItem
 import org.koin.core.annotation.KoinViewModel
@@ -53,6 +54,10 @@ class LibraryViewModel(
 
     /** Live download missions; the Downloaded view filters these to completed ones. */
     val downloadTasks: StateFlow<List<DownloadTask>> = downloadEngine.tasks
+
+    /** Saved playlists from playback controller (read-only). */
+    val savedPlaylists: List<SavedPlaylist>
+        get() = playback.savedPlaylists.value
 
     /** Re-read the (non-observable) resume store, e.g. when the library screen is shown. */
     fun refreshResumeEntries() {
@@ -137,14 +142,16 @@ class LibraryViewModel(
      */
     fun playDerived(item: DerivedViewItem) {
         viewModelScope.launch {
-            playback.playItem(
-                MediaItem(
-                    id = item.id,
-                    title = item.title,
-                    url = item.url,
-                    resumePositionMs = item.playablePositionMs
+            if (item.url.isNotBlank()) {
+                playback.playItem(
+                    MediaItem(
+                        id = item.id,
+                        title = item.title,
+                        url = item.url,
+                        resumePositionMs = item.playablePositionMs
+                    )
                 )
-            )
+            }
         }
     }
 }
