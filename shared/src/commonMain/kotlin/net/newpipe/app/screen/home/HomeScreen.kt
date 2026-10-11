@@ -7,54 +7,61 @@ package net.newpipe.app.screen.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import net.newpipe.app.component.EmptyState
 import net.newpipe.app.component.NavEntry
 import net.newpipe.app.component.NavRail
 import net.newpipe.app.component.PlusScaffold
-import net.newpipe.app.component.SectionHeader
 import net.newpipe.app.component.TopToolbar
+import net.newpipe.app.component.VideoCard
+import net.newpipe.app.component.VideoRail
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.platform.LocalWorkspaceMode
 import net.newpipe.app.platform.LocalWorkspaceModeChange
 import net.newpipe.app.platform.WorkspaceMode
-import net.newpipe.app.platform.gridDensity
-import net.newpipe.app.platform.homeColumns
 import net.newpipe.app.platform.isCompactSidebar
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.theme.spaceSmall
+import net.newpipe.app.viewmodel.home.HomeViewModel
 import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.home_continue_watching_title
+import newpipe.shared.generated.resources.home_downloads_title
+import newpipe.shared.generated.resources.home_empty_message
+import newpipe.shared.generated.resources.home_empty_title
+import newpipe.shared.generated.resources.home_playlists_title
+import newpipe.shared.generated.resources.home_recently_played_title
 import newpipe.shared.generated.resources.ic_cloud_download
 import newpipe.shared.generated.resources.ic_file_download
 import newpipe.shared.generated.resources.ic_foreground
 import newpipe.shared.generated.resources.ic_headset
+import newpipe.shared.generated.resources.ic_notifications
 import newpipe.shared.generated.resources.ic_palette
 import newpipe.shared.generated.resources.layout_balanced
 import newpipe.shared.generated.resources.layout_compact
@@ -63,17 +70,31 @@ import newpipe.shared.generated.resources.nav_history
 import newpipe.shared.generated.resources.nav_search
 import newpipe.shared.generated.resources.nav_trending
 import newpipe.shared.generated.resources.playlists_screen_title
+import newpipe.shared.generated.resources.subscriptions_screen_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Desktop home shell: navigation rail + toolbar + content. Only real destinations are wired;
- * unimplemented sections are intentionally absent rather than shown as dead controls.
+ * Desktop home shell: navigation rail + toolbar + real content rails fed by the persisted stores.
+ * Only real data is shown; when every store is empty an honest empty state is displayed instead.
  */
 @Composable
-fun HomeScreen(navigator: Navigator = koinInject()) {
+fun HomeScreen(
+    navigator: Navigator = koinInject(),
+    viewModel: HomeViewModel = koinViewModel()
+) {
+    val sections by viewModel.sections.collectAsStateWithLifecycle()
+    val isEmpty by viewModel.isEmpty.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { viewModel.refresh() }
     HomeScreenContent(
+        sections = sections,
+        isEmpty = isEmpty,
+        onPlayItem = { item ->
+            viewModel.play(item)
+            if (item.url.isNotBlank()) navigator.navigateTo(Destination.Player)
+        },
         onNavigate = { destination ->
             if (destination != Destination.Home) navigator.navigateTo(destination)
         }
@@ -83,7 +104,10 @@ fun HomeScreen(navigator: Navigator = koinInject()) {
 @Composable
 fun HomeScreenContent(
     selectedDestination: Destination = Destination.Home,
-    onNavigate: (Destination) -> Unit = {}
+    onNavigate: (Destination) -> Unit = {},
+    sections: List<HomeSection> = emptyList(),
+    isEmpty: Boolean = true,
+    onPlayItem: (HomeRailItem) -> Unit = {}
 ) {
     val workspaceMode = LocalWorkspaceMode.current
     val onWorkspaceModeChange = LocalWorkspaceModeChange.current
@@ -128,6 +152,12 @@ fun HomeScreenContent(
             icon = painterResource(Res.drawable.ic_headset)
         ),
         NavEntry(
+            label = stringResource(Res.string.subscriptions_screen_title),
+            selected = selectedDestination == Destination.Subscriptions,
+            onClick = { onNavigate(Destination.Subscriptions) },
+            icon = painterResource(Res.drawable.ic_notifications)
+        ),
+        NavEntry(
             label = "Downloads",
             selected = selectedDestination == Destination.Downloads,
             onClick = { onNavigate(Destination.Downloads) },
@@ -166,86 +196,55 @@ fun HomeScreenContent(
         toolbar = { TopToolbar(title = "Home") }
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val availableWidthDp = maxWidth.value.roundToInt()
-            val columns = workspaceMode.homeColumns(availableWidthDp)
-            val density = workspaceMode.gridDensity()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
                 WelcomeHero()
-                HomeGridSection(
-                    title = "Continue watching",
-                    columns = columns,
-                    density = density,
-                    items = listOf("Saved for later", "Subscription uploads")
-                )
-                HomeGridSection(
-                    title = "Trending",
-                    columns = columns,
-                    density = density,
-                    items = listOf("Music", "Gaming", "News", "Live", "Podcasts", "Sports")
-                )
+                if (isEmpty) {
+                    EmptyState(
+                        title = stringResource(Res.string.home_empty_title),
+                        message = stringResource(Res.string.home_empty_message)
+                    )
+                } else {
+                    sections.forEach { section ->
+                        HomeRail(
+                            title = homeRailTitle(section.type),
+                            items = section.items,
+                            onPlayItem = onPlayItem
+                        )
+                    }
+                }
                 Spacer(Modifier.height(spaceLarge))
             }
         }
     }
 }
 
-/**
- * A responsive home rail: [items] are laid out in rows of [columns] tiles. The column count comes
- * from the active [WorkspaceMode], so widening the window or switching modes reflows the grid
- * immediately; [density] scales the vertical rhythm between rows.
- */
 @Composable
-private fun HomeGridSection(
-    title: String,
-    columns: Int,
-    density: Float,
-    items: List<String>
-) {
-    SectionHeader(title = title)
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spaceLarge),
-        verticalArrangement = Arrangement.spacedBy(spaceNormal * density)
-    ) {
-        items.chunked(columns.coerceAtLeast(1)).forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(spaceNormal)
-            ) {
-                rowItems.forEach { label ->
-                    HomePlaceholderCard(label = label, modifier = Modifier.weight(1f))
-                }
-                repeat(columns - rowItems.size) {
-                    Spacer(Modifier.weight(1f))
-                }
-            }
-        }
-    }
+private fun homeRailTitle(type: HomeRailType): String = when (type) {
+    HomeRailType.CONTINUE_WATCHING -> stringResource(Res.string.home_continue_watching_title)
+    HomeRailType.RECENTLY_PLAYED -> stringResource(Res.string.home_recently_played_title)
+    HomeRailType.DOWNLOADS -> stringResource(Res.string.home_downloads_title)
+    HomeRailType.PLAYLISTS -> stringResource(Res.string.home_playlists_title)
 }
 
+/** One titled horizontal rail of [VideoCard]s rendered from a real [HomeSection]. */
 @Composable
-private fun HomePlaceholderCard(label: String, modifier: Modifier = Modifier) {
-    val colors = plusColors()
-    Box(
-        modifier = modifier
-            .aspectRatio(16f / 9f)
-            .clip(RoundedCornerShape(12.dp))
-            .background(colors.surfaceElevated)
-            .border(1.dp, colors.border, RoundedCornerShape(12.dp)),
-        contentAlignment = Alignment.BottomStart
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.textSecondary,
-            maxLines = 1,
-            modifier = Modifier.padding(spaceNormal)
-        )
+private fun HomeRail(
+    title: String,
+    items: List<HomeRailItem>,
+    onPlayItem: (HomeRailItem) -> Unit
+) {
+    VideoRail(title = title) {
+        items(items) { item ->
+            VideoCard(
+                title = item.title,
+                subtitle = item.subtitle,
+                onClick = { onPlayItem(item) }
+            )
+        }
     }
 }
 

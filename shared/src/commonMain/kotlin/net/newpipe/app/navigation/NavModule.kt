@@ -20,8 +20,10 @@ import net.newpipe.app.screen.settings.PlayerSettingsScreen
 import net.newpipe.app.screen.settings.SettingsHomeScreen
 import net.newpipe.app.screen.settings.VideoAudioSettingsScreen
 import net.newpipe.app.screen.settings.backup.BackupRestoreScreen
+import net.newpipe.app.screen.settings.content.ContentSettingsScreen
 import net.newpipe.app.screen.settings.downloads.DownloadsSettingsScreen
 import net.newpipe.app.screen.settings.history.HistorySettingsScreen
+import net.newpipe.app.screen.subscriptions.SubscriptionsScreen
 import net.newpipe.app.screen.trending.TrendingScreen
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.annotation.Provided
@@ -53,6 +55,10 @@ fun navModule() = module {
 
     navigation<Destination.Playlists> {
         PlaylistsScreen()
+    }
+
+    navigation<Destination.Subscriptions> {
+        SubscriptionsScreen()
     }
 
     navigation<Destination.Downloads> {
@@ -89,6 +95,10 @@ fun navModule() = module {
 
     navigation<Destination.HistorySettings> {
         HistorySettingsScreen()
+    }
+
+    navigation<Destination.ContentSettings> {
+        ContentSettingsScreen()
     }
 
     navigation<Destination.AppearanceSettings> {

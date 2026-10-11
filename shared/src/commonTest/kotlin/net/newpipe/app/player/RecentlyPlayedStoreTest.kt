@@ -151,4 +151,52 @@ class RecentlyPlayedStoreTest {
         assertNull(settings().getStringOrNull(RecentlyPlayedStore.KEY))
         assertTrue(store(settings()).entries.value.isEmpty())
     }
+
+    @Test
+    fun removeDropsOnlyTheMatchingEntryAndPersists() {
+        val backing = settings()
+        val s = store(backing)
+        s.record(media("a"), nowEpochMs = 1_000L)
+        s.record(media("b"), nowEpochMs = 2_000L)
+
+        s.remove("a")
+
+        assertEquals(listOf("b"), s.entries.value.map { it.id })
+        val reloaded = RecentlyPlayedStore(backing, json)
+        assertEquals(listOf("b"), reloaded.entries.value.map { it.id })
+    }
+
+    @Test
+    fun removeUnknownIdIsNoOp() {
+        val s = store()
+        s.record(media("a"), nowEpochMs = 1_000L)
+
+        s.remove("missing")
+
+        assertEquals(listOf("a"), s.entries.value.map { it.id })
+    }
+
+    @Test
+    fun removeLastEntryEmptiesHistory() {
+        val s = store()
+        s.record(media("a"), nowEpochMs = 1_000L)
+
+        s.remove("a")
+
+        assertTrue(s.entries.value.isEmpty())
+    }
+
+    @Test
+    fun pureRemoveFiltersByIdWithoutMutatingInput() {
+        val existing = listOf(
+            RecentlyPlayedEntry("a", playedAtEpochMs = 1L),
+            RecentlyPlayedEntry("b", playedAtEpochMs = 2L),
+            RecentlyPlayedEntry("a", playedAtEpochMs = 3L)
+        )
+
+        val result = RecentlyPlayedStore.pureRemove(existing, "a")
+
+        assertEquals(listOf("b"), result.map { it.id })
+        assertEquals(3, existing.size)
+    }
 }

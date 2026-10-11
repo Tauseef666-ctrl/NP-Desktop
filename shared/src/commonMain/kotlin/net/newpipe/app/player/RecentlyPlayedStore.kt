@@ -63,6 +63,13 @@ class RecentlyPlayedStore(
         persist(updated)
     }
 
+    /** Drop the single entry with [id], leaving the rest of the history untouched and persisted. */
+    fun remove(id: String) {
+        val updated = pureRemove(_entries.value, id)
+        _entries.value = updated
+        persist(updated)
+    }
+
     /** Forget the entire history (privacy/clear-history). */
     fun clear() {
         _entries.value = emptyList()
@@ -110,5 +117,12 @@ class RecentlyPlayedStore(
             val limited = if (cap < 0) 0 else cap
             return (listOf(entry) + withoutDuplicate).take(limited)
         }
+
+        /**
+         * Pure removal used by [remove]: returns a new list without any entry whose id equals [id],
+         * leaving the input untouched so the drop rule is unit-testable.
+         */
+        fun pureRemove(items: List<RecentlyPlayedEntry>, id: String): List<RecentlyPlayedEntry> =
+            items.filterNot { it.id == id }
     }
 }

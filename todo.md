@@ -76,18 +76,18 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 
 ## 4. Phase 4 — Screen redesign (desktop-first)
 
-- [~] Home: desktop shell (NavRail + top toolbar + hero + honest empty rails) via `screen/home/HomeScreen.kt`; real data rails pending.
+- [~] Home: desktop shell (NavRail + top toolbar + hero) via `screen/home/HomeScreen.kt`; **real store-fed rails done** (`viewmodel/home/HomeViewModel.kt` + pure `screen/home/HomeRails.kt` — Continue watching/Recently played/Downloads/Playlists, empty rails hidden, honest empty state; the previous fake placeholder rails were removed; 14 new tests).
 - [~] Search: `screen/search/SearchScreen.kt` + `Destination.Search` + NavRail entry (live input, honest empty state); **search history + suggestions done** (`search/SearchHistoryStore.kt` persisted `npp_search_history`/cap 15 + pure `pureAdd`, pure `search/SearchSuggestions.kt` `matchSuggestions`, `SearchViewModel`; recent-search list + live suggestions + clear-history in the screen; 19 new tests). Provider-backed results still pending.
-- [ ] Subscriptions + Feed (groups).
+- [~] Subscriptions + Feed: **local subscriptions manager done** (`subscription/SubscriptionStore.kt` persisted `npp_subscriptions`/cap 500 + pure `pureAdd`, pure `subscription/SubscriptionOps.kt` url-normalize/id, `viewmodel/subscriptions/SubscriptionsViewModel.kt`, `screen/subscriptions/SubscriptionsScreen.kt` add/validate(dupe+url)/remove-with-confirm, route `Destination.Subscriptions` + Home entry, honest "new videos need a provider" note; 34 new tests). Provider-backed Feed (groups) pending.
 - [~] Trending / Popular: `screen/trending/TrendingScreen.kt` + `Destination.Trending` + NavRail entry (honest empty state, 1 UI test); ranking/kiosk wiring pending.
 - [ ] Channels (tabs).
 - [~] Playlists: **local playlists screen done** (`screen/playlists/PlaylistsScreen.kt` + `viewmodel/playlists/PlaylistsViewModel.kt`, list/expand/play/delete with confirm; `PlaybackController.deletePlaylist`; route `Destination.Playlists` + Home rail entry); remote (provider) playlists pending.
-- [~] History: `screen/history/HistoryScreen.kt` + `Destination.History` + NavRail entry (honest empty state, 1 UI test); playback-history recording pending.
+- [~] History: **wired to real data done** (`viewmodel/history/HistoryViewModel.kt` + pure `screen/history/HistoryGrouping.kt` Today/Yesterday/This week/Earlier, per-item remove via new `RecentlyPlayedStore.remove`/`pureRemove`, clear-all with confirm; honest empty state; 17 new tests).
 - [~] Downloads: `screen/downloads/DownloadsScreen.kt` + `Destination.Downloads` + Home entry (real missions via the JVM engine; §6).
 - [~] Local Media: `screen/library/LibraryScreen.kt` (indexed folders + scanned list + play), route `Destination.Library` registered + Home entry.
-- [ ] Settings (all existing categories preserved).
+- [ ] Settings (all existing categories preserved). **Content** category wired (`screen/settings/content/ContentSettingsScreen.kt` + VM, honest connected-providers view); remaining categories pending.
 - [ ] About / Licenses (already exists).
-- [~] Navigation + routes: `Destination.Home`/`Library`/`Downloads`/`Search`/`Trending`/`History` registered (`NavModule`), desktop entry starts at Home; remaining routes pending.
+- [~] Navigation + routes: `Destination.Home`/`Library`/`Downloads`/`Search`/`Trending`/`History`/`Playlists`/`Subscriptions`/`ContentSettings`/… registered (`NavModule`), desktop entry starts at Home; remaining routes pending.
 
 ---
 
@@ -187,7 +187,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 
 ### F10 — Extensible media provider system
 - [x] Base: NewPipeExtractor + `ServiceList`/`ServiceHelper` abstraction — extend, don't replace.
-- [ ] Harden interfaces (search/metadata/channel/playlist/resolve/captions/errors); isolate per-provider failures; document capabilities; mock-provider tests.
+- [~] Harden interfaces (search/metadata/channel/playlist/resolve/captions/errors); isolate per-provider failures; document capabilities; mock-provider tests. → **foundation done** (`provider/MediaProvider.kt` interface + `ProviderCapabilities`, `provider/ProviderRegistry.kt` @Singleton register/unregister/byId/available, `provider/ProviderModule.kt` @ComponentScan, `ContentSettingsViewModel` + honest `ContentSettingsScreen`; no concrete provider bundled yet; 9 new tests). Per-operation hardening pending.
 
 ---
 
@@ -204,7 +204,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 
 - [ ] Run lint/checkstyle/ktlint/dependency-order.
 - [ ] Android unit + (emulator) instrumented tests green.
-- [ ] `:shared:jvmTest` green; add tests for new components/VMs. → currently **340 tests, 0 failures** (PlayQueue 12, PlaybackController 25, PlayerShortcuts 13, PlayQueueStore 7, PlaylistStore 9, PlaylistOps 8, VideoSettingsStore 10, DownloadStore 6, downloads engine 7, DownloadOps 18, scanner 11, resume store 10, RecentlyPlayedStore 13, AdaptiveLayout 7, PlayQueueMove 5, LibraryViews 15, Format 8, DownloadCategory 7, WorkspacePreferences 8, LibraryFilter 12, BackupOps 12, BackupContent 5, JVMBackupRepository 8, AppShortcutScope 7, SearchHistoryStore 10, SearchSuggestions 5, SearchViewModel 4, PlaylistsViewModel 6, DownloadsSettingsViewModel 6, HistorySettingsViewModel 6, scaffold screens 5 (Search 6/Trending 1/History 1), + UI/settings suites incl. DownloadsTabs 3/LibrarySearch 2/PlayerSettingsPanel 2/ShortcutReferenceSection 3).
+- [ ] `:shared:jvmTest` green; add tests for new components/VMs. → currently **417 tests, 0 failures** (PlayQueue 12, PlaybackController 25, PlayerShortcuts 13, PlayQueueStore 7, PlaylistStore 9, PlaylistOps 8, VideoSettingsStore 10, DownloadStore 6, downloads engine 7, DownloadOps 18, scanner 11, resume store 10, RecentlyPlayedStore 13, AdaptiveLayout 7, PlayQueueMove 5, LibraryViews 15, Format 8, DownloadCategory 7, WorkspacePreferences 8, LibraryFilter 12, BackupOps 12, BackupContent 5, JVMBackupRepository 8, AppShortcutScope 7, SearchHistoryStore 10, SearchSuggestions 5, SearchViewModel 4, PlaylistsViewModel 6, DownloadsSettingsViewModel 6, HistorySettingsViewModel 6, scaffold screens 5 (Search 6/Trending 1/History 1), + UI/settings suites incl. DownloadsTabs 3/LibrarySearch 2/PlayerSettingsPanel 2/ShortcutReferenceSection 3, SubscriptionOps 14, SubscriptionStore 14, SubscriptionsViewModel 6, ProviderRegistry 6, ContentSettingsViewModel 3, HistoryGrouping 8, HistoryViewModel 6, HomeRails 11, HomeViewModel 5, RecentlyPlayedStore 17).
 - [ ] Playback/download tests (desktop engine on a real machine).
 - [ ] Backup: create → inspect → restore → verify data; invalid/corrupt/incompatible backups.
 - [ ] Data-integrity: no silent loss; backward-compatible migrations; old data still reads.

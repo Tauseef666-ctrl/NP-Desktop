@@ -196,7 +196,7 @@
     <!-- History screen -->
     <string name="history_screen_title">History</string>
     <string name="history_empty_title">No history yet</string>
-    <string name="history_empty_message">Videos you watch will be listed here once playback history is wired up.</string>
+    <string name="history_empty_message">Videos you play will be listed here.</string>
 
     <!-- Downloads: tabs -->
     <string name="downloads_tab_all">All</string>
@@ -366,5 +366,50 @@
     <string name="history_settings_clear_resume">Clear saved resume positions</string>
     <string name="history_settings_items_count">%1$d item(s)</string>
     <string name="history_settings_cleared">Cleared</string>
+
+    <!-- Subscriptions manager (workstream A) -->
+    <string name="subscriptions_screen_title">Subscriptions</string>
+    <string name="subscriptions_add">Add subscription</string>
+    <string name="subscriptions_add_title">Add subscription</string>
+    <string name="subscriptions_name_label">Name</string>
+    <string name="subscriptions_url_label">Channel URL</string>
+    <string name="subscriptions_empty_title">No subscriptions</string>
+    <string name="subscriptions_empty_message">Channels you add will be listed here.</string>
+    <string name="subscriptions_added">Subscription added</string>
+    <string name="subscriptions_removed">Subscription removed</string>
+    <string name="subscriptions_invalid_url">Enter a valid channel URL</string>
+    <string name="subscriptions_duplicate">That channel is already subscribed</string>
+    <string name="subscriptions_remove">Remove</string>
+    <string name="subscriptions_remove_confirm_title">Remove this subscription?</string>
+    <string name="subscriptions_remove_confirm_message">The channel will be removed from your subscriptions.</string>
+    <string name="subscriptions_provider_pending">New videos require a connected provider.</string>
+    <string name="subscriptions_count">%1$d channel(s)</string>
+
+    <!-- Provider foundation & content settings (workstream B) -->
+    <string name="content_settings_title">Content</string>
+    <string name="content_settings_providers_title">Providers</string>
+    <string name="content_settings_no_providers_title">No providers connected</string>
+    <string name="content_settings_no_providers_message">Streaming providers (such as YouTube or PeerTube) will appear here once connected. Search, trending and feeds need a provider.</string>
+    <string name="content_settings_provider_available">Available</string>
+    <string name="content_settings_provider_unavailable">Unavailable</string>
+
+    <!-- History screen (workstream C) -->
+    <string name="history_group_today">Today</string>
+    <string name="history_group_yesterday">Yesterday</string>
+    <string name="history_group_this_week">This week</string>
+    <string name="history_group_earlier">Earlier</string>
+    <string name="history_remove">Remove from history</string>
+    <string name="history_clear_all_title">Clear watch history</string>
+    <string name="history_clear_all_summary">Permanently remove every watch-history entry.</string>
+    <string name="history_cleared">Watch history cleared</string>
+
+    <!-- Home rails (workstream D) -->
+    <string name="home_continue_watching_title">Continue watching</string>
+    <string name="home_recently_played_title">Recently played</string>
+    <string name="home_downloads_title">Downloads</string>
+    <string name="home_playlists_title">Playlists</string>
+    <string name="home_subscriptions_title">Subscriptions</string>
+    <string name="home_empty_title">Nothing here yet</string>
+    <string name="home_empty_message">Play something, add subscriptions, or download media to see it here.</string>
 
 </resources>
