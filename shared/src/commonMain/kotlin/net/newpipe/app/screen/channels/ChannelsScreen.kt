@@ -32,9 +32,13 @@ import net.newpipe.app.component.providerErrorMessage
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preview.ThemePreviewProvider
+import net.newpipe.app.provider.ChannelNavigation
+import net.newpipe.app.provider.PlaylistNavigation
+import net.newpipe.app.provider.ProviderClickAction
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentKind
 import net.newpipe.app.provider.ProviderPlaybackState
+import net.newpipe.app.provider.providerClickAction
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.util.formatDuration
 import net.newpipe.app.viewmodel.channels.ChannelsState
@@ -57,7 +61,9 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ChannelsScreen(
     navigator: Navigator = koinInject(),
-    viewModel: ChannelsViewModel = koinViewModel()
+    viewModel: ChannelsViewModel = koinViewModel(),
+    playlistNavigation: PlaylistNavigation = koinInject(),
+    channelNavigation: ChannelNavigation = koinInject()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val selection by viewModel.selection.collectAsStateWithLifecycle()
@@ -76,7 +82,19 @@ fun ChannelsScreen(
         playbackState = playbackState,
         onBack = { navigator.navigateUp() },
         onRetry = { viewModel.retry() },
-        onItemClick = { viewModel.play(it) }
+        onItemClick = { item ->
+            when (providerClickAction(item)) {
+                ProviderClickAction.PLAY -> viewModel.play(item)
+                ProviderClickAction.OPEN_CHANNEL -> {
+                    channelNavigation.select(item.url, item.title)
+                    navigator.navigateTo(Destination.Channels)
+                }
+                ProviderClickAction.OPEN_PLAYLIST -> {
+                    playlistNavigation.select(item.url, item.title)
+                    navigator.navigateTo(Destination.Playlist)
+                }
+            }
+        }
     )
 }
 

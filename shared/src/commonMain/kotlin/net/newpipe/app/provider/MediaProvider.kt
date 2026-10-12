@@ -44,6 +44,13 @@ interface MediaProvider {
         ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "channel")
 
     /**
+     * Load the contents of the playlist at [url]. [pageToken] continues a previous page when the
+     * provider supplied a [ProviderContentPage.nextPageToken].
+     */
+    suspend fun playlist(url: String, pageToken: String? = null): ProviderResult<ProviderContentPage> =
+        ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "playlist")
+
+    /**
      * Resolve the page at [url] to a directly playable [ResolvedMedia] stream. Providers that can
      * search/trend/list but not resolve playback keep this default failure instead of pretending.
      */

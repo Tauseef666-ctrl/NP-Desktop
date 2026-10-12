@@ -487,4 +487,11 @@
     <string name="playback_preparing">Preparing playback…</string>
     <string name="playback_error_title">Could not start playback</string>
 
+    <!-- Provider playlists (milestone 10) -->
+    <string name="playlist_screen_title">Playlist</string>
+    <string name="playlist_loading">Loading playlist…</string>
+    <string name="playlist_empty_title">Nothing to show</string>
+    <string name="playlist_empty_message">This playlist did not return any content.</string>
+    <string name="playlist_load_more">Load more</string>
+
 </resources>

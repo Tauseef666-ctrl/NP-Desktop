@@ -14,6 +14,7 @@ import net.newpipe.app.screen.history.HistoryScreen
 import net.newpipe.app.screen.home.HomeScreen
 import net.newpipe.app.screen.library.LibraryScreen
 import net.newpipe.app.screen.player.PlayerScreen
+import net.newpipe.app.screen.playlist.PlaylistScreen
 import net.newpipe.app.screen.playlists.PlaylistsScreen
 import net.newpipe.app.screen.search.SearchScreen
 import net.newpipe.app.screen.settings.AppearanceSettingsScreen
@@ -83,6 +84,10 @@ fun navModule() = module {
 
     navigation<Destination.Channels> {
         ChannelsScreen()
+    }
+
+    navigation<Destination.Playlist> {
+        PlaylistScreen()
     }
 
     navigation<Destination.About> {

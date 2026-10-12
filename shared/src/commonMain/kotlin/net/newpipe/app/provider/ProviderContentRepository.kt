@@ -58,6 +58,18 @@ class ProviderContentRepository(
     }
 
     /**
+     * Load the contents of the playlist at [url]. Picks the first available provider whose
+     * [ProviderCapabilities.playlists] is enabled; fails with [ProviderFailureReason.NO_PROVIDER]
+     * when none exist or [ProviderFailureReason.UNSUPPORTED] when the providers present cannot list
+     * playlists.
+     */
+    suspend fun playlist(url: String, pageToken: String? = null): ProviderResult<ProviderContentPage> {
+        val provider = firstFor { it.capabilities.playlists }
+            ?: return noProviderOrUnsupported { it.capabilities.playlists }
+        return run(provider) { it.playlist(url, pageToken) }
+    }
+
+    /**
      * Resolve the page at [url] to a playable stream. Fails with [ProviderFailureReason.NO_PROVIDER]
      * when no provider can resolve, or [ProviderFailureReason.UNSUPPORTED] when the providers present
      * cannot.

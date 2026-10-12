@@ -10,6 +10,7 @@ import org.schabi.newpipe.extractor.Image
 import org.schabi.newpipe.extractor.InfoItem
 import org.schabi.newpipe.extractor.ListExtractor
 import org.schabi.newpipe.extractor.NewPipe
+import org.schabi.newpipe.extractor.Page
 import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.exceptions.ExtractionException
 import org.schabi.newpipe.extractor.exceptions.ParsingException
@@ -27,8 +28,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * The provider wraps the YouTube service exposed by [ServiceList]. It is honest about its limits:
  *
- *  * Only the **first page** of every listing is returned; an incoming `pageToken` is ignored and
- *    [ProviderContentPage.nextPageToken] is always `null`. Pagination is a later milestone.
+ *  * Only the **first page** of every listing except playlists is returned; there an incoming
+ *    `pageToken` is ignored and [ProviderContentPage.nextPageToken] is always `null`. Playlists
+ *    paginate: the extractor's next-page URL is surfaced as the [ProviderContentPage.nextPageToken]
+ *    and accepted back on the following call.
  *  * Extraction is blocking and runs on the caller's dispatcher; [ProviderContentRepository] already
  *    moves provider calls off the main dispatcher.
  *  * If NewPipeExtractor fails to initialise, [isAvailable] is `false` and the provider advertises
@@ -79,6 +82,22 @@ class ExtractorMediaProvider : MediaProvider {
                     it.id.contains("videos", ignoreCase = true)
             } ?: tabs.first()
             pureMapPage(ServiceList.YouTube.getChannelTabExtractor(videosTab).initialPage)
+        }
+
+    /**
+     * Load one page of the playlist at [url]. A blank [pageToken] fetches the initial page; otherwise
+     * the token is handed back to the extractor to continue where the previous page stopped.
+     */
+    override suspend fun playlist(url: String, pageToken: String?): ProviderResult<ProviderContentPage> =
+        guarded {
+            val extractor = ServiceList.YouTube.getPlaylistExtractor(url)
+            val rawPage = if (pageToken.isNullOrBlank()) {
+                extractor.initialPage
+            } else {
+                extractor.getPage(Page(pageToken))
+            }
+            val page = widen(rawPage)
+            pureMapPage(page, page.nextPage?.url?.takeIf { it.isNotBlank() })
         }
 
     override suspend fun resolve(url: String): ProviderResult<ResolvedMedia> {
@@ -198,13 +217,17 @@ class ExtractorMediaProvider : MediaProvider {
         }
 
         /**
-         * Pure mapping of a first page into a [ProviderContentPage], dropping items that have no
-         * representation. Pagination is intentionally not carried over yet.
+         * Pure mapping of a page into a [ProviderContentPage], dropping items that have no
+         * representation. The optional [nextPageToken] is carried over verbatim; callers that only
+         * pass a page keep the previous behaviour of a `null` next token.
          */
-        fun pureMapPage(page: ListExtractor.InfoItemsPage<InfoItem>): ProviderContentPage =
+        fun pureMapPage(
+            page: ListExtractor.InfoItemsPage<InfoItem>,
+            nextPageToken: String? = null
+        ): ProviderContentPage =
             ProviderContentPage(
                 items = page.items.orEmpty().mapNotNull(::pureMapItem),
-                nextPageToken = null
+                nextPageToken = nextPageToken
             )
 
         private fun bestThumbnail(images: List<Image>?): String? {

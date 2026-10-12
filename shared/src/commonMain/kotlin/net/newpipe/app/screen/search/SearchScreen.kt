@@ -41,9 +41,12 @@ import net.newpipe.app.composable.PreferenceRow
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preview.ThemePreviewProvider
+import net.newpipe.app.provider.PlaylistNavigation
+import net.newpipe.app.provider.ProviderClickAction
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentKind
 import net.newpipe.app.provider.ProviderPlaybackState
+import net.newpipe.app.provider.providerClickAction
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.util.formatDuration
@@ -75,7 +78,8 @@ private const val ResultColumns = 2
 @Composable
 fun SearchScreen(
     navigator: Navigator = koinInject(),
-    viewModel: SearchViewModel = koinViewModel()
+    viewModel: SearchViewModel = koinViewModel(),
+    playlistNavigation: PlaylistNavigation = koinInject()
 ) {
     var query by remember { mutableStateOf("") }
     val history by viewModel.historyEntries.collectAsStateWithLifecycle()
@@ -101,16 +105,15 @@ fun SearchScreen(
         onClearHistory = { viewModel.clearHistory() },
         onSubmitQuery = { viewModel.search(it) },
         onItemClick = { item ->
-            when (item.kind) {
-                ProviderContentKind.CHANNEL -> {
+            when (providerClickAction(item)) {
+                ProviderClickAction.PLAY -> viewModel.play(item)
+                ProviderClickAction.OPEN_CHANNEL -> {
                     viewModel.selectChannel(item.url, item.title)
                     navigator.navigateTo(Destination.Channels)
                 }
-                ProviderContentKind.VIDEO, ProviderContentKind.AUDIO, ProviderContentKind.LIVE ->
-                    viewModel.play(item)
-                ProviderContentKind.PLAYLIST -> item.uploaderUrl?.let { uploaderUrl ->
-                    viewModel.selectChannel(uploaderUrl, item.uploader ?: item.title)
-                    navigator.navigateTo(Destination.Channels)
+                ProviderClickAction.OPEN_PLAYLIST -> {
+                    playlistNavigation.select(item.url, item.title)
+                    navigator.navigateTo(Destination.Playlist)
                 }
             }
         }

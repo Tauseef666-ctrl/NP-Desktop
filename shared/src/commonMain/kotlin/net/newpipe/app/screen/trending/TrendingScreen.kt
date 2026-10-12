@@ -34,9 +34,12 @@ import net.newpipe.app.component.providerErrorMessage
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preview.ThemePreviewProvider
+import net.newpipe.app.provider.PlaylistNavigation
+import net.newpipe.app.provider.ProviderClickAction
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentKind
 import net.newpipe.app.provider.ProviderPlaybackState
+import net.newpipe.app.provider.providerClickAction
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.util.formatDuration
 import net.newpipe.app.viewmodel.trending.TrendingState
@@ -62,7 +65,8 @@ private const val ResultColumns = 3
 @Composable
 fun TrendingScreen(
     navigator: Navigator = koinInject(),
-    viewModel: TrendingViewModel = koinViewModel()
+    viewModel: TrendingViewModel = koinViewModel(),
+    playlistNavigation: PlaylistNavigation = koinInject()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val playbackState by viewModel.playbackState.collectAsStateWithLifecycle()
@@ -80,12 +84,17 @@ fun TrendingScreen(
         onNavigateUp = { navigator.navigateUp() },
         onRetry = { viewModel.retry() },
         onItemClick = { item ->
-            if (item.kind == ProviderContentKind.CHANNEL) {
-                if (viewModel.selectChannel(item)) {
-                    navigator.navigateTo(Destination.Channels)
+            when (providerClickAction(item)) {
+                ProviderClickAction.PLAY -> viewModel.play(item)
+                ProviderClickAction.OPEN_CHANNEL -> {
+                    if (viewModel.selectChannel(item)) {
+                        navigator.navigateTo(Destination.Channels)
+                    }
                 }
-            } else {
-                viewModel.play(item)
+                ProviderClickAction.OPEN_PLAYLIST -> {
+                    playlistNavigation.select(item.url, item.title)
+                    navigator.navigateTo(Destination.Playlist)
+                }
             }
         }
     )
