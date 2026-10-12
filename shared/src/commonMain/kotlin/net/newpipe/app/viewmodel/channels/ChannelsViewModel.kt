@@ -13,9 +13,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.newpipe.app.provider.ChannelNavigation
+import net.newpipe.app.provider.MediaPlayback
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentRepository
 import net.newpipe.app.provider.ProviderFailureReason
+import net.newpipe.app.provider.ProviderPlaybackSession
+import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.provider.ProviderResult
 import org.koin.core.annotation.KoinViewModel
 
@@ -45,7 +48,8 @@ sealed interface ChannelsState {
 @KoinViewModel
 class ChannelsViewModel(
     private val repository: ProviderContentRepository,
-    private val channelNav: ChannelNavigation
+    private val channelNav: ChannelNavigation,
+    private val mediaPlayback: MediaPlayback
 ) : ViewModel() {
 
     /** The channel selected for display, or null when none was chosen. */
@@ -55,6 +59,11 @@ class ChannelsViewModel(
 
     /** The current screen state. */
     val state: StateFlow<ChannelsState> = _state.asStateFlow()
+
+    private val playbackSession = ProviderPlaybackSession(mediaPlayback, viewModelScope)
+
+    /** The state of the most recent play request, for inline progress/error and navigation. */
+    val playbackState: StateFlow<ProviderPlaybackState> = playbackSession.state
 
     private var loadJob: Job? = null
 
@@ -103,4 +112,10 @@ class ChannelsViewModel(
             }
         }
     }
+
+    /** Resolve and start [item] through the shared playback session. */
+    fun play(item: ProviderContentItem) = playbackSession.play(item)
+
+    /** Return playback state to idle after the UI handled a launched/failed request. */
+    fun acknowledgePlayback() = playbackSession.acknowledge()
 }

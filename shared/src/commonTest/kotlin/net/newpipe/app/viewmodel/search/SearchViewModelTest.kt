@@ -21,15 +21,33 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import net.newpipe.app.provider.ChannelNavigation
+import net.newpipe.app.provider.MediaPlayback
 import net.newpipe.app.provider.MediaProvider
 import net.newpipe.app.provider.ProviderCapabilities
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentPage
 import net.newpipe.app.provider.ProviderContentRepository
 import net.newpipe.app.provider.ProviderFailureReason
+import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.provider.ProviderRegistry
 import net.newpipe.app.provider.ProviderResult
+import net.newpipe.app.player.MediaItem
 import net.newpipe.app.search.SearchHistoryStore
+
+private class FakeSearchPlayback(
+    private val playResult: ProviderResult<Unit> = ProviderResult.Success(Unit),
+    private val resolveResult: ProviderResult<MediaItem> =
+        ProviderResult.Failure(ProviderFailureReason.NO_PROVIDER)
+) : MediaPlayback {
+    var playedItems: MutableList<ProviderContentItem> = mutableListOf()
+
+    override suspend fun resolve(item: ProviderContentItem): ProviderResult<MediaItem> = resolveResult
+
+    override suspend fun play(item: ProviderContentItem): ProviderResult<Unit> {
+        playedItems.add(item)
+        return playResult
+    }
+}
 
 private class FakeSearchProvider(
     override val id: String = "fake",
@@ -60,10 +78,12 @@ class SearchViewModelTest {
 
     private fun viewModel(
         settings: MapSettings = MapSettings(),
-        registry: ProviderRegistry = ProviderRegistry()
+        registry: ProviderRegistry = ProviderRegistry(),
+        playback: MediaPlayback = FakeSearchPlayback()
     ) = SearchViewModel(
         history = SearchHistoryStore(settings, Json { ignoreUnknownKeys = true }),
         repository = ProviderContentRepository(registry).apply { dispatcher = Dispatchers.Unconfined },
+        mediaPlayback = playback,
         channelNavigation = ChannelNavigation()
     )
 
@@ -204,5 +224,52 @@ class SearchViewModelTest {
 
         slowGate.complete(ProviderResult.Success(ProviderContentPage(listOf(item("stale")))))
         assertEquals(SearchResultsState.Success(newerPage.items), vm.results.value)
+    }
+
+    @Test
+    fun playOnSuccessPublishesLaunched() = runTest {
+        val vm = viewModel(playback = FakeSearchPlayback(playResult = ProviderResult.Success(Unit)))
+
+        vm.play(item("v1"))
+
+        assertEquals(ProviderPlaybackState.Launched, vm.playbackState.value)
+    }
+
+    @Test
+    fun playOnFailurePublishesFailureWithReason() = runTest {
+        val vm = viewModel(
+            playback = FakeSearchPlayback(
+                playResult = ProviderResult.Failure(ProviderFailureReason.NETWORK)
+            )
+        )
+
+        vm.play(item("v1"))
+
+        assertEquals(
+            ProviderPlaybackState.Failure(ProviderFailureReason.NETWORK),
+            vm.playbackState.value
+        )
+    }
+
+    @Test
+    fun acknowledgePlaybackResetsToIdle() = runTest {
+        val vm = viewModel(playback = FakeSearchPlayback(playResult = ProviderResult.Success(Unit)))
+        vm.play(item("v1"))
+        assertEquals(ProviderPlaybackState.Launched, vm.playbackState.value)
+
+        vm.acknowledgePlayback()
+
+        assertEquals(ProviderPlaybackState.Idle, vm.playbackState.value)
+    }
+
+    @Test
+    fun playPassesItemToMediaPlayback() = runTest {
+        val playback = FakeSearchPlayback(playResult = ProviderResult.Success(Unit))
+        val vm = viewModel(playback = playback)
+        val target = item("v1")
+
+        vm.play(target)
+
+        assertEquals(listOf(target), playback.playedItems)
     }
 }

@@ -12,9 +12,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.newpipe.app.provider.ChannelNavigation
+import net.newpipe.app.provider.MediaPlayback
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentRepository
 import net.newpipe.app.provider.ProviderFailureReason
+import net.newpipe.app.provider.ProviderPlaybackSession
+import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.provider.ProviderResult
 import net.newpipe.app.search.SearchHistoryStore
 import net.newpipe.app.search.matchSuggestions
@@ -48,8 +51,14 @@ sealed interface SearchResultsState {
 class SearchViewModel(
     private val history: SearchHistoryStore,
     private val repository: ProviderContentRepository,
+    private val mediaPlayback: MediaPlayback,
     private val channelNavigation: ChannelNavigation
 ) : ViewModel() {
+
+    private val playbackSession = ProviderPlaybackSession(mediaPlayback, viewModelScope)
+
+    /** Status of the most recent "play this result" request. */
+    val playbackState: StateFlow<ProviderPlaybackState> = playbackSession.state
 
     /** Newest-first recent search queries; emits whenever a query is recorded or cleared. */
     val historyEntries: StateFlow<List<String>> = history.entries
@@ -94,6 +103,12 @@ class SearchViewModel(
 
     /** Remember the channel to open when the user taps a search result. */
     fun selectChannel(url: String, name: String) = channelNavigation.select(url, name)
+
+    /** Resolve and start playback of [item] through the shared queue. */
+    fun play(item: ProviderContentItem) = playbackSession.play(item)
+
+    /** Acknowledge a launched/failed playback request so the UI can navigate/reset. */
+    fun acknowledgePlayback() = playbackSession.acknowledge()
 
     /** Reset the results area back to [SearchResultsState.Idle] and abandon any in-flight search. */
     fun clearResults() {

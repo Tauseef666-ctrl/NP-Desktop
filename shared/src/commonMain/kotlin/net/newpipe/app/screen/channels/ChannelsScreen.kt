@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,14 +24,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.newpipe.app.component.EmptyState
 import net.newpipe.app.component.ErrorState
 import net.newpipe.app.component.LoadingState
+import net.newpipe.app.component.PlaybackStatusMessage
 import net.newpipe.app.component.PlusScaffold
 import net.newpipe.app.component.TopToolbar
 import net.newpipe.app.component.VideoCard
 import net.newpipe.app.component.providerErrorMessage
+import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentKind
+import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.util.formatDuration
 import net.newpipe.app.viewmodel.channels.ChannelsState
@@ -57,11 +61,22 @@ fun ChannelsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val selection by viewModel.selection.collectAsStateWithLifecycle()
+    val playbackState by viewModel.playbackState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(playbackState) {
+        if (playbackState is ProviderPlaybackState.Launched) {
+            viewModel.acknowledgePlayback()
+            navigator.navigateTo(Destination.Player)
+        }
+    }
+
     ChannelsScreenContent(
         state = state,
         title = selection?.name ?: stringResource(Res.string.channels_screen_title),
+        playbackState = playbackState,
         onBack = { navigator.navigateUp() },
-        onRetry = { viewModel.retry() }
+        onRetry = { viewModel.retry() },
+        onItemClick = { viewModel.play(it) }
     )
 }
 
@@ -70,8 +85,10 @@ fun ChannelsScreenContent(
     state: ChannelsState,
     title: String,
     modifier: Modifier = Modifier,
+    playbackState: ProviderPlaybackState = ProviderPlaybackState.Idle,
     onBack: () -> Unit = {},
-    onRetry: () -> Unit = {}
+    onRetry: () -> Unit = {},
+    onItemClick: (ProviderContentItem) -> Unit = {}
 ) {
     PlusScaffold(
         modifier = modifier,
@@ -79,6 +96,7 @@ fun ChannelsScreenContent(
             TopToolbar(title = title, onBack = onBack)
         }
     ) {
+        PlaybackStatusMessage(playbackState, Modifier.align(Alignment.TopStart))
         when (state) {
             ChannelsState.Idle -> EmptyState(
                 title = stringResource(Res.string.channels_empty_title),
@@ -105,7 +123,7 @@ fun ChannelsScreenContent(
                     modifier = Modifier.align(Alignment.Center).fillMaxWidth()
                 )
             } else {
-                ChannelItems(items = state.items)
+                ChannelItems(items = state.items, onItemClick = onItemClick)
             }
         }
     }
@@ -113,7 +131,11 @@ fun ChannelsScreenContent(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ChannelItems(items: List<ProviderContentItem>, modifier: Modifier = Modifier) {
+private fun ChannelItems(
+    items: List<ProviderContentItem>,
+    onItemClick: (ProviderContentItem) -> Unit,
+    modifier: Modifier = Modifier
+) {
     FlowRow(
         modifier = modifier
             .fillMaxSize()
@@ -128,7 +150,7 @@ private fun ChannelItems(items: List<ProviderContentItem>, modifier: Modifier = 
                 subtitle = item.uploader,
                 durationText = item.durationSeconds?.let { formatDuration(it) },
                 isLive = item.kind == ProviderContentKind.LIVE,
-                onClick = {}
+                onClick = { onItemClick(item) }
             )
         }
     }

@@ -57,6 +57,17 @@ class ProviderContentRepository(
         return run(provider) { it.channel(url, pageToken) }
     }
 
+    /**
+     * Resolve the page at [url] to a playable stream. Fails with [ProviderFailureReason.NO_PROVIDER]
+     * when no provider can resolve, or [ProviderFailureReason.UNSUPPORTED] when the providers present
+     * cannot.
+     */
+    suspend fun resolve(url: String): ProviderResult<ResolvedMedia> {
+        val provider = firstFor { it.capabilities.resolve }
+            ?: return noProviderOrUnsupported { it.capabilities.resolve }
+        return run(provider) { it.resolve(url) }
+    }
+
     private fun firstFor(predicate: (MediaProvider) -> Boolean): MediaProvider? =
         registry.available.value.firstOrNull { it.isAvailable && predicate(it) }
 
@@ -71,10 +82,10 @@ class ProviderContentRepository(
         }
     }
 
-    private suspend fun run(
+    private suspend fun <T> run(
         provider: MediaProvider,
-        block: suspend (MediaProvider) -> ProviderResult<ProviderContentPage>
-    ): ProviderResult<ProviderContentPage> = withContext(dispatcher) {
+        block: suspend (MediaProvider) -> ProviderResult<T>
+    ): ProviderResult<T> = withContext(dispatcher) {
         try {
             block(provider)
         } catch (t: Throwable) {

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -24,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.newpipe.app.component.EmptyState
 import net.newpipe.app.component.ErrorState
 import net.newpipe.app.component.LoadingState
+import net.newpipe.app.component.PlaybackStatusMessage
 import net.newpipe.app.component.PlusScaffold
 import net.newpipe.app.component.SectionHeader
 import net.newpipe.app.component.TopToolbar
@@ -34,6 +36,7 @@ import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentKind
+import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.util.formatDuration
 import net.newpipe.app.viewmodel.trending.TrendingState
@@ -62,13 +65,27 @@ fun TrendingScreen(
     viewModel: TrendingViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val playbackState by viewModel.playbackState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(playbackState) {
+        if (playbackState is ProviderPlaybackState.Launched) {
+            viewModel.acknowledgePlayback()
+            navigator.navigateTo(Destination.Player)
+        }
+    }
+
     TrendingScreenContent(
         state = state,
+        playbackState = playbackState,
         onNavigateUp = { navigator.navigateUp() },
         onRetry = { viewModel.retry() },
         onItemClick = { item ->
-            if (viewModel.selectChannel(item)) {
-                navigator.navigateTo(Destination.Channels)
+            if (item.kind == ProviderContentKind.CHANNEL) {
+                if (viewModel.selectChannel(item)) {
+                    navigator.navigateTo(Destination.Channels)
+                }
+            } else {
+                viewModel.play(item)
             }
         }
     )
@@ -78,6 +95,7 @@ fun TrendingScreen(
 fun TrendingScreenContent(
     state: TrendingState,
     modifier: Modifier = Modifier,
+    playbackState: ProviderPlaybackState = ProviderPlaybackState.Idle,
     onNavigateUp: () -> Unit = {},
     onRetry: () -> Unit = {},
     onItemClick: (ProviderContentItem) -> Unit = {}
@@ -98,6 +116,7 @@ fun TrendingScreenContent(
                 .padding(vertical = spaceNormal)
         ) {
             SectionHeader(title = stringResource(Res.string.trending_results_title))
+            PlaybackStatusMessage(playbackState)
             when (state) {
                 TrendingState.Loading -> LoadingState(
                     message = stringResource(Res.string.trending_loading)

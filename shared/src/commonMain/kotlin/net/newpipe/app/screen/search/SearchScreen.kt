@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.newpipe.app.component.EmptyState
 import net.newpipe.app.component.ErrorState
 import net.newpipe.app.component.LoadingState
+import net.newpipe.app.component.PlaybackStatusMessage
 import net.newpipe.app.component.PlusScaffold
 import net.newpipe.app.component.SearchBarField
 import net.newpipe.app.component.SectionHeader
@@ -41,6 +43,7 @@ import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentKind
+import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.util.formatDuration
@@ -77,6 +80,13 @@ fun SearchScreen(
     var query by remember { mutableStateOf("") }
     val history by viewModel.historyEntries.collectAsStateWithLifecycle()
     val results by viewModel.results.collectAsStateWithLifecycle()
+    val playbackState by viewModel.playbackState.collectAsStateWithLifecycle()
+    LaunchedEffect(playbackState) {
+        if (playbackState is ProviderPlaybackState.Launched) {
+            viewModel.acknowledgePlayback()
+            navigator.navigateTo(Destination.Player)
+        }
+    }
     SearchScreenContent(
         query = query,
         onQueryChange = {
@@ -87,17 +97,21 @@ fun SearchScreen(
         history = history,
         suggestions = viewModel.suggestions(query),
         results = results,
+        playbackState = playbackState,
         onClearHistory = { viewModel.clearHistory() },
         onSubmitQuery = { viewModel.search(it) },
         onItemClick = { item ->
-            val selection: Pair<String, String>? = when {
-                item.kind == ProviderContentKind.CHANNEL -> item.url to item.title
-                item.uploaderUrl != null -> item.uploaderUrl to (item.uploader ?: item.title)
-                else -> null
-            }
-            if (selection != null) {
-                viewModel.selectChannel(selection.first, selection.second)
-                navigator.navigateTo(Destination.Channels)
+            when (item.kind) {
+                ProviderContentKind.CHANNEL -> {
+                    viewModel.selectChannel(item.url, item.title)
+                    navigator.navigateTo(Destination.Channels)
+                }
+                ProviderContentKind.VIDEO, ProviderContentKind.AUDIO, ProviderContentKind.LIVE ->
+                    viewModel.play(item)
+                ProviderContentKind.PLAYLIST -> item.uploaderUrl?.let { uploaderUrl ->
+                    viewModel.selectChannel(uploaderUrl, item.uploader ?: item.title)
+                    navigator.navigateTo(Destination.Channels)
+                }
             }
         }
     )
@@ -116,6 +130,7 @@ fun SearchScreenContent(
     history: List<String> = emptyList(),
     suggestions: List<String> = emptyList(),
     results: SearchResultsState = SearchResultsState.Idle,
+    playbackState: ProviderPlaybackState = ProviderPlaybackState.Idle,
     onClearHistory: () -> Unit = {},
     onSubmitQuery: (String) -> Unit = {},
     onItemClick: (ProviderContentItem) -> Unit = {}
@@ -172,11 +187,14 @@ fun SearchScreenContent(
                     }
                 }
 
-                else -> SearchResultsSection(
-                    results = results,
-                    onRetry = { onSubmitQuery(query) },
-                    onItemClick = onItemClick
-                )
+                else -> {
+                    PlaybackStatusMessage(playbackState)
+                    SearchResultsSection(
+                        results = results,
+                        onRetry = { onSubmitQuery(query) },
+                        onItemClick = onItemClick
+                    )
+                }
             }
             Spacer(Modifier.height(spaceNormal))
         }

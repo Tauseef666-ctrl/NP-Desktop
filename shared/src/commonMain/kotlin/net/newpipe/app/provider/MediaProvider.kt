@@ -14,7 +14,8 @@ data class ProviderCapabilities(
     val trending: Boolean = false,
     val subscriptions: Boolean = false,
     val channels: Boolean = false,
-    val playlists: Boolean = false
+    val playlists: Boolean = false,
+    val resolve: Boolean = false
 )
 
 /**
@@ -41,4 +42,11 @@ interface MediaProvider {
     /** Load the contents of the channel at [url]. */
     suspend fun channel(url: String, pageToken: String? = null): ProviderResult<ProviderContentPage> =
         ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "channel")
+
+    /**
+     * Resolve the page at [url] to a directly playable [ResolvedMedia] stream. Providers that can
+     * search/trend/list but not resolve playback keep this default failure instead of pretending.
+     */
+    suspend fun resolve(url: String): ProviderResult<ResolvedMedia> =
+        ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "resolve")
 }

@@ -18,7 +18,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import net.newpipe.app.player.MediaItem
 import net.newpipe.app.provider.ChannelNavigation
+import net.newpipe.app.provider.MediaPlayback
 import net.newpipe.app.provider.MediaProvider
 import net.newpipe.app.provider.ProviderCapabilities
 import net.newpipe.app.provider.ProviderContentItem
@@ -26,6 +28,7 @@ import net.newpipe.app.provider.ProviderContentKind
 import net.newpipe.app.provider.ProviderContentPage
 import net.newpipe.app.provider.ProviderContentRepository
 import net.newpipe.app.provider.ProviderFailureReason
+import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.provider.ProviderRegistry
 import net.newpipe.app.provider.ProviderResult
 
@@ -38,6 +41,21 @@ private class FakeTrendingProvider(
     override val capabilities: ProviderCapabilities = ProviderCapabilities(trending = true)
 
     override suspend fun trending(pageToken: String?): ProviderResult<ProviderContentPage> = onTrending()
+}
+
+private class FakeTrendingPlayback(
+    private val result: ProviderResult<Unit> = ProviderResult.Success(Unit)
+) : MediaPlayback {
+    var lastItem: ProviderContentItem? = null
+        private set
+
+    override suspend fun resolve(item: ProviderContentItem): ProviderResult<MediaItem> =
+        ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED)
+
+    override suspend fun play(item: ProviderContentItem): ProviderResult<Unit> {
+        lastItem = item
+        return result
+    }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -55,10 +73,12 @@ class TrendingViewModelTest {
 
     private fun viewModel(
         registry: ProviderRegistry = ProviderRegistry(),
-        channelNav: ChannelNavigation = ChannelNavigation()
+        channelNav: ChannelNavigation = ChannelNavigation(),
+        mediaPlayback: MediaPlayback = FakeTrendingPlayback()
     ) = TrendingViewModel(
         repository = ProviderContentRepository(registry).apply { dispatcher = Dispatchers.Unconfined },
-        channelNav = channelNav
+        channelNav = channelNav,
+        mediaPlayback = mediaPlayback
     )
 
     private fun item(id: String) = ProviderContentItem(
@@ -167,5 +187,50 @@ class TrendingViewModelTest {
         val vm = viewModel()
         // A stream without an uploader URL has no channel to open.
         assertFalse(vm.selectChannel(item("v1")))
+    }
+
+    @Test
+    fun playOnSuccessPublishesLaunched() = runTest {
+        val vm = viewModel(mediaPlayback = FakeTrendingPlayback(ProviderResult.Success(Unit)))
+
+        vm.play(item("v1"))
+
+        assertEquals(ProviderPlaybackState.Launched, vm.playbackState.value)
+    }
+
+    @Test
+    fun playOnFailurePublishesFailureWithReason() = runTest {
+        val vm = viewModel(
+            mediaPlayback = FakeTrendingPlayback(ProviderResult.Failure(ProviderFailureReason.NETWORK))
+        )
+
+        vm.play(item("v1"))
+
+        assertEquals(
+            ProviderPlaybackState.Failure(ProviderFailureReason.NETWORK),
+            vm.playbackState.value
+        )
+    }
+
+    @Test
+    fun acknowledgePlaybackResetsToIdle() = runTest {
+        val vm = viewModel(mediaPlayback = FakeTrendingPlayback(ProviderResult.Success(Unit)))
+        vm.play(item("v1"))
+        assertEquals(ProviderPlaybackState.Launched, vm.playbackState.value)
+
+        vm.acknowledgePlayback()
+
+        assertEquals(ProviderPlaybackState.Idle, vm.playbackState.value)
+    }
+
+    @Test
+    fun playPassesItemToMediaPlayback() = runTest {
+        val playback = FakeTrendingPlayback(ProviderResult.Success(Unit))
+        val vm = viewModel(mediaPlayback = playback)
+        val target = item("v1")
+
+        vm.play(target)
+
+        assertEquals(target, playback.lastItem)
     }
 }

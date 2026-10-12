@@ -16,6 +16,7 @@ import org.schabi.newpipe.extractor.exceptions.ParsingException
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException
 import org.schabi.newpipe.extractor.localization.Localization
 import org.schabi.newpipe.extractor.playlist.PlaylistInfoItem
+import org.schabi.newpipe.extractor.stream.StreamInfo
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import org.schabi.newpipe.extractor.stream.StreamType
 import java.io.IOException
@@ -45,7 +46,8 @@ class ExtractorMediaProvider : MediaProvider {
         trending = true,
         subscriptions = false,
         channels = true,
-        playlists = true
+        playlists = true,
+        resolve = true
     )
 
     override val isAvailable: Boolean = ensureInitialized()
@@ -79,7 +81,30 @@ class ExtractorMediaProvider : MediaProvider {
             pureMapPage(ServiceList.YouTube.getChannelTabExtractor(videosTab).initialPage)
         }
 
-    private fun guarded(block: () -> ProviderContentPage): ProviderResult<ProviderContentPage> {
+    override suspend fun resolve(url: String): ProviderResult<ResolvedMedia> {
+        val result = guarded {
+            val info = StreamInfo.getInfo(ServiceList.YouTube, url)
+            val isLive = info.streamType == StreamType.LIVE_STREAM ||
+                info.streamType == StreamType.AUDIO_LIVE_STREAM
+            pickResolvedMedia(
+                isLive = isLive,
+                hlsUrl = info.hlsUrl,
+                durationSeconds = info.duration,
+                progressiveVideo = info.videoStreams.mapNotNull { stream ->
+                    stream.url?.let { VideoCandidate(it, stream.height) }
+                },
+                audioStreams = info.audioStreams.mapNotNull { it.url }
+            )
+        }
+        return when (result) {
+            is ProviderResult.Success ->
+                result.value?.let { ProviderResult.Success(it) }
+                    ?: ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "No playable stream found for $url")
+            is ProviderResult.Failure -> result
+        }
+    }
+
+    private fun <T> guarded(block: () -> T): ProviderResult<T> {
         return try {
             ProviderResult.Success(block())
         } catch (e: ReCaptchaException) {
@@ -192,5 +217,47 @@ class ExtractorMediaProvider : MediaProvider {
         @Suppress("UNCHECKED_CAST")
         private fun widen(page: ListExtractor.InfoItemsPage<*>): ListExtractor.InfoItemsPage<InfoItem> =
             page as ListExtractor.InfoItemsPage<InfoItem>
+
+        /** A progressive video rendition candidate: its direct URL and nominal height. */
+        data class VideoCandidate(val url: String, val height: Int)
+
+        /**
+         * Pure selection of a playable rendition. Live streams prefer their HLS manifest; otherwise the
+         * highest-height progressive (muxed audio+video) stream is used, falling back to the first audio-only
+         * stream when no progressive stream exists. Returns `null` when nothing playable is available.
+         */
+        fun pickResolvedMedia(
+            isLive: Boolean,
+            hlsUrl: String?,
+            durationSeconds: Long,
+            progressiveVideo: List<VideoCandidate>,
+            audioStreams: List<String>
+        ): ResolvedMedia? {
+            if (isLive) {
+                hlsUrl?.takeIf { it.isNotBlank() }?.let {
+                    return ResolvedMedia(streamUrl = it, isLive = true, audioOnly = false, durationSeconds = null)
+                }
+            }
+            val knownDuration = durationSeconds.takeIf { it > 0L }
+            val bestVideo = progressiveVideo.filter { it.url.isNotBlank() }.maxByOrNull { it.height }
+            if (bestVideo != null) {
+                return ResolvedMedia(
+                    streamUrl = bestVideo.url,
+                    isLive = isLive,
+                    audioOnly = false,
+                    durationSeconds = if (isLive) null else knownDuration
+                )
+            }
+            val audio = audioStreams.firstOrNull { it.isNotBlank() }
+            if (audio != null) {
+                return ResolvedMedia(
+                    streamUrl = audio,
+                    isLive = isLive,
+                    audioOnly = true,
+                    durationSeconds = if (isLive) null else knownDuration
+                )
+            }
+            return null
+        }
     }
 }
