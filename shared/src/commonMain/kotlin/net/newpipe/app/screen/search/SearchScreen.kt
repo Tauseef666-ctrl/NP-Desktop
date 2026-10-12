@@ -5,9 +5,12 @@
 
 package net.newpipe.app.screen.search
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -24,22 +27,34 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.newpipe.app.component.EmptyState
+import net.newpipe.app.component.ErrorState
+import net.newpipe.app.component.LoadingState
 import net.newpipe.app.component.PlusScaffold
 import net.newpipe.app.component.SearchBarField
 import net.newpipe.app.component.SectionHeader
 import net.newpipe.app.component.TopToolbar
+import net.newpipe.app.component.VideoCard
+import net.newpipe.app.component.providerErrorMessage
 import net.newpipe.app.composable.PreferenceRow
+import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preview.ThemePreviewProvider
+import net.newpipe.app.provider.ProviderContentItem
+import net.newpipe.app.provider.ProviderContentKind
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
+import net.newpipe.app.util.formatDuration
+import net.newpipe.app.viewmodel.search.SearchResultsState
 import net.newpipe.app.viewmodel.search.SearchViewModel
 import newpipe.shared.generated.resources.Res
-import newpipe.shared.generated.resources.search_empty_message
-import newpipe.shared.generated.resources.search_empty_title
+import newpipe.shared.generated.resources.provider_retry
 import newpipe.shared.generated.resources.search_history_clear
 import newpipe.shared.generated.resources.search_history_empty
 import newpipe.shared.generated.resources.search_history_title
+import newpipe.shared.generated.resources.search_results_empty_message
+import newpipe.shared.generated.resources.search_results_empty_title
+import newpipe.shared.generated.resources.search_results_loading
+import newpipe.shared.generated.resources.search_results_title
 import newpipe.shared.generated.resources.search_screen_placeholder
 import newpipe.shared.generated.resources.search_screen_title
 import newpipe.shared.generated.resources.search_suggestions_title
@@ -47,9 +62,12 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
+private const val ResultColumns = 2
+
 /**
  * Search destination. The input is live; recent searches and suggestions come from the persisted
- * history. Results stay empty until provider wiring lands.
+ * history, while submitted queries are resolved through [SearchViewModel] against the provider
+ * repository and rendered as real result cards.
  */
 @Composable
 fun SearchScreen(
@@ -58,17 +76,38 @@ fun SearchScreen(
 ) {
     var query by remember { mutableStateOf("") }
     val history by viewModel.historyEntries.collectAsStateWithLifecycle()
+    val results by viewModel.results.collectAsStateWithLifecycle()
     SearchScreenContent(
         query = query,
-        onQueryChange = { query = it },
+        onQueryChange = {
+            query = it
+            viewModel.clearResults()
+        },
         onNavigateUp = { navigator.navigateUp() },
         history = history,
         suggestions = viewModel.suggestions(query),
+        results = results,
         onClearHistory = { viewModel.clearHistory() },
-        onSubmitQuery = { viewModel.record(it) }
+        onSubmitQuery = { viewModel.search(it) },
+        onItemClick = { item ->
+            val selection: Pair<String, String>? = when {
+                item.kind == ProviderContentKind.CHANNEL -> item.url to item.title
+                item.uploaderUrl != null -> item.uploaderUrl to (item.uploader ?: item.title)
+                else -> null
+            }
+            if (selection != null) {
+                viewModel.selectChannel(selection.first, selection.second)
+                navigator.navigateTo(Destination.Channels)
+            }
+        }
     )
 }
 
+/**
+ * Stateless search content. Result rendering is driven by [results]; while the query is blank only
+ * recent history is shown, and while no search has run yet ([SearchResultsState.Idle]) the
+ * suggestions are shown in place of the results section.
+ */
 @Composable
 fun SearchScreenContent(
     query: String = "",
@@ -76,8 +115,10 @@ fun SearchScreenContent(
     onNavigateUp: () -> Unit = {},
     history: List<String> = emptyList(),
     suggestions: List<String> = emptyList(),
+    results: SearchResultsState = SearchResultsState.Idle,
     onClearHistory: () -> Unit = {},
-    onSubmitQuery: (String) -> Unit = {}
+    onSubmitQuery: (String) -> Unit = {},
+    onItemClick: (ProviderContentItem) -> Unit = {}
 ) {
     PlusScaffold(
         toolbar = {
@@ -100,39 +141,108 @@ fun SearchScreenContent(
                 placeholder = stringResource(Res.string.search_screen_placeholder),
                 onSubmit = { onSubmitQuery(query) }
             )
-            if (query.isBlank()) {
-                SectionHeader(title = stringResource(Res.string.search_history_title))
-                if (history.isEmpty()) {
-                    EmptyState(title = stringResource(Res.string.search_history_empty))
-                } else {
-                    TextButton(
-                        onClick = onClearHistory,
-                        modifier = Modifier.padding(horizontal = spaceNormal)
-                    ) {
-                        Text(text = stringResource(Res.string.search_history_clear))
+            when {
+                query.isBlank() -> {
+                    SectionHeader(title = stringResource(Res.string.search_history_title))
+                    if (history.isEmpty()) {
+                        EmptyState(title = stringResource(Res.string.search_history_empty))
+                    } else {
+                        TextButton(
+                            onClick = onClearHistory,
+                            modifier = Modifier.padding(horizontal = spaceNormal)
+                        ) {
+                            Text(text = stringResource(Res.string.search_history_clear))
+                        }
+                        history.forEach { entry ->
+                            PreferenceRow(
+                                title = entry,
+                                onClick = { onQueryChange(entry) }
+                            )
+                        }
                     }
-                    history.forEach { entry ->
+                }
+
+                results is SearchResultsState.Idle -> {
+                    SectionHeader(title = stringResource(Res.string.search_suggestions_title))
+                    suggestions.forEach { suggestion ->
                         PreferenceRow(
-                            title = entry,
-                            onClick = { onQueryChange(entry) }
+                            title = suggestion,
+                            onClick = { onQueryChange(suggestion) }
                         )
                     }
                 }
-            } else {
-                SectionHeader(title = stringResource(Res.string.search_suggestions_title))
-                suggestions.forEach { suggestion ->
-                    PreferenceRow(
-                        title = suggestion,
-                        onClick = { onQueryChange(suggestion) }
+
+                else -> SearchResultsSection(
+                    results = results,
+                    onRetry = { onSubmitQuery(query) },
+                    onItemClick = onItemClick
+                )
+            }
+            Spacer(Modifier.height(spaceNormal))
+        }
+    }
+}
+
+@Composable
+private fun SearchResultsSection(
+    results: SearchResultsState,
+    onRetry: () -> Unit,
+    onItemClick: (ProviderContentItem) -> Unit
+) {
+    SectionHeader(title = stringResource(Res.string.search_results_title))
+    when (results) {
+        SearchResultsState.Idle -> Unit
+
+        SearchResultsState.Loading -> LoadingState(
+            message = stringResource(Res.string.search_results_loading)
+        )
+
+        is SearchResultsState.Failure -> ErrorState(
+            message = providerErrorMessage(results.reason),
+            retryLabel = stringResource(Res.string.provider_retry),
+            onRetry = onRetry
+        )
+
+        is SearchResultsState.Success -> if (results.items.isEmpty()) {
+            EmptyState(
+                title = stringResource(Res.string.search_results_empty_title),
+                message = stringResource(Res.string.search_results_empty_message)
+            )
+        } else {
+            SearchResultsGrid(items = results.items, onItemClick = onItemClick)
+        }
+    }
+}
+
+@Composable
+private fun SearchResultsGrid(
+    items: List<ProviderContentItem>,
+    onItemClick: (ProviderContentItem) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        items.chunked(ResultColumns).forEach { row ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = spaceNormal, vertical = spaceNormal),
+                horizontalArrangement = Arrangement.spacedBy(spaceNormal)
+            ) {
+                row.forEach { item ->
+                    VideoCard(
+                        title = item.title,
+                        subtitle = item.uploader,
+                        durationText = item.durationSeconds
+                            ?.takeIf { item.kind != ProviderContentKind.LIVE }
+                            ?.let { formatDuration(it) },
+                        isLive = item.kind == ProviderContentKind.LIVE,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onItemClick(item) }
                     )
                 }
+                repeat(ResultColumns - row.size) {
+                    Spacer(Modifier.weight(1f))
+                }
             }
-            SectionHeader(title = "Results")
-            EmptyState(
-                title = stringResource(Res.string.search_empty_title),
-                message = stringResource(Res.string.search_empty_message)
-            )
-            Spacer(Modifier.height(spaceNormal))
         }
     }
 }
@@ -141,5 +251,35 @@ fun SearchScreenContent(
 @PreviewLightDark
 @Composable
 private fun SearchScreenPreview() {
-    SearchScreenContent(history = listOf("NewPipe updates", "Kotlin Multiplatform"))
+    SearchScreenContent(
+        query = "NewPipe",
+        history = listOf("NewPipe updates", "Kotlin Multiplatform"),
+        results = SearchResultsState.Success(
+            listOf(
+                ProviderContentItem(
+                    id = "1",
+                    title = "NewPipe+ walkthrough",
+                    url = "https://example.org/watch/1",
+                    uploader = "NewPipe",
+                    durationSeconds = 754,
+                    kind = ProviderContentKind.VIDEO
+                ),
+                ProviderContentItem(
+                    id = "2",
+                    title = "Kotlin Multiplatform in 2026",
+                    url = "https://example.org/watch/2",
+                    uploader = "Kotlin",
+                    durationSeconds = 3600,
+                    kind = ProviderContentKind.VIDEO
+                ),
+                ProviderContentItem(
+                    id = "3",
+                    title = "Live: NewPipe community stream",
+                    url = "https://example.org/live/3",
+                    uploader = "NewPipe",
+                    kind = ProviderContentKind.LIVE
+                )
+            )
+        )
+    )
 }

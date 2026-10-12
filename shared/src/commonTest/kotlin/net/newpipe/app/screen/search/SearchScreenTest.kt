@@ -20,8 +20,8 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import net.newpipe.app.extensions.withKoin
 import newpipe.shared.generated.resources.Res
-import newpipe.shared.generated.resources.search_empty_message
 import newpipe.shared.generated.resources.search_history_clear
+import newpipe.shared.generated.resources.search_history_empty
 import newpipe.shared.generated.resources.search_history_title
 import newpipe.shared.generated.resources.search_screen_placeholder
 import newpipe.shared.generated.resources.search_screen_title
@@ -67,7 +67,7 @@ class SearchScreenTest {
             modules = emptyList(),
             content = { SearchScreenContent() },
             onContent = {
-                onNodeWithText(getString(Res.string.search_empty_message))
+                onNodeWithText(getString(Res.string.search_history_empty))
                     .assertIsDisplayed()
             }
         )

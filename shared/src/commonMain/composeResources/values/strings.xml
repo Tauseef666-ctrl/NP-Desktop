@@ -185,8 +185,6 @@
     <!-- Search screen -->
     <string name="search_screen_title">Search</string>
     <string name="search_screen_placeholder">Search for videos, channels and playlists…</string>
-    <string name="search_empty_title">No results yet</string>
-    <string name="search_empty_message">Type a query above. Results will appear once the media provider is wired up.</string>
 
     <!-- Trending screen -->
     <string name="trending_screen_title">Trending</string>
@@ -463,5 +461,26 @@
     <string name="player_default_speed_1_5">1.5x</string>
     <string name="player_default_speed_1_75">1.75x</string>
     <string name="player_default_speed_2_0">2x</string>
+
+    <!-- Provider content: search, trending, channels (milestone 8) -->
+    <string name="provider_error_no_provider">No provider connected. Add one in Settings &gt; Content.</string>
+    <string name="provider_error_unsupported">The connected provider does not support this.</string>
+    <string name="provider_error_network">Could not reach the provider. Check your connection and try again.</string>
+    <string name="provider_error_parse">The provider returned content we could not read.</string>
+    <string name="provider_error_unknown">Something went wrong while loading content.</string>
+    <string name="provider_retry">Retry</string>
+
+    <string name="search_results_title">Results</string>
+    <string name="search_results_loading">Searching…</string>
+    <string name="search_results_empty_title">No results</string>
+    <string name="search_results_empty_message">No matching content was found for this search.</string>
+
+    <string name="trending_loading">Loading trending…</string>
+    <string name="trending_results_title">Trending</string>
+
+    <string name="channels_screen_title">Channel</string>
+    <string name="channels_loading">Loading channel…</string>
+    <string name="channels_empty_title">Nothing to show</string>
+    <string name="channels_empty_message">This channel did not return any content.</string>
 
 </resources>

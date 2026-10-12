@@ -16,6 +16,7 @@ import net.newpipe.app.extensions.withKoin
 import newpipe.shared.generated.resources.Res
 import newpipe.shared.generated.resources.trending_empty_message
 import newpipe.shared.generated.resources.trending_screen_title
+import net.newpipe.app.viewmodel.trending.TrendingState
 import org.jetbrains.compose.resources.getString
 
 @OptIn(ExperimentalTestApi::class)
@@ -25,7 +26,7 @@ class TrendingScreenTest {
     fun rendersTitleAndEmptyState() = runComposeUiTest {
         withKoin(
             modules = emptyList(),
-            content = { TrendingScreenContent() },
+            content = { TrendingScreenContent(state = TrendingState.Success(emptyList())) },
             onContent = {
                 onAllNodesWithText(getString(Res.string.trending_screen_title))
                     .onFirst()

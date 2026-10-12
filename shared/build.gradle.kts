@@ -140,6 +140,7 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation(libs.vlcj)
+                implementation(libs.newpipe.extractor)
             }
         }
         val jvmTest by getting {

@@ -8,6 +8,7 @@ package net.newpipe.app.navigation
 import androidx.compose.runtime.mutableStateListOf
 import co.touchlab.kermit.Logger
 import net.newpipe.app.screen.about.AboutScreen
+import net.newpipe.app.screen.channels.ChannelsScreen
 import net.newpipe.app.screen.downloads.DownloadsScreen
 import net.newpipe.app.screen.history.HistoryScreen
 import net.newpipe.app.screen.home.HomeScreen
@@ -78,6 +79,10 @@ fun navModule() = module {
 
     navigation<Destination.Trending> {
         TrendingScreen()
+    }
+
+    navigation<Destination.Channels> {
+        ChannelsScreen()
     }
 
     navigation<Destination.About> {

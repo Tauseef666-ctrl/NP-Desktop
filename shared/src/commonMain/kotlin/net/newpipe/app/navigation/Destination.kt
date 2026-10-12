@@ -42,6 +42,9 @@ sealed interface Destination : NavKey {
     data object Trending : Destination
 
     @Serializable
+    data object Channels : Destination
+
+    @Serializable
     data object PlayerSettings : Destination
 
     @Serializable
