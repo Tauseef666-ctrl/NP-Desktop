@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
@@ -27,6 +28,7 @@ import net.newpipe.app.component.ErrorState
 import net.newpipe.app.component.LoadingState
 import net.newpipe.app.component.PlaybackStatusMessage
 import net.newpipe.app.component.PlusScaffold
+import net.newpipe.app.component.ProviderLoadMore
 import net.newpipe.app.component.SectionHeader
 import net.newpipe.app.component.TopToolbar
 import net.newpipe.app.component.VideoCard
@@ -96,7 +98,8 @@ fun TrendingScreen(
                     navigator.navigateTo(Destination.Playlist)
                 }
             }
-        }
+        },
+        onLoadMore = { viewModel.loadMore() }
     )
 }
 
@@ -107,7 +110,8 @@ fun TrendingScreenContent(
     playbackState: ProviderPlaybackState = ProviderPlaybackState.Idle,
     onNavigateUp: () -> Unit = {},
     onRetry: () -> Unit = {},
-    onItemClick: (ProviderContentItem) -> Unit = {}
+    onItemClick: (ProviderContentItem) -> Unit = {},
+    onLoadMore: () -> Unit = {}
 ) {
     PlusScaffold(
         modifier = modifier,
@@ -143,7 +147,13 @@ fun TrendingScreenContent(
                         message = stringResource(Res.string.trending_empty_message)
                     )
                 } else {
-                    TrendingGrid(items = state.items, onItemClick = onItemClick)
+                    TrendingGrid(
+                        items = state.items,
+                        nextPageToken = state.nextPageToken,
+                        loadingMore = state.loadingMore,
+                        onItemClick = onItemClick,
+                        onLoadMore = onLoadMore
+                    )
                 }
             }
             Spacer(Modifier.height(spaceNormal))
@@ -154,7 +164,10 @@ fun TrendingScreenContent(
 @Composable
 private fun TrendingGrid(
     items: List<ProviderContentItem>,
-    onItemClick: (ProviderContentItem) -> Unit
+    nextPageToken: String?,
+    loadingMore: Boolean,
+    onItemClick: (ProviderContentItem) -> Unit,
+    onLoadMore: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         items.chunked(ResultColumns).forEach { row ->
@@ -180,6 +193,13 @@ private fun TrendingGrid(
                     Spacer(Modifier.weight(1f))
                 }
             }
+        }
+        if (nextPageToken != null) {
+            ProviderLoadMore(
+                loadingMore = loadingMore,
+                onLoadMore = onLoadMore,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
         }
     }
 }

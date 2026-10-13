@@ -5,6 +5,7 @@
 
 package net.newpipe.app.viewmodel.trending
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -41,6 +42,22 @@ private class FakeTrendingProvider(
     override val capabilities: ProviderCapabilities = ProviderCapabilities(trending = true)
 
     override suspend fun trending(pageToken: String?): ProviderResult<ProviderContentPage> = onTrending()
+}
+
+private class PagingTrendingProvider(
+    private val onTrending: suspend (String?) -> ProviderResult<ProviderContentPage>
+) : MediaProvider {
+    override val id: String = "fake"
+    override val name: String = "Fake provider"
+    override val isAvailable: Boolean = true
+    override val capabilities: ProviderCapabilities = ProviderCapabilities(trending = true)
+
+    val seenTokens: MutableList<String?> = mutableListOf()
+
+    override suspend fun trending(pageToken: String?): ProviderResult<ProviderContentPage> {
+        seenTokens.add(pageToken)
+        return onTrending(pageToken)
+    }
 }
 
 private class FakeTrendingPlayback(
@@ -151,6 +168,81 @@ class TrendingViewModelTest {
 
         assertEquals(TrendingState.Success(page.items), vm.awaitSettled())
         assertEquals(2, calls)
+    }
+
+    @Test
+    fun loadMoreAppendsNextPage() = runTest {
+        val page1 = ProviderContentPage(listOf(item("v1")), nextPageToken = "T1")
+        val page2 = ProviderContentPage(listOf(item("v2")), nextPageToken = "T2")
+        val provider = PagingTrendingProvider { token ->
+            if (token == null) ProviderResult.Success(page1) else ProviderResult.Success(page2)
+        }
+        val vm = viewModel(registry = ProviderRegistry().apply { register(provider) })
+        vm.awaitSettled()
+
+        vm.loadMore()
+
+        val success = vm.state.first { it is TrendingState.Success && it.items.size == 2 }
+            as TrendingState.Success
+        assertEquals(listOf(item("v1"), item("v2")), success.items)
+        assertEquals("T2", success.nextPageToken)
+        assertEquals(listOf<String?>(null, "T1"), provider.seenTokens)
+    }
+
+    @Test
+    fun loadMoreWithoutTokenIsNoOp() = runTest {
+        val page1 = ProviderContentPage(listOf(item("v1")))
+        val provider = PagingTrendingProvider { ProviderResult.Success(page1) }
+        val vm = viewModel(registry = ProviderRegistry().apply { register(provider) })
+        vm.awaitSettled()
+
+        vm.loadMore()
+
+        assertEquals(listOf<String?>(null), provider.seenTokens)
+        assertEquals(listOf(item("v1")), (vm.state.value as TrendingState.Success).items)
+    }
+
+    @Test
+    fun loadMoreFailureKeepsItemsAndClearsLoading() = runTest {
+        val page1 = ProviderContentPage(listOf(item("v1")), nextPageToken = "T1")
+        val provider = PagingTrendingProvider { token ->
+            if (token == null) {
+                ProviderResult.Success(page1)
+            } else {
+                ProviderResult.Failure(ProviderFailureReason.NETWORK)
+            }
+        }
+        val vm = viewModel(registry = ProviderRegistry().apply { register(provider) })
+        vm.awaitSettled()
+
+        vm.loadMore()
+
+        val success = vm.state.value as TrendingState.Success
+        assertEquals(listOf(item("v1")), success.items)
+        assertEquals("T1", success.nextPageToken)
+        assertEquals(false, success.loadingMore)
+    }
+
+    @Test
+    fun loadMoreIgnoredWhileAlreadyLoading() = runTest {
+        val page1 = ProviderContentPage(listOf(item("v1")), nextPageToken = "T1")
+        val page2 = ProviderContentPage(listOf(item("v2")), nextPageToken = "T2")
+        val gate = CompletableDeferred<ProviderResult<ProviderContentPage>>()
+        val provider = PagingTrendingProvider { token ->
+            if (token == null) ProviderResult.Success(page1) else gate.await()
+        }
+        val vm = viewModel(registry = ProviderRegistry().apply { register(provider) })
+        vm.awaitSettled()
+
+        vm.loadMore()
+        vm.loadMore()
+
+        assertEquals(listOf<String?>(null, "T1"), provider.seenTokens)
+
+        gate.complete(ProviderResult.Success(page2))
+        val success = vm.state.first { it is TrendingState.Success && it.items.size == 2 }
+            as TrendingState.Success
+        assertEquals(listOf(item("v1"), item("v2")), success.items)
     }
 
     @Test

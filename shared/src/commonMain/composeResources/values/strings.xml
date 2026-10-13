@@ -469,6 +469,7 @@
     <string name="provider_error_parse">The provider returned content we could not read.</string>
     <string name="provider_error_unknown">Something went wrong while loading content.</string>
     <string name="provider_retry">Retry</string>
+    <string name="provider_load_more">Load more</string>
 
     <string name="search_results_title">Results</string>
     <string name="search_results_loading">Searching…</string>

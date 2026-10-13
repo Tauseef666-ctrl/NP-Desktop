@@ -26,6 +26,7 @@ import net.newpipe.app.component.ErrorState
 import net.newpipe.app.component.LoadingState
 import net.newpipe.app.component.PlaybackStatusMessage
 import net.newpipe.app.component.PlusScaffold
+import net.newpipe.app.component.ProviderLoadMore
 import net.newpipe.app.component.TopToolbar
 import net.newpipe.app.component.VideoCard
 import net.newpipe.app.component.providerErrorMessage
@@ -94,7 +95,8 @@ fun ChannelsScreen(
                     navigator.navigateTo(Destination.Playlist)
                 }
             }
-        }
+        },
+        onLoadMore = { viewModel.loadMore() }
     )
 }
 
@@ -106,7 +108,8 @@ fun ChannelsScreenContent(
     playbackState: ProviderPlaybackState = ProviderPlaybackState.Idle,
     onBack: () -> Unit = {},
     onRetry: () -> Unit = {},
-    onItemClick: (ProviderContentItem) -> Unit = {}
+    onItemClick: (ProviderContentItem) -> Unit = {},
+    onLoadMore: () -> Unit = {}
 ) {
     PlusScaffold(
         modifier = modifier,
@@ -141,7 +144,13 @@ fun ChannelsScreenContent(
                     modifier = Modifier.align(Alignment.Center).fillMaxWidth()
                 )
             } else {
-                ChannelItems(items = state.items, onItemClick = onItemClick)
+                ChannelItems(
+                    items = state.items,
+                    nextPageToken = state.nextPageToken,
+                    loadingMore = state.loadingMore,
+                    onItemClick = onItemClick,
+                    onLoadMore = onLoadMore
+                )
             }
         }
     }
@@ -151,7 +160,10 @@ fun ChannelsScreenContent(
 @Composable
 private fun ChannelItems(
     items: List<ProviderContentItem>,
+    nextPageToken: String?,
+    loadingMore: Boolean,
     onItemClick: (ProviderContentItem) -> Unit,
+    onLoadMore: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     FlowRow(
@@ -169,6 +181,12 @@ private fun ChannelItems(
                 durationText = item.durationSeconds?.let { formatDuration(it) },
                 isLive = item.kind == ProviderContentKind.LIVE,
                 onClick = { onItemClick(item) }
+            )
+        }
+        if (nextPageToken != null) {
+            ProviderLoadMore(
+                loadingMore = loadingMore,
+                onLoadMore = onLoadMore
             )
         }
     }

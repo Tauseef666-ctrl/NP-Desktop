@@ -28,10 +28,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * The provider wraps the YouTube service exposed by [ServiceList]. It is honest about its limits:
  *
- *  * Only the **first page** of every listing except playlists is returned; there an incoming
- *    `pageToken` is ignored and [ProviderContentPage.nextPageToken] is always `null`. Playlists
- *    paginate: the extractor's next-page URL is surfaced as the [ProviderContentPage.nextPageToken]
- *    and accepted back on the following call.
+ *  * Every listing (search, trending, channels and playlists) paginates: the extractor's next-page
+ *    URL is surfaced as the [ProviderContentPage.nextPageToken] and accepted back on the following
+ *    call. A null/blank incoming `pageToken` fetches the first page; a null next-page token means the
+ *    provider has no more content for that listing.
  *  * Extraction is blocking and runs on the caller's dispatcher; [ProviderContentRepository] already
  *    moves provider calls off the main dispatcher.
  *  * If NewPipeExtractor fails to initialise, [isAvailable] is `false` and the provider advertises
@@ -55,21 +55,31 @@ class ExtractorMediaProvider : MediaProvider {
 
     override val isAvailable: Boolean = ensureInitialized()
 
-    /** Search YouTube once; [pageToken] is ignored (see class KDoc). */
+    /**
+     * Search YouTube. A null/blank [pageToken] fetches the first page; otherwise the token is handed
+     * back to the extractor to continue where the previous page stopped (see class KDoc).
+     */
     override suspend fun search(query: String, pageToken: String?): ProviderResult<ProviderContentPage> =
         guarded {
-            pureMapPage(ServiceList.YouTube.getSearchExtractor(query).initialPage)
-        }
-
-    /** Load the default YouTube kiosk once; [pageToken] is ignored (see class KDoc). */
-    override suspend fun trending(pageToken: String?): ProviderResult<ProviderContentPage> =
-        guarded {
-            pureMapPage(widen(ServiceList.YouTube.kioskList.defaultKioskExtractor.initialPage))
+            val extractor = ServiceList.YouTube.getSearchExtractor(query)
+            val page = resolvePage(pageToken, extractor)
+            pureMapPage(page, pureNextPageToken(page))
         }
 
     /**
-     * Load the first content tab (preferring the videos tab) of the channel at [url] once; [pageToken]
-     * is ignored (see class KDoc).
+     * Load the default YouTube kiosk. A null/blank [pageToken] fetches the first page; otherwise the
+     * token continues the previous page (see class KDoc).
+     */
+    override suspend fun trending(pageToken: String?): ProviderResult<ProviderContentPage> =
+        guarded {
+            val extractor = ServiceList.YouTube.kioskList.defaultKioskExtractor
+            val page = resolvePage(pageToken, extractor)
+            pureMapPage(page, pureNextPageToken(page))
+        }
+
+    /**
+     * Load the first content tab (preferring the videos tab) of the channel at [url]. A null/blank
+     * [pageToken] fetches the first page; otherwise the token continues the same tab (see class KDoc).
      */
     override suspend fun channel(url: String, pageToken: String?): ProviderResult<ProviderContentPage> =
         guarded {
@@ -81,7 +91,8 @@ class ExtractorMediaProvider : MediaProvider {
                 it.url.contains("/videos", ignoreCase = true) ||
                     it.id.contains("videos", ignoreCase = true)
             } ?: tabs.first()
-            pureMapPage(ServiceList.YouTube.getChannelTabExtractor(videosTab).initialPage)
+            val page = resolvePage(pageToken, ServiceList.YouTube.getChannelTabExtractor(videosTab))
+            pureMapPage(page, pureNextPageToken(page))
         }
 
     /**
@@ -90,14 +101,8 @@ class ExtractorMediaProvider : MediaProvider {
      */
     override suspend fun playlist(url: String, pageToken: String?): ProviderResult<ProviderContentPage> =
         guarded {
-            val extractor = ServiceList.YouTube.getPlaylistExtractor(url)
-            val rawPage = if (pageToken.isNullOrBlank()) {
-                extractor.initialPage
-            } else {
-                extractor.getPage(Page(pageToken))
-            }
-            val page = widen(rawPage)
-            pureMapPage(page, page.nextPage?.url?.takeIf { it.isNotBlank() })
+            val page = resolvePage(pageToken, ServiceList.YouTube.getPlaylistExtractor(url))
+            pureMapPage(page, pureNextPageToken(page))
         }
 
     override suspend fun resolve(url: String): ProviderResult<ResolvedMedia> {
@@ -229,6 +234,30 @@ class ExtractorMediaProvider : MediaProvider {
                 items = page.items.orEmpty().mapNotNull(::pureMapItem),
                 nextPageToken = nextPageToken
             )
+
+        /**
+         * The opaque token that continues a paginated listing: the extractor's next-page URL, or
+         * `null` when the listing is exhausted (no next page, or a blank URL).
+         */
+        fun pureNextPageToken(page: ListExtractor.InfoItemsPage<*>): String? =
+            page.nextPage?.url?.takeIf { it.isNotBlank() }
+
+        /**
+         * Fetch one page of [extractor]'s listing: the initial page for a null/blank [pageToken],
+         * otherwise the page the token points at. Widened to a concrete [InfoItem] page because the
+         * extractor's item type varies per listing but the mapper always works on [InfoItem].
+         */
+        private fun resolvePage(
+            pageToken: String?,
+            extractor: ListExtractor<*>
+        ): ListExtractor.InfoItemsPage<InfoItem> {
+            val page = if (pageToken.isNullOrBlank()) {
+                extractor.initialPage
+            } else {
+                extractor.getPage(Page(pageToken))
+            }
+            return widen(page)
+        }
 
         private fun bestThumbnail(images: List<Image>?): String? {
             if (images.isNullOrEmpty()) return null

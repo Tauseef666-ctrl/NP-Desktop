@@ -5,6 +5,7 @@
 
 package net.newpipe.app.viewmodel.channels
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -71,6 +72,22 @@ private class FakeChannelProvider(
     override suspend fun channel(url: String, pageToken: String?): ProviderResult<ProviderContentPage> {
         channelCalls++
         return result
+    }
+}
+
+private class PagingChannelProvider(
+    private val onChannel: suspend (String, String?) -> ProviderResult<ProviderContentPage>
+) : MediaProvider {
+    override val id: String = "fake"
+    override val name: String = "Fake"
+    override val isAvailable: Boolean = true
+    override val capabilities: ProviderCapabilities = ProviderCapabilities(channels = true)
+
+    val seenTokens: MutableList<String?> = mutableListOf()
+
+    override suspend fun channel(url: String, pageToken: String?): ProviderResult<ProviderContentPage> {
+        seenTokens.add(pageToken)
+        return onChannel(url, pageToken)
     }
 }
 
@@ -206,6 +223,89 @@ class ChannelsViewModelTest {
         val state = viewModel.state.first { it !is ChannelsState.Loading }
         assertTrue(state is ChannelsState.Success)
         assertEquals(2, provider.channelCalls)
+    }
+
+    @Test
+    fun loadMoreAppendsNextPage() = runTest {
+        val channelNav = ChannelNavigation()
+        channelNav.select(CHANNEL_URL, "NewPipe")
+        val page1 = ProviderContentPage(listOf(VIDEO), nextPageToken = "T1")
+        val page2 = ProviderContentPage(listOf(LIVE), nextPageToken = "T2")
+        val provider = PagingChannelProvider { _, token ->
+            if (token == null) ProviderResult.Success(page1) else ProviderResult.Success(page2)
+        }
+        val vm = viewModel(repository(provider), channelNav)
+        vm.state.first { it !is ChannelsState.Loading }
+
+        vm.loadMore()
+
+        val success = vm.state.first { it is ChannelsState.Success && it.items.size == 2 }
+            as ChannelsState.Success
+        assertEquals(listOf(VIDEO, LIVE), success.items)
+        assertEquals("T2", success.nextPageToken)
+        assertEquals(listOf<String?>(null, "T1"), provider.seenTokens)
+    }
+
+    @Test
+    fun loadMoreWithoutTokenIsNoOp() = runTest {
+        val channelNav = ChannelNavigation()
+        channelNav.select(CHANNEL_URL, "NewPipe")
+        val page1 = ProviderContentPage(listOf(VIDEO))
+        val provider = PagingChannelProvider { _, _ -> ProviderResult.Success(page1) }
+        val vm = viewModel(repository(provider), channelNav)
+        vm.state.first { it !is ChannelsState.Loading }
+
+        vm.loadMore()
+
+        assertEquals(listOf<String?>(null), provider.seenTokens)
+        assertEquals(listOf(VIDEO), (vm.state.value as ChannelsState.Success).items)
+    }
+
+    @Test
+    fun loadMoreFailureKeepsItemsAndClearsLoading() = runTest {
+        val channelNav = ChannelNavigation()
+        channelNav.select(CHANNEL_URL, "NewPipe")
+        val page1 = ProviderContentPage(listOf(VIDEO), nextPageToken = "T1")
+        val provider = PagingChannelProvider { _, token ->
+            if (token == null) {
+                ProviderResult.Success(page1)
+            } else {
+                ProviderResult.Failure(ProviderFailureReason.NETWORK)
+            }
+        }
+        val vm = viewModel(repository(provider), channelNav)
+        vm.state.first { it !is ChannelsState.Loading }
+
+        vm.loadMore()
+
+        val success = vm.state.value as ChannelsState.Success
+        assertEquals(listOf(VIDEO), success.items)
+        assertEquals("T1", success.nextPageToken)
+        assertEquals(false, success.loadingMore)
+    }
+
+    @Test
+    fun loadMoreIgnoredWhileAlreadyLoading() = runTest {
+        val channelNav = ChannelNavigation()
+        channelNav.select(CHANNEL_URL, "NewPipe")
+        val page1 = ProviderContentPage(listOf(VIDEO), nextPageToken = "T1")
+        val page2 = ProviderContentPage(listOf(LIVE), nextPageToken = "T2")
+        val gate = CompletableDeferred<ProviderResult<ProviderContentPage>>()
+        val provider = PagingChannelProvider { _, token ->
+            if (token == null) ProviderResult.Success(page1) else gate.await()
+        }
+        val vm = viewModel(repository(provider), channelNav)
+        vm.state.first { it !is ChannelsState.Loading }
+
+        vm.loadMore()
+        vm.loadMore()
+
+        assertEquals(listOf<String?>(null, "T1"), provider.seenTokens)
+
+        gate.complete(ProviderResult.Success(page2))
+        val success = vm.state.first { it is ChannelsState.Success && it.items.size == 2 }
+            as ChannelsState.Success
+        assertEquals(listOf(VIDEO, LIVE), success.items)
     }
 
     @Test

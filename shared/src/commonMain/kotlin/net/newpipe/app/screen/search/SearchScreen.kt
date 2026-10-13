@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
@@ -32,6 +33,7 @@ import net.newpipe.app.component.ErrorState
 import net.newpipe.app.component.LoadingState
 import net.newpipe.app.component.PlaybackStatusMessage
 import net.newpipe.app.component.PlusScaffold
+import net.newpipe.app.component.ProviderLoadMore
 import net.newpipe.app.component.SearchBarField
 import net.newpipe.app.component.SectionHeader
 import net.newpipe.app.component.TopToolbar
@@ -116,7 +118,8 @@ fun SearchScreen(
                     navigator.navigateTo(Destination.Playlist)
                 }
             }
-        }
+        },
+        onLoadMore = { viewModel.loadMore() }
     )
 }
 
@@ -136,7 +139,8 @@ fun SearchScreenContent(
     playbackState: ProviderPlaybackState = ProviderPlaybackState.Idle,
     onClearHistory: () -> Unit = {},
     onSubmitQuery: (String) -> Unit = {},
-    onItemClick: (ProviderContentItem) -> Unit = {}
+    onItemClick: (ProviderContentItem) -> Unit = {},
+    onLoadMore: () -> Unit = {}
 ) {
     PlusScaffold(
         toolbar = {
@@ -195,7 +199,8 @@ fun SearchScreenContent(
                     SearchResultsSection(
                         results = results,
                         onRetry = { onSubmitQuery(query) },
-                        onItemClick = onItemClick
+                        onItemClick = onItemClick,
+                        onLoadMore = onLoadMore
                     )
                 }
             }
@@ -208,7 +213,8 @@ fun SearchScreenContent(
 private fun SearchResultsSection(
     results: SearchResultsState,
     onRetry: () -> Unit,
-    onItemClick: (ProviderContentItem) -> Unit
+    onItemClick: (ProviderContentItem) -> Unit,
+    onLoadMore: () -> Unit
 ) {
     SectionHeader(title = stringResource(Res.string.search_results_title))
     when (results) {
@@ -230,7 +236,13 @@ private fun SearchResultsSection(
                 message = stringResource(Res.string.search_results_empty_message)
             )
         } else {
-            SearchResultsGrid(items = results.items, onItemClick = onItemClick)
+            SearchResultsGrid(
+                items = results.items,
+                nextPageToken = results.nextPageToken,
+                loadingMore = results.loadingMore,
+                onItemClick = onItemClick,
+                onLoadMore = onLoadMore
+            )
         }
     }
 }
@@ -238,7 +250,10 @@ private fun SearchResultsSection(
 @Composable
 private fun SearchResultsGrid(
     items: List<ProviderContentItem>,
-    onItemClick: (ProviderContentItem) -> Unit
+    nextPageToken: String?,
+    loadingMore: Boolean,
+    onItemClick: (ProviderContentItem) -> Unit,
+    onLoadMore: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         items.chunked(ResultColumns).forEach { row ->
@@ -264,6 +279,13 @@ private fun SearchResultsGrid(
                     Spacer(Modifier.weight(1f))
                 }
             }
+        }
+        if (nextPageToken != null) {
+            ProviderLoadMore(
+                loadingMore = loadingMore,
+                onLoadMore = onLoadMore,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
         }
     }
 }

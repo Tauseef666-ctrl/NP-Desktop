@@ -28,8 +28,15 @@ sealed interface TrendingState {
     /** A ranked page is being requested from the provider. */
     data object Loading : TrendingState
 
-    /** The provider delivered a ranked page. */
-    data class Success(val items: List<ProviderContentItem>) : TrendingState
+    /**
+     * The provider delivered a ranked page. [nextPageToken] continues the list (null means
+     * exhausted) and [loadingMore] is true while a follow-up page request is in flight.
+     */
+    data class Success(
+        val items: List<ProviderContentItem>,
+        val nextPageToken: String? = null,
+        val loadingMore: Boolean = false
+    ) : TrendingState
 
     /** Loading failed with a machine-readable [reason] for localized, honest UI text. */
     data class Failure(val reason: ProviderFailureReason) : TrendingState
@@ -59,6 +66,7 @@ class TrendingViewModel(
     val playbackState: StateFlow<ProviderPlaybackState> = playbackSession.state
 
     private var loadJob: Job? = null
+    private var loadMoreJob: Job? = null
 
     init {
         load()
@@ -74,7 +82,12 @@ class TrendingViewModel(
         _state.value = TrendingState.Loading
         loadJob = viewModelScope.launch {
             _state.value = when (val result = repository.trending()) {
-                is ProviderResult.Success -> TrendingState.Success(result.value.items)
+                is ProviderResult.Success -> TrendingState.Success(
+                    items = result.value.items,
+                    nextPageToken = result.value.nextPageToken,
+                    loadingMore = false
+                )
+
                 is ProviderResult.Failure -> TrendingState.Failure(result.reason)
             }
         }
@@ -82,6 +95,43 @@ class TrendingViewModel(
 
     /** Retry the load after a failure; re-queries the provider. */
     fun retry() = load()
+
+    /**
+     * Request the next page of the ranked listing. Only runs while the state is
+     * [TrendingState.Success] with a non-blank [TrendingState.Success.nextPageToken] and no load-more
+     * request already in flight, so overlapping requests cannot interleave. On success the new items
+     * are appended and the token is refreshed; on failure the already-loaded items are kept, only
+     * [TrendingState.Success.loadingMore] is cleared and the token is kept so the user can try again.
+     */
+    fun loadMore() {
+        val current = _state.value
+        if (current !is TrendingState.Success) return
+        val pageToken = current.nextPageToken
+        if (pageToken.isNullOrBlank()) return
+        if (current.loadingMore) return
+        if (loadMoreJob?.isActive == true) return
+
+        _state.value = current.copy(loadingMore = true)
+        loadMoreJob = viewModelScope.launch {
+            when (val result = repository.trending(pageToken)) {
+                is ProviderResult.Success -> {
+                    val latest = _state.value as? TrendingState.Success ?: return@launch
+                    _state.value = latest.copy(
+                        items = latest.items + result.value.items,
+                        nextPageToken = result.value.nextPageToken,
+                        loadingMore = false
+                    )
+                }
+
+                is ProviderResult.Failure -> {
+                    val latest = _state.value as? TrendingState.Success ?: return@launch
+                    // Honest outcome: the pages already shown stay available, only the load-more
+                    // state is released so the user can either scroll the list or try again.
+                    _state.value = latest.copy(loadingMore = false)
+                }
+            }
+        }
+    }
 
     /**
      * Remember the channel behind [item] for the channel screen: its own URL when [item] is a

@@ -33,8 +33,15 @@ sealed interface ChannelsState {
     /** A channel is being loaded. */
     data object Loading : ChannelsState
 
-    /** The channel content loaded successfully. */
-    data class Success(val items: List<ProviderContentItem>) : ChannelsState
+    /**
+     * The channel content loaded successfully. [nextPageToken] continues the list (null means
+     * exhausted) and [loadingMore] is true while a follow-up page request is in flight.
+     */
+    data class Success(
+        val items: List<ProviderContentItem>,
+        val nextPageToken: String? = null,
+        val loadingMore: Boolean = false
+    ) : ChannelsState
 
     /** Loading failed for [reason]. */
     data class Failure(val reason: ProviderFailureReason) : ChannelsState
@@ -66,6 +73,7 @@ class ChannelsViewModel(
     val playbackState: StateFlow<ProviderPlaybackState> = playbackSession.state
 
     private var loadJob: Job? = null
+    private var loadMoreJob: Job? = null
 
     init {
         load()
@@ -107,8 +115,52 @@ class ChannelsViewModel(
         _state.value = ChannelsState.Loading
         loadJob = viewModelScope.launch {
             _state.value = when (val result = repository.channel(url)) {
-                is ProviderResult.Success -> ChannelsState.Success(result.value.items)
+                is ProviderResult.Success -> ChannelsState.Success(
+                    items = result.value.items,
+                    nextPageToken = result.value.nextPageToken,
+                    loadingMore = false
+                )
+
                 is ProviderResult.Failure -> ChannelsState.Failure(result.reason)
+            }
+        }
+    }
+
+    /**
+     * Request the next page of the loaded channel. Only runs while the state is
+     * [ChannelsState.Success] with a non-blank [ChannelsState.Success.nextPageToken], a current
+     * selection and no load-more request already in flight, so overlapping requests cannot
+     * interleave. On success the new items are appended and the token is refreshed; on failure the
+     * already-loaded items are kept, only [ChannelsState.Success.loadingMore] is cleared and the
+     * token is kept so the user can try again.
+     */
+    fun loadMore() {
+        val current = _state.value
+        if (current !is ChannelsState.Success) return
+        val pageToken = current.nextPageToken
+        if (pageToken.isNullOrBlank()) return
+        if (current.loadingMore) return
+        if (loadMoreJob?.isActive == true) return
+        val url = channelNav.selected.value?.url ?: return
+
+        _state.value = current.copy(loadingMore = true)
+        loadMoreJob = viewModelScope.launch {
+            when (val result = repository.channel(url, pageToken)) {
+                is ProviderResult.Success -> {
+                    val latest = _state.value as? ChannelsState.Success ?: return@launch
+                    _state.value = latest.copy(
+                        items = latest.items + result.value.items,
+                        nextPageToken = result.value.nextPageToken,
+                        loadingMore = false
+                    )
+                }
+
+                is ProviderResult.Failure -> {
+                    val latest = _state.value as? ChannelsState.Success ?: return@launch
+                    // Honest outcome: the pages already shown stay available, only the load-more
+                    // state is released so the user can either scroll the list or try again.
+                    _state.value = latest.copy(loadingMore = false)
+                }
             }
         }
     }

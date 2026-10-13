@@ -7,6 +7,7 @@ package net.newpipe.app.viewmodel.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,7 +34,18 @@ import org.koin.core.annotation.KoinViewModel
 sealed interface SearchResultsState {
     data object Idle : SearchResultsState
     data object Loading : SearchResultsState
-    data class Success(val items: List<ProviderContentItem>) : SearchResultsState
+
+    /**
+     * Results for a query. [nextPageToken] continues the list (null means exhausted) and
+     * [loadingMore] is true while a follow-up page request is in flight, so the load-more action can
+     * be disabled.
+     */
+    data class Success(
+        val items: List<ProviderContentItem>,
+        val nextPageToken: String? = null,
+        val loadingMore: Boolean = false
+    ) : SearchResultsState
+
     data class Failure(val reason: ProviderFailureReason) : SearchResultsState
 }
 
@@ -69,6 +81,7 @@ class SearchViewModel(
     val results: StateFlow<SearchResultsState> = _results.asStateFlow()
 
     private var activeQuery: String? = null
+    private var loadMoreJob: Job? = null
 
     /** Record [query] as the most recent search (blank input is ignored). */
     fun record(query: String) = history.record(query)
@@ -95,8 +108,57 @@ class SearchViewModel(
             val result = repository.search(trimmed)
             if (activeQuery != trimmed) return@launch
             _results.value = when (result) {
-                is ProviderResult.Success -> SearchResultsState.Success(result.value.items)
+                is ProviderResult.Success -> SearchResultsState.Success(
+                    items = result.value.items,
+                    nextPageToken = result.value.nextPageToken,
+                    loadingMore = false
+                )
+
                 is ProviderResult.Failure -> SearchResultsState.Failure(result.reason)
+            }
+        }
+    }
+
+    /**
+     * Request the next page of the current results. Only runs while the state is
+     * [SearchResultsState.Success] with a non-blank [SearchResultsState.Success.nextPageToken], an
+     * [activeQuery] still set and no load-more request already in flight, so overlapping requests
+     * cannot interleave. The query is re-checked after the provider call ("latest wins"): a result
+     * whose query was superseded is discarded instead of appended. On success the new items are
+     * appended and the token is refreshed; on failure the already-loaded items are kept, only
+     * [SearchResultsState.Success.loadingMore] is cleared and the token is kept so the user can try
+     * again.
+     */
+    fun loadMore() {
+        val current = _results.value
+        if (current !is SearchResultsState.Success) return
+        val pageToken = current.nextPageToken
+        if (pageToken.isNullOrBlank()) return
+        if (current.loadingMore) return
+        if (loadMoreJob?.isActive == true) return
+        val query = activeQuery
+        if (query.isNullOrBlank()) return
+
+        _results.value = current.copy(loadingMore = true)
+        loadMoreJob = viewModelScope.launch {
+            val result = repository.search(query, pageToken)
+            if (activeQuery != query) return@launch
+            when (result) {
+                is ProviderResult.Success -> {
+                    val latest = _results.value as? SearchResultsState.Success ?: return@launch
+                    _results.value = latest.copy(
+                        items = latest.items + result.value.items,
+                        nextPageToken = result.value.nextPageToken,
+                        loadingMore = false
+                    )
+                }
+
+                is ProviderResult.Failure -> {
+                    val latest = _results.value as? SearchResultsState.Success ?: return@launch
+                    // Honest outcome: the pages already shown stay available, only the load-more
+                    // state is released so the user can either scroll the list or try again.
+                    _results.value = latest.copy(loadingMore = false)
+                }
             }
         }
     }
