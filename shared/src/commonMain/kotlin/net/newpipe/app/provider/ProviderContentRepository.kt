@@ -116,6 +116,17 @@ class ProviderContentRepository(
         return run(provider) { it.streamMetadata(url) }
     }
 
+    /**
+     * List the available subtitle/caption tracks of the stream page at [url]. Picks the first
+     * available provider whose [ProviderCapabilities.resolve] is enabled (subtitles are read from the
+     * same stream page as playback), and fails the same way [resolve] does when none can.
+     */
+    suspend fun subtitles(url: String): ProviderResult<List<SubtitleTrack>> {
+        val provider = firstFor { it.capabilities.resolve }
+            ?: return noProviderOrUnsupported { it.capabilities.resolve }
+        return run(provider) { it.subtitles(url) }
+    }
+
     private fun firstFor(predicate: (MediaProvider) -> Boolean): MediaProvider? =
         registry.available.value.firstOrNull { it.isAvailable && predicate(it) }
 

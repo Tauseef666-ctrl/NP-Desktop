@@ -81,4 +81,11 @@ interface MediaProvider {
      */
     suspend fun streamMetadata(url: String): ProviderResult<StreamMetadata> =
         ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "streamMetadata")
+
+    /**
+     * List the available subtitle/caption tracks of the stream page at [url]. Providers that cannot
+     * read a stream page keep this default failure instead of pretending.
+     */
+    suspend fun subtitles(url: String): ProviderResult<List<SubtitleTrack>> =
+        ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "subtitles")
 }
