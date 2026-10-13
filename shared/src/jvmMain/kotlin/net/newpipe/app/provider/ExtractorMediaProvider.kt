@@ -12,6 +12,7 @@ import org.schabi.newpipe.extractor.ListExtractor
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.Page
 import org.schabi.newpipe.extractor.ServiceList
+import org.schabi.newpipe.extractor.channel.tabs.ChannelTabs
 import org.schabi.newpipe.extractor.exceptions.ExtractionException
 import org.schabi.newpipe.extractor.exceptions.ParsingException
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException
@@ -31,7 +32,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  *  * Every listing (search, trending, channels and playlists) paginates: the extractor's next-page
  *    URL is surfaced as the [ProviderContentPage.nextPageToken] and accepted back on the following
  *    call. A null/blank incoming `pageToken` fetches the first page; a null next-page token means the
- *    provider has no more content for that listing.
+ *    provider has no more content for that listing. Channels expose their content tabs (Videos,
+ *    Shorts, Live, Playlists, …) and each tab paginates the same way.
  *  * Extraction is blocking and runs on the caller's dispatcher; [ProviderContentRepository] already
  *    moves provider calls off the main dispatcher.
  *  * If NewPipeExtractor fails to initialise, [isAvailable] is `false` and the provider advertises
@@ -92,6 +94,37 @@ class ExtractorMediaProvider : MediaProvider {
                     it.id.contains("videos", ignoreCase = true)
             } ?: tabs.first()
             val page = resolvePage(pageToken, ServiceList.YouTube.getChannelTabExtractor(videosTab))
+            pureMapPage(page, pureNextPageToken(page))
+        }
+
+    /**
+     * List the selectable content tabs of the channel at [url], mapping each extractor tab id to a
+     * display label (see [channelTabLabel]).
+     */
+    override suspend fun channelTabs(url: String): ProviderResult<List<ProviderChannelTab>> =
+        guarded {
+            ServiceList.YouTube.getChannelExtractor(url).tabs.map { tab ->
+                ProviderChannelTab(id = tab.id, label = channelTabLabel(tab.id))
+            }
+        }
+
+    /**
+     * Load one page of the channel tab [tabId] of the channel at [url]. The tab is matched by exact
+     * id first, then case-insensitively as a substring. A null/blank [pageToken] fetches the first
+     * page; otherwise the token continues the same tab (see class KDoc).
+     */
+    override suspend fun channelTab(
+        url: String,
+        tabId: String,
+        pageToken: String?
+    ): ProviderResult<ProviderContentPage> =
+        guarded {
+            val tabs = ServiceList.YouTube.getChannelExtractor(url).tabs
+            if (tabs.isEmpty()) throw ParsingException("Channel has no content tabs: $url")
+            val tab = tabs.firstOrNull { it.id == tabId }
+                ?: tabs.firstOrNull { it.id.contains(tabId, ignoreCase = true) }
+                ?: throw ParsingException("Channel has no tab '$tabId': $url")
+            val page = resolvePage(pageToken, ServiceList.YouTube.getChannelTabExtractor(tab))
             pureMapPage(page, pureNextPageToken(page))
         }
 
@@ -241,6 +274,24 @@ class ExtractorMediaProvider : MediaProvider {
          */
         fun pureNextPageToken(page: ListExtractor.InfoItemsPage<*>): String? =
             page.nextPage?.url?.takeIf { it.isNotBlank() }
+
+        /**
+         * Pure mapping of an extractor channel tab id to a display label. Unknown ids fall back to
+         * the provider's own id so the UI never shows a blank tab.
+         */
+        fun channelTabLabel(id: String): String = when (id.lowercase()) {
+            ChannelTabs.VIDEOS -> "Videos"
+            ChannelTabs.TRACKS -> "Tracks"
+            ChannelTabs.SHORTS -> "Shorts"
+            ChannelTabs.LIVESTREAMS, "streams", "live" -> "Live"
+            ChannelTabs.CHANNELS -> "Channels"
+            ChannelTabs.PLAYLISTS -> "Playlists"
+            ChannelTabs.ALBUMS, "releases" -> "Albums"
+            ChannelTabs.LIKES -> "Likes"
+            ChannelTabs.PODCASTS -> "Podcasts"
+            ChannelTabs.COURSES -> "Courses"
+            else -> id
+        }
 
         /**
          * Fetch one page of [extractor]'s listing: the initial page for a null/blank [pageToken],

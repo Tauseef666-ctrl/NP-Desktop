@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.newpipe.app.provider.ChannelNavigation
 import net.newpipe.app.provider.MediaPlayback
+import net.newpipe.app.provider.ProviderChannelTab
 import net.newpipe.app.provider.ProviderContentItem
+import net.newpipe.app.provider.ProviderContentPage
 import net.newpipe.app.provider.ProviderContentRepository
 import net.newpipe.app.provider.ProviderFailureReason
 import net.newpipe.app.provider.ProviderPlaybackSession
@@ -67,6 +69,16 @@ class ChannelsViewModel(
     /** The current screen state. */
     val state: StateFlow<ChannelsState> = _state.asStateFlow()
 
+    private val _tabs = MutableStateFlow<List<ProviderChannelTab>>(emptyList())
+
+    /** The content tabs the current provider exposes for the selected channel (empty when unsupported). */
+    val tabs: StateFlow<List<ProviderChannelTab>> = _tabs.asStateFlow()
+
+    private val _selectedTabId = MutableStateFlow<String?>(null)
+
+    /** The currently selected tab id, or null when the provider has no tabs. */
+    val selectedTabId: StateFlow<String?> = _selectedTabId.asStateFlow()
+
     private val playbackSession = ProviderPlaybackSession(mediaPlayback, viewModelScope)
 
     /** The state of the most recent play request, for inline progress/error and navigation. */
@@ -114,15 +126,56 @@ class ChannelsViewModel(
     private fun startLoad(url: String) {
         _state.value = ChannelsState.Loading
         loadJob = viewModelScope.launch {
-            _state.value = when (val result = repository.channel(url)) {
-                is ProviderResult.Success -> ChannelsState.Success(
-                    items = result.value.items,
-                    nextPageToken = result.value.nextPageToken,
-                    loadingMore = false
-                )
+            when (val tabsResult = repository.channelTabs(url)) {
+                is ProviderResult.Success -> {
+                    val availableTabs = tabsResult.value
+                    if (availableTabs.isNotEmpty()) {
+                        _tabs.value = availableTabs
+                        val tabId = availableTabs.first().id
+                        _selectedTabId.value = tabId
+                        applyContentResult(repository.channelTab(url, tabId))
+                    } else {
+                        _tabs.value = emptyList()
+                        _selectedTabId.value = null
+                        applyContentResult(repository.channel(url))
+                    }
+                }
 
-                is ProviderResult.Failure -> ChannelsState.Failure(result.reason)
+                is ProviderResult.Failure -> {
+                    _tabs.value = emptyList()
+                    _selectedTabId.value = null
+                    applyContentResult(repository.channel(url))
+                }
             }
+        }
+    }
+
+    /**
+     * Switch the displayed content to the tab [tabId] of the selected channel. Cancels any in-flight
+     * load so the new selection really re-queries, and keeps [tabs] so the UI can keep offering the
+     * other tabs while the switch is in flight.
+     */
+    fun selectTab(tabId: String) {
+        val url = channelNav.selected.value?.url ?: return
+        if (tabId == _selectedTabId.value && _state.value is ChannelsState.Success) return
+        loadJob?.cancel()
+        loadMoreJob?.cancel()
+        _selectedTabId.value = tabId
+        _state.value = ChannelsState.Loading
+        loadJob = viewModelScope.launch {
+            applyContentResult(repository.channelTab(url, tabId))
+        }
+    }
+
+    private fun applyContentResult(result: ProviderResult<ProviderContentPage>) {
+        _state.value = when (result) {
+            is ProviderResult.Success -> ChannelsState.Success(
+                items = result.value.items,
+                nextPageToken = result.value.nextPageToken,
+                loadingMore = false
+            )
+
+            is ProviderResult.Failure -> ChannelsState.Failure(result.reason)
         }
     }
 
@@ -142,10 +195,16 @@ class ChannelsViewModel(
         if (current.loadingMore) return
         if (loadMoreJob?.isActive == true) return
         val url = channelNav.selected.value?.url ?: return
+        val tabId = _selectedTabId.value
 
         _state.value = current.copy(loadingMore = true)
         loadMoreJob = viewModelScope.launch {
-            when (val result = repository.channel(url, pageToken)) {
+            val result = if (tabId != null) {
+                repository.channelTab(url, tabId, pageToken)
+            } else {
+                repository.channel(url, pageToken)
+            }
+            when (result) {
                 is ProviderResult.Success -> {
                     val latest = _state.value as? ChannelsState.Success ?: return@launch
                     _state.value = latest.copy(

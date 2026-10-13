@@ -44,6 +44,24 @@ interface MediaProvider {
         ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "channel")
 
     /**
+     * List the selectable content tabs of the channel at [url] (for example Videos/Shorts/Live/
+     * Playlists). Providers without tab support keep this default failure instead of pretending.
+     */
+    suspend fun channelTabs(url: String): ProviderResult<List<ProviderChannelTab>> =
+        ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "channelTabs")
+
+    /**
+     * Load the contents of one channel tab ([tabId] as returned by [channelTabs]) of the channel at
+     * [url]. [pageToken] continues a previous page when the provider supplied one.
+     */
+    suspend fun channelTab(
+        url: String,
+        tabId: String,
+        pageToken: String? = null
+    ): ProviderResult<ProviderContentPage> =
+        ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "channelTab")
+
+    /**
      * Load the contents of the playlist at [url]. [pageToken] continues a previous page when the
      * provider supplied a [ProviderContentPage.nextPageToken].
      */

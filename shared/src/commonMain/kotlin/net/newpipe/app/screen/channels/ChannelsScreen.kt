@@ -6,6 +6,9 @@
 package net.newpipe.app.screen.channels
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +26,7 @@ import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.newpipe.app.component.EmptyState
 import net.newpipe.app.component.ErrorState
+import net.newpipe.app.component.FilterChipRow
 import net.newpipe.app.component.LoadingState
 import net.newpipe.app.component.PlaybackStatusMessage
 import net.newpipe.app.component.PlusScaffold
@@ -35,6 +39,7 @@ import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.provider.ChannelNavigation
 import net.newpipe.app.provider.PlaylistNavigation
+import net.newpipe.app.provider.ProviderChannelTab
 import net.newpipe.app.provider.ProviderClickAction
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentKind
@@ -69,6 +74,8 @@ fun ChannelsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val selection by viewModel.selection.collectAsStateWithLifecycle()
     val playbackState by viewModel.playbackState.collectAsStateWithLifecycle()
+    val tabs by viewModel.tabs.collectAsStateWithLifecycle()
+    val selectedTabId by viewModel.selectedTabId.collectAsStateWithLifecycle()
 
     LaunchedEffect(playbackState) {
         if (playbackState is ProviderPlaybackState.Launched) {
@@ -81,6 +88,9 @@ fun ChannelsScreen(
         state = state,
         title = selection?.name ?: stringResource(Res.string.channels_screen_title),
         playbackState = playbackState,
+        tabs = tabs,
+        selectedTabId = selectedTabId,
+        onSelectTab = { viewModel.selectTab(it) },
         onBack = { navigator.navigateUp() },
         onRetry = { viewModel.retry() },
         onItemClick = { item ->
@@ -106,6 +116,9 @@ fun ChannelsScreenContent(
     title: String,
     modifier: Modifier = Modifier,
     playbackState: ProviderPlaybackState = ProviderPlaybackState.Idle,
+    tabs: List<ProviderChannelTab> = emptyList(),
+    selectedTabId: String? = null,
+    onSelectTab: (String) -> Unit = {},
     onBack: () -> Unit = {},
     onRetry: () -> Unit = {},
     onItemClick: (ProviderContentItem) -> Unit = {},
@@ -117,41 +130,78 @@ fun ChannelsScreenContent(
             TopToolbar(title = title, onBack = onBack)
         }
     ) {
-        PlaybackStatusMessage(playbackState, Modifier.align(Alignment.TopStart))
-        when (state) {
-            ChannelsState.Idle -> EmptyState(
+        if (tabs.isEmpty()) {
+            ChannelStateContent(
+                state = state,
+                playbackState = playbackState,
+                onRetry = onRetry,
+                onItemClick = onItemClick,
+                onLoadMore = onLoadMore
+            )
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                FilterChipRow(
+                    options = tabs.map { it.label },
+                    selectedIndex = tabs.indexOfFirst { it.id == selectedTabId }.coerceAtLeast(0),
+                    onSelect = { index -> onSelectTab(tabs[index].id) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    ChannelStateContent(
+                        state = state,
+                        playbackState = playbackState,
+                        onRetry = onRetry,
+                        onItemClick = onItemClick,
+                        onLoadMore = onLoadMore
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.ChannelStateContent(
+    state: ChannelsState,
+    playbackState: ProviderPlaybackState,
+    onRetry: () -> Unit,
+    onItemClick: (ProviderContentItem) -> Unit,
+    onLoadMore: () -> Unit
+) {
+    PlaybackStatusMessage(playbackState, Modifier.align(Alignment.TopStart))
+    when (state) {
+        ChannelsState.Idle -> EmptyState(
+            title = stringResource(Res.string.channels_empty_title),
+            message = stringResource(Res.string.channels_empty_message),
+            modifier = Modifier.align(Alignment.Center).fillMaxWidth()
+        )
+
+        ChannelsState.Loading -> LoadingState(
+            message = stringResource(Res.string.channels_loading),
+            modifier = Modifier.align(Alignment.Center).fillMaxWidth()
+        )
+
+        is ChannelsState.Failure -> ErrorState(
+            message = providerErrorMessage(state.reason),
+            retryLabel = stringResource(Res.string.provider_retry),
+            onRetry = onRetry,
+            modifier = Modifier.align(Alignment.Center).fillMaxWidth()
+        )
+
+        is ChannelsState.Success -> if (state.items.isEmpty()) {
+            EmptyState(
                 title = stringResource(Res.string.channels_empty_title),
                 message = stringResource(Res.string.channels_empty_message),
                 modifier = Modifier.align(Alignment.Center).fillMaxWidth()
             )
-
-            ChannelsState.Loading -> LoadingState(
-                message = stringResource(Res.string.channels_loading),
-                modifier = Modifier.align(Alignment.Center).fillMaxWidth()
+        } else {
+            ChannelItems(
+                items = state.items,
+                nextPageToken = state.nextPageToken,
+                loadingMore = state.loadingMore,
+                onItemClick = onItemClick,
+                onLoadMore = onLoadMore
             )
-
-            is ChannelsState.Failure -> ErrorState(
-                message = providerErrorMessage(state.reason),
-                retryLabel = stringResource(Res.string.provider_retry),
-                onRetry = onRetry,
-                modifier = Modifier.align(Alignment.Center).fillMaxWidth()
-            )
-
-            is ChannelsState.Success -> if (state.items.isEmpty()) {
-                EmptyState(
-                    title = stringResource(Res.string.channels_empty_title),
-                    message = stringResource(Res.string.channels_empty_message),
-                    modifier = Modifier.align(Alignment.Center).fillMaxWidth()
-                )
-            } else {
-                ChannelItems(
-                    items = state.items,
-                    nextPageToken = state.nextPageToken,
-                    loadingMore = state.loadingMore,
-                    onItemClick = onItemClick,
-                    onLoadMore = onLoadMore
-                )
-            }
         }
     }
 }
@@ -217,5 +267,32 @@ private fun ChannelsScreenPreview() {
             )
         ),
         title = "NewPipe"
+    )
+}
+
+@PreviewWrapper(ThemePreviewProvider::class)
+@PreviewLightDark
+@Composable
+private fun ChannelsScreenTabsPreview() {
+    ChannelsScreenContent(
+        state = ChannelsState.Success(
+            items = listOf(
+                ProviderContentItem(
+                    id = "v1",
+                    title = "NewPipe+ — a private, polished media experience",
+                    url = "https://example.com/watch?v=1",
+                    uploader = "NewPipe",
+                    durationSeconds = 754L,
+                    kind = ProviderContentKind.VIDEO
+                )
+            )
+        ),
+        title = "NewPipe",
+        tabs = listOf(
+            ProviderChannelTab("videos", "Videos"),
+            ProviderChannelTab("shorts", "Shorts"),
+            ProviderChannelTab("livestreams", "Live")
+        ),
+        selectedTabId = "videos"
     )
 }

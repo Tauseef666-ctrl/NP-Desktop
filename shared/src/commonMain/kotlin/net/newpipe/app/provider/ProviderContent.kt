@@ -46,6 +46,16 @@ data class ProviderContentPage(
 )
 
 /**
+ * One selectable content tab of a channel (for example Videos, Shorts, Live or Playlists). Kept
+ * provider-agnostic: [id] is the provider's stable tab identifier (used to load that tab's content)
+ * and [label] is the display text the provider derived for it.
+ */
+data class ProviderChannelTab(
+    val id: String,
+    val label: String
+)
+
+/**
  * Why a provider operation failed. Kept as a small enum so the UI can map each case to localized,
  * honest text instead of a raw exception string.
  */

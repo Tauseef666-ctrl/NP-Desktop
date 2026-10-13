@@ -58,6 +58,31 @@ class ProviderContentRepository(
     }
 
     /**
+     * List the selectable content tabs of the channel at [url]. Picks the first available provider
+     * whose [ProviderCapabilities.channels] is enabled; fails the same way [channel] does when none
+     * can list channels.
+     */
+    suspend fun channelTabs(url: String): ProviderResult<List<ProviderChannelTab>> {
+        val provider = firstFor { it.capabilities.channels }
+            ?: return noProviderOrUnsupported { it.capabilities.channels }
+        return run(provider) { it.channelTabs(url) }
+    }
+
+    /**
+     * Load one content tab ([tabId] as returned by [channelTabs]) of the channel at [url]. Picks the
+     * first available provider whose [ProviderCapabilities.channels] is enabled.
+     */
+    suspend fun channelTab(
+        url: String,
+        tabId: String,
+        pageToken: String? = null
+    ): ProviderResult<ProviderContentPage> {
+        val provider = firstFor { it.capabilities.channels }
+            ?: return noProviderOrUnsupported { it.capabilities.channels }
+        return run(provider) { it.channelTab(url, tabId, pageToken) }
+    }
+
+    /**
      * Load the contents of the playlist at [url]. Picks the first available provider whose
      * [ProviderCapabilities.playlists] is enabled; fails with [ProviderFailureReason.NO_PROVIDER]
      * when none exist or [ProviderFailureReason.UNSUPPORTED] when the providers present cannot list

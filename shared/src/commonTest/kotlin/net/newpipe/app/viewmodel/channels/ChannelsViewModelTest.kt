@@ -24,6 +24,7 @@ import net.newpipe.app.provider.ChannelNavigation
 import net.newpipe.app.provider.MediaPlayback
 import net.newpipe.app.provider.MediaProvider
 import net.newpipe.app.provider.ProviderCapabilities
+import net.newpipe.app.provider.ProviderChannelTab
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentKind
 import net.newpipe.app.provider.ProviderContentPage
@@ -87,6 +88,45 @@ private class PagingChannelProvider(
 
     override suspend fun channel(url: String, pageToken: String?): ProviderResult<ProviderContentPage> {
         seenTokens.add(pageToken)
+        return onChannel(url, pageToken)
+    }
+}
+
+/**
+ * Media provider stand-in that exposes channel tabs and serves per-tab content. Records every
+ * [channelTab] call (tab id to page token) and counts [channel] calls so tests can assert which
+ * path the view model took.
+ */
+private class TabsChannelProvider(
+    private val tabs: List<ProviderChannelTab>,
+    private val onTab: suspend (url: String, tabId: String, pageToken: String?) -> ProviderResult<ProviderContentPage>,
+    private val onChannel: suspend (url: String, pageToken: String?) -> ProviderResult<ProviderContentPage> =
+        { _, _ -> ProviderResult.Success(ProviderContentPage(emptyList())) }
+) : MediaProvider {
+    override val id: String = "fake-tabs"
+    override val name: String = "Fake tabs"
+    override val isAvailable: Boolean = true
+    override val capabilities: ProviderCapabilities = ProviderCapabilities(channels = true)
+
+    val tabCalls: MutableList<Pair<String, String?>> = mutableListOf()
+
+    var channelCalls: Int = 0
+        private set
+
+    override suspend fun channelTabs(url: String): ProviderResult<List<ProviderChannelTab>> =
+        ProviderResult.Success(tabs)
+
+    override suspend fun channelTab(
+        url: String,
+        tabId: String,
+        pageToken: String?
+    ): ProviderResult<ProviderContentPage> {
+        tabCalls.add(tabId to pageToken)
+        return onTab(url, tabId, pageToken)
+    }
+
+    override suspend fun channel(url: String, pageToken: String?): ProviderResult<ProviderContentPage> {
+        channelCalls++
         return onChannel(url, pageToken)
     }
 }
@@ -352,5 +392,120 @@ class ChannelsViewModelTest {
         vm.play(VIDEO)
 
         assertEquals(VIDEO, playback.lastItem)
+    }
+
+    private fun tabbedProvider(
+        onTab: suspend (url: String, tabId: String, pageToken: String?) -> ProviderResult<ProviderContentPage>
+    ): TabsChannelProvider = TabsChannelProvider(
+        tabs = listOf(
+            ProviderChannelTab("videos", "Videos"),
+            ProviderChannelTab("shorts", "Shorts")
+        ),
+        onTab = onTab
+    )
+
+    @Test
+    fun tabsAndDefaultSelectionLoaded() = runTest {
+        val channelNav = ChannelNavigation()
+        channelNav.select(CHANNEL_URL, "NewPipe")
+        val provider = tabbedProvider { _, tabId, _ ->
+            if (tabId == "videos") {
+                ProviderResult.Success(ProviderContentPage(listOf(VIDEO)))
+            } else {
+                ProviderResult.Success(ProviderContentPage(listOf(LIVE)))
+            }
+        }
+        val vm = viewModel(repository(provider), channelNav)
+
+        val state = vm.state.first { it !is ChannelsState.Loading }
+
+        assertEquals(
+            listOf(ProviderChannelTab("videos", "Videos"), ProviderChannelTab("shorts", "Shorts")),
+            vm.tabs.value
+        )
+        assertEquals("videos", vm.selectedTabId.value)
+        assertEquals(ChannelsState.Success(listOf(VIDEO)), state)
+        assertEquals(listOf<Pair<String, String?>>("videos" to null), provider.tabCalls)
+        assertEquals(0, provider.channelCalls)
+    }
+
+    @Test
+    fun selectTabLoadsThatTab() = runTest {
+        val channelNav = ChannelNavigation()
+        channelNav.select(CHANNEL_URL, "NewPipe")
+        val provider = tabbedProvider { _, tabId, _ ->
+            if (tabId == "videos") {
+                ProviderResult.Success(ProviderContentPage(listOf(VIDEO)))
+            } else {
+                ProviderResult.Success(ProviderContentPage(listOf(LIVE)))
+            }
+        }
+        val vm = viewModel(repository(provider), channelNav)
+        vm.state.first { it !is ChannelsState.Loading }
+
+        vm.selectTab("shorts")
+
+        val state = vm.state.first { it !is ChannelsState.Loading }
+        assertEquals("shorts", vm.selectedTabId.value)
+        assertEquals(ChannelsState.Success(listOf(LIVE)), state)
+        assertTrue(provider.tabCalls.contains("shorts" to null))
+    }
+
+    @Test
+    fun selectSameTabIsNoOp() = runTest {
+        val channelNav = ChannelNavigation()
+        channelNav.select(CHANNEL_URL, "NewPipe")
+        val provider = tabbedProvider { _, _, _ ->
+            ProviderResult.Success(ProviderContentPage(listOf(VIDEO)))
+        }
+        val vm = viewModel(repository(provider), channelNav)
+        vm.state.first { it !is ChannelsState.Loading }
+        assertEquals(listOf<Pair<String, String?>>("videos" to null), provider.tabCalls)
+
+        vm.selectTab("videos")
+
+        assertEquals(listOf<Pair<String, String?>>("videos" to null), provider.tabCalls)
+    }
+
+    @Test
+    fun loadMoreUsesSelectedTab() = runTest {
+        val channelNav = ChannelNavigation()
+        channelNav.select(CHANNEL_URL, "NewPipe")
+        val shortsPage1 = ProviderContentPage(listOf(LIVE), nextPageToken = "T1")
+        val shortsPage2 = ProviderContentPage(listOf(VIDEO), nextPageToken = "T2")
+        val provider = tabbedProvider { _, tabId, token ->
+            when {
+                tabId != "shorts" -> ProviderResult.Success(ProviderContentPage(listOf(VIDEO)))
+                token == null -> ProviderResult.Success(shortsPage1)
+                else -> ProviderResult.Success(shortsPage2)
+            }
+        }
+        val vm = viewModel(repository(provider), channelNav)
+        vm.state.first { it !is ChannelsState.Loading }
+
+        vm.selectTab("shorts")
+        vm.state.first { it is ChannelsState.Success && it.nextPageToken == "T1" }
+
+        vm.loadMore()
+
+        val success = vm.state.first { it is ChannelsState.Success && it.items.size == 2 }
+            as ChannelsState.Success
+        assertEquals(listOf(LIVE, VIDEO), success.items)
+        assertEquals("shorts" to "T1", provider.tabCalls.last())
+    }
+
+    @Test
+    fun tabsUnsupportedFallsBackToChannel() = runTest {
+        val channelNav = ChannelNavigation()
+        channelNav.select(CHANNEL_URL, "NewPipe")
+        val provider = FakeChannelProvider(SUCCESS_PAGE)
+        val vm = viewModel(repository(provider), channelNav)
+
+        val state = vm.state.first { it !is ChannelsState.Loading }
+
+        assertTrue(vm.tabs.value.isEmpty())
+        assertNull(vm.selectedTabId.value)
+        assertEquals(1, provider.channelCalls)
+        assertEquals(ChannelsState.Success(listOf(VIDEO, LIVE)), state)
     }
 }
