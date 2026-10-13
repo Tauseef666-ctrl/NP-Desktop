@@ -105,6 +105,17 @@ class ProviderContentRepository(
         return run(provider) { it.resolve(url) }
     }
 
+    /**
+     * Fetch descriptive [StreamMetadata] for the stream page at [url]. Picks the first available
+     * provider whose [ProviderCapabilities.resolve] is enabled (metadata is read from the same stream
+     * page as playback), and fails the same way [resolve] does when none can.
+     */
+    suspend fun streamMetadata(url: String): ProviderResult<StreamMetadata> {
+        val provider = firstFor { it.capabilities.resolve }
+            ?: return noProviderOrUnsupported { it.capabilities.resolve }
+        return run(provider) { it.streamMetadata(url) }
+    }
+
     private fun firstFor(predicate: (MediaProvider) -> Boolean): MediaProvider? =
         registry.available.value.firstOrNull { it.isAvailable && predicate(it) }
 

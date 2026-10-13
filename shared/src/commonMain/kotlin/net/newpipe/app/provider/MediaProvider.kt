@@ -74,4 +74,11 @@ interface MediaProvider {
      */
     suspend fun resolve(url: String): ProviderResult<ResolvedMedia> =
         ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "resolve")
+
+    /**
+     * Fetch descriptive [StreamMetadata] for the stream page at [url]. Providers that cannot read a
+     * stream page keep this default failure instead of pretending.
+     */
+    suspend fun streamMetadata(url: String): ProviderResult<StreamMetadata> =
+        ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "streamMetadata")
 }

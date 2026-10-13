@@ -24,6 +24,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
@@ -62,12 +64,16 @@ import net.newpipe.app.player.ShortcutResolver
 import net.newpipe.app.player.VideoSettings
 import net.newpipe.app.player.onPlayerKeyEvent
 import net.newpipe.app.preview.ThemePreviewProvider
+import net.newpipe.app.provider.StreamMetadata
 import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.theme.spaceSmall
+import net.newpipe.app.util.formatCount
 import net.newpipe.app.util.formatDuration
 import net.newpipe.app.viewmodel.player.PlayerViewModel
+import net.newpipe.app.viewmodel.streaminfo.StreamMetadataState
+import net.newpipe.app.viewmodel.streaminfo.StreamMetadataViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -79,16 +85,22 @@ fun PlayerScreen(
     viewModel: PlayerViewModel = koinViewModel(),
     engine: PlayerEngine = koinInject(),
     popOut: PopOutCoordinator = koinInject(),
-    controller: PlaybackController = koinInject()
+    controller: PlaybackController = koinInject(),
+    streamMetadataViewModel: StreamMetadataViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val queue by viewModel.queueState.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val savedPlaylists by controller.savedPlaylists.collectAsStateWithLifecycle()
+    val metadataState by streamMetadataViewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(queue.current?.id) {
+        streamMetadataViewModel.load(queue.current?.id)
+    }
     PlayerScreenContent(
         state = state,
         queue = queue,
         settings = settings,
+        metadataState = metadataState,
         engine = engine,
         isEngineAvailable = viewModel.isEngineAvailable,
         popOut = popOut,
@@ -133,6 +145,7 @@ fun PlayerScreenContent(
     state: PlaybackState = PlaybackState(),
     queue: PlayerQueueState = PlayerQueueState(),
     settings: VideoSettings = VideoSettings(),
+    metadataState: StreamMetadataState = StreamMetadataState.Idle,
     engine: PlayerEngine? = null,
     isEngineAvailable: Boolean = true,
     popOut: PopOutCoordinator? = null,
@@ -234,6 +247,10 @@ fun PlayerScreenContent(
                 }
             )
 
+            if (metadataState is StreamMetadataState.Success) {
+                StreamInfoSection(metadataState.metadata)
+            }
+
             if (!queue.isEmpty) {
                 PlayerQuickSettings(
                     state = state,
@@ -298,6 +315,73 @@ fun PlayerScreenContent(
                 }
             }
             Spacer(Modifier.height(spaceLarge))
+        }
+    }
+}
+
+@Composable
+private fun StreamInfoSection(metadata: StreamMetadata, modifier: Modifier = Modifier) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spaceLarge, vertical = spaceSmall)
+            .then(modifier)
+    ) {
+        SectionHeader(title = "About")
+        Text(
+            text = metadata.title,
+            style = MaterialTheme.typography.titleMedium
+        )
+        val uploaderParts = buildList {
+            metadata.uploaderName?.let { add(if (metadata.uploaderVerified) "$it ✓" else it) }
+            metadata.subscriberCount?.let { add("${formatCount(it)} subscribers") }
+            metadata.uploadDate?.let { add(it) }
+        }
+        if (uploaderParts.isNotEmpty()) {
+            Spacer(Modifier.height(spaceSmall))
+            Text(
+                text = uploaderParts.joinToString(" · "),
+                style = MaterialTheme.typography.bodyMedium,
+                color = plusColors().textSecondary
+            )
+        }
+        val engagementParts = buildList {
+            metadata.viewCount?.let { add("${formatCount(it)} views") }
+            metadata.likeCount?.let { add("${formatCount(it)} likes") }
+        }
+        if (engagementParts.isNotEmpty()) {
+            Spacer(Modifier.height(spaceSmall))
+            Text(
+                text = engagementParts.joinToString(" · "),
+                style = MaterialTheme.typography.bodyMedium,
+                color = plusColors().textSecondary
+            )
+        }
+        metadata.category?.let { category ->
+            Spacer(Modifier.height(spaceSmall))
+            Text(
+                text = category,
+                style = MaterialTheme.typography.bodyMedium,
+                color = plusColors().textSecondary
+            )
+        }
+        if (metadata.tags.isNotEmpty()) {
+            Spacer(Modifier.height(spaceSmall))
+            Text(
+                text = metadata.tags.joinToString(" · "),
+                style = MaterialTheme.typography.bodySmall,
+                color = plusColors().textSecondary
+            )
+        }
+        metadata.description?.let { description ->
+            Spacer(Modifier.height(spaceSmall))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = plusColors().textSecondary,
+                maxLines = 6,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
@@ -486,6 +570,35 @@ private fun PlayerScreenPreview() {
                 net.newpipe.app.player.MediaItem(id = "2", title = "Next up in the queue", durationMs = 180_000L)
             ),
             currentIndex = 0
+        )
+    )
+}
+
+@PreviewWrapper(ThemePreviewProvider::class)
+@PreviewLightDark
+@Composable
+private fun PlayerScreenMetadataPreview() {
+    PlayerScreenContent(
+        state = PlaybackState(status = PlaybackStatus.READY, durationMs = 213_000L, positionMs = 42_000L),
+        queue = PlayerQueueState(
+            items = listOf(
+                net.newpipe.app.player.MediaItem(id = "1", title = "A private, polished media experience", durationMs = 213_000L)
+            ),
+            currentIndex = 0
+        ),
+        metadataState = StreamMetadataState.Success(
+            StreamMetadata(
+                title = "A private, polished media experience",
+                uploaderName = "NewPipe",
+                uploaderVerified = true,
+                subscriberCount = 1_200_000L,
+                viewCount = 340_000L,
+                likeCount = 12_000L,
+                uploadDate = "2026-01-02",
+                category = "Music",
+                tags = listOf("demo", "newpipe"),
+                description = "A desktop-first NewPipe+ experience with an honest, provider-agnostic metadata surface."
+            )
         )
     )
 }

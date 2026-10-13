@@ -38,6 +38,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  *    moves provider calls off the main dispatcher.
  *  * If NewPipeExtractor fails to initialise, [isAvailable] is `false` and the provider advertises
  *    itself as unusable instead of crashing the Koin graph.
+ *  * Stream metadata is read from the same page as playback, so [streamMetadata] performs no extra
+ *    request beyond the one [resolve] already needs.
  */
 @Singleton(binds = [MediaProvider::class])
 class ExtractorMediaProvider : MediaProvider {
@@ -160,6 +162,33 @@ class ExtractorMediaProvider : MediaProvider {
             is ProviderResult.Failure -> result
         }
     }
+
+    /**
+     * Read the descriptive [StreamMetadata] of the stream page at [url] from the same extractor page
+     * that playback uses.
+     */
+    override suspend fun streamMetadata(url: String): ProviderResult<StreamMetadata> =
+        guarded {
+            val info = StreamInfo.getInfo(ServiceList.YouTube, url)
+            val isLive = info.streamType == StreamType.LIVE_STREAM ||
+                info.streamType == StreamType.AUDIO_LIVE_STREAM
+            pureStreamMetadata(
+                title = info.name,
+                uploaderName = info.uploaderName,
+                uploaderUrl = info.uploaderUrl,
+                uploaderVerified = info.isUploaderVerified,
+                subscriberCount = info.uploaderSubscriberCount,
+                viewCount = info.viewCount,
+                likeCount = info.likeCount,
+                textualUploadDate = info.textualUploadDate,
+                durationSeconds = info.duration,
+                thumbnailUrl = bestThumbnail(info.thumbnails),
+                description = info.description?.content(),
+                category = info.category,
+                tags = info.tags.orEmpty(),
+                isLive = isLive
+            )
+        }
 
     private fun <T> guarded(block: () -> T): ProviderResult<T> {
         return try {
@@ -362,5 +391,41 @@ class ExtractorMediaProvider : MediaProvider {
             }
             return null
         }
+
+        /**
+         * Pure mapping of a stream page's raw values into a [StreamMetadata], normalising absent or
+         * empty values to `null` so the UI never shows placeholders. No network access.
+         */
+        fun pureStreamMetadata(
+            title: String,
+            uploaderName: String?,
+            uploaderUrl: String?,
+            uploaderVerified: Boolean,
+            subscriberCount: Long,
+            viewCount: Long,
+            likeCount: Long,
+            textualUploadDate: String?,
+            durationSeconds: Long,
+            thumbnailUrl: String?,
+            description: String?,
+            category: String?,
+            tags: List<String>,
+            isLive: Boolean
+        ): StreamMetadata = StreamMetadata(
+            title = title,
+            uploaderName = uploaderName?.takeIf { it.isNotBlank() },
+            uploaderUrl = uploaderUrl?.takeIf { it.isNotBlank() },
+            uploaderVerified = uploaderVerified,
+            subscriberCount = subscriberCount.takeIf { it > 0L },
+            viewCount = viewCount.takeIf { it > 0L },
+            likeCount = likeCount.takeIf { it > 0L },
+            uploadDate = textualUploadDate?.takeIf { it.isNotBlank() },
+            durationSeconds = durationSeconds.takeIf { it > 0L },
+            thumbnailUrl = thumbnailUrl?.takeIf { it.isNotBlank() },
+            description = description?.takeIf { it.isNotBlank() },
+            category = category?.takeIf { it.isNotBlank() },
+            tags = tags.filter { it.isNotBlank() },
+            isLive = isLive
+        )
     }
 }
