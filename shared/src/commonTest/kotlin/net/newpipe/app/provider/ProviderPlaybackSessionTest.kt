@@ -109,16 +109,61 @@ class ProviderPlaybackSessionTest {
     }
 
     @Test
-    fun acknowledgeReturnsToIdle() = runTest {
+    fun playAllDoesNothingIfEmpty() = runTest {
         val fake = ConfigurableMediaPlayback(result = ProviderResult.Success(Unit))
+        val session = ProviderPlaybackSession(fake, this)
+
+        session.playAll(emptyList())
+        advanceUntilIdle()
+
+        assertEquals(ProviderPlaybackState.Idle, session.state.value)
+        assertEquals(0, fake.playCalls)
+    }
+
+    @Test
+    fun playAllPlaysFirstUntilSuccessAndBreaks() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val fake = ConfigurableMediaPlayback(result = ProviderResult.Success(Unit))
+        val session = ProviderPlaybackSession(fake, this)
+
+        session.playAll(listOf(item("a"), item("b")))
+        advanceUntilIdle()
+
+        assertEquals(ProviderPlaybackState.Launched, session.state.value)
+        assertEquals(1, fake.playCalls)
+    }
+
+    @Test
+    fun playAllReturnsUnsupportedIfAllFail() = runTest {
+        val fake = ConfigurableMediaPlayback(
+            result = ProviderResult.Failure(ProviderFailureReason.NETWORK)
+        )
+        val session = ProviderPlaybackSession(fake, this)
+
+        session.playAll(listOf(item("a"), item("b")))
+        advanceUntilIdle()
+
+        assertEquals(
+            ProviderPlaybackState.Failure(ProviderFailureReason.UNSUPPORTED),
+            session.state.value
+        )
+    }
+
+    @Test
+    fun playAllIsIgnoredWhileLoading() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val fake = ConfigurableMediaPlayback(gate = gate)
         val session = ProviderPlaybackSession(fake, this)
 
         session.play(item())
         advanceUntilIdle()
+        assertEquals(ProviderPlaybackState.Loading, session.state.value)
+
+        session.playAll(listOf(item("a"), item("b")))
+        assertEquals(1, fake.playCalls)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
         assertEquals(ProviderPlaybackState.Launched, session.state.value)
-
-        session.acknowledge()
-
-        assertEquals(ProviderPlaybackState.Idle, session.state.value)
     }
 }
