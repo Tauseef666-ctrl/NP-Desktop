@@ -41,6 +41,29 @@ class ProviderPlaybackSession(
         }
     }
 
+    /** Play all [items] starting from the first playable item. Items that fail to play are skipped.
+     * Ignored while a request is already in flight. */
+    fun playAll(items: List<ProviderContentItem>) {
+        if (_state.value == ProviderPlaybackState.Loading) return
+        if (items.isEmpty()) return
+        _state.value = ProviderPlaybackState.Loading
+        scope.launch {
+            var launched = false
+            for (item in items) {
+                if (launched) break
+                val result = playback.play(item)
+                if (result is ProviderResult.Success) {
+                    launched = true
+                }
+            }
+            _state.value = if (launched) {
+                ProviderPlaybackState.Launched
+            } else {
+                ProviderPlaybackState.Failure(ProviderFailureReason.UNSUPPORTED)
+            }
+        }
+    }
+
     /** Return to [ProviderPlaybackState.Idle] after the UI has handled a launched/failed request. */
     fun acknowledge() {
         _state.value = ProviderPlaybackState.Idle

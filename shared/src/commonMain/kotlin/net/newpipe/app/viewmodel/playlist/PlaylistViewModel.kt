@@ -168,6 +168,13 @@ class PlaylistViewModel(
     /** Resolve and start [item] through the shared playback session. */
     fun play(item: ProviderContentItem) = playbackSession.play(item)
 
+    /** Play all items in the current playlist, starting from the first playable item. */
+    fun playAll() {
+        val current = _state.value
+        if (current !is PlaylistState.Success) return
+        playbackSession.playAll(current.items)
+    }
+
     /** Return playback state to idle after the UI handled a launched/failed request. */
     fun acknowledgePlayback() = playbackSession.acknowledge()
 }
