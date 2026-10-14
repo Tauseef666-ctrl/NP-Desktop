@@ -79,6 +79,7 @@ fun PlaylistScreen(
         onBack = { navigator.navigateUp() },
         onRetry = { viewModel.retry() },
         onItemClick = { viewModel.play(it) },
+        onPlayAll = { viewModel.playAll() },
         onLoadMore = { viewModel.loadMore() }
     )
 }
@@ -92,6 +93,7 @@ fun PlaylistScreenContent(
     onBack: () -> Unit = {},
     onRetry: () -> Unit = {},
     onItemClick: (ProviderContentItem) -> Unit = {},
+    onPlayAll: () -> Unit = {},
     onLoadMore: () -> Unit = {}
 ) {
     PlusScaffold(
@@ -131,6 +133,7 @@ fun PlaylistScreenContent(
                     items = state.items,
                     nextPageToken = state.nextPageToken,
                     loadingMore = state.loadingMore,
+                    onPlayAll = onPlayAll,
                     onItemClick = onItemClick,
                     onLoadMore = onLoadMore
                 )
@@ -144,6 +147,7 @@ private fun PlaylistItems(
     items: List<ProviderContentItem>,
     nextPageToken: String?,
     loadingMore: Boolean,
+    onPlayAll: () -> Unit,
     onItemClick: (ProviderContentItem) -> Unit,
     onLoadMore: () -> Unit,
     modifier: Modifier = Modifier
@@ -155,6 +159,12 @@ private fun PlaylistItems(
             .padding(spaceLarge),
         verticalArrangement = Arrangement.spacedBy(spaceLarge)
     ) {
+        TextButton(
+            onClick = onPlayAll,
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text(text = "Play all")
+        }
         items.forEach { item ->
             VideoCard(
                 title = item.title,
