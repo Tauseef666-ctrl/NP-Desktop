@@ -20,6 +20,7 @@ import net.newpipe.app.provider.ProviderFailureReason
 import net.newpipe.app.provider.ProviderPlaybackSession
 import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.provider.ProviderResult
+import net.newpipe.app.provider.SearchFilter
 import net.newpipe.app.search.SearchHistoryStore
 import net.newpipe.app.search.matchSuggestions
 import org.koin.core.annotation.KoinViewModel
@@ -80,8 +81,14 @@ class SearchViewModel(
     /** Provider-backed results for the most recently submitted query. */
     val results: StateFlow<SearchResultsState> = _results.asStateFlow()
 
+    private val _filter = MutableStateFlow(SearchFilter.ALL)
+
+    /** The content filter applied to searches (Videos/Channels/Playlists), defaulting to All. */
+    val selectedFilter: StateFlow<SearchFilter> = _filter.asStateFlow()
+
     private var activeQuery: String? = null
     private var loadMoreJob: Job? = null
+    private var requestId = 0
 
     /** Record [query] as the most recent search (blank input is ignored). */
     fun record(query: String) = history.record(query)
@@ -102,11 +109,16 @@ class SearchViewModel(
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return
         history.record(trimmed)
-        activeQuery = trimmed
+        runSearch(trimmed)
+    }
+
+    private fun runSearch(query: String) {
+        val id = ++requestId
+        activeQuery = query
         _results.value = SearchResultsState.Loading
         viewModelScope.launch {
-            val result = repository.search(trimmed)
-            if (activeQuery != trimmed) return@launch
+            val result = repository.searchFiltered(query, _filter.value)
+            if (id != requestId) return@launch
             _results.value = when (result) {
                 is ProviderResult.Success -> SearchResultsState.Success(
                     items = result.value.items,
@@ -117,6 +129,17 @@ class SearchViewModel(
                 is ProviderResult.Failure -> SearchResultsState.Failure(result.reason)
             }
         }
+    }
+
+    /**
+     * Change the content filter. When a query is active the search is re-run with the new filter;
+     * otherwise only the selection changes. Selecting the current filter is a no-op.
+     */
+    fun setFilter(filter: SearchFilter) {
+        if (_filter.value == filter) return
+        _filter.value = filter
+        val query = activeQuery
+        if (!query.isNullOrBlank()) runSearch(query)
     }
 
     /**
@@ -139,10 +162,11 @@ class SearchViewModel(
         val query = activeQuery
         if (query.isNullOrBlank()) return
 
+        val id = requestId
         _results.value = current.copy(loadingMore = true)
         loadMoreJob = viewModelScope.launch {
-            val result = repository.search(query, pageToken)
-            if (activeQuery != query) return@launch
+            val result = repository.searchFiltered(query, _filter.value, pageToken)
+            if (id != requestId || activeQuery != query) return@launch
             when (result) {
                 is ProviderResult.Success -> {
                     val latest = _results.value as? SearchResultsState.Success ?: return@launch
@@ -174,6 +198,7 @@ class SearchViewModel(
 
     /** Reset the results area back to [SearchResultsState.Idle] and abandon any in-flight search. */
     fun clearResults() {
+        requestId++
         activeQuery = null
         _results.value = SearchResultsState.Idle
     }

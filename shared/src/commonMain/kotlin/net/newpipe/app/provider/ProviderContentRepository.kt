@@ -45,6 +45,20 @@ class ProviderContentRepository(
         return run(provider) { it.search(query, pageToken) }
     }
 
+    /**
+     * Search [query] restricted to [filter]. Picks the first available provider whose
+     * [ProviderCapabilities.search] is enabled, and fails the same way [search] does when none can.
+     */
+    suspend fun searchFiltered(
+        query: String,
+        filter: SearchFilter,
+        pageToken: String? = null
+    ): ProviderResult<ProviderContentPage> {
+        val provider = firstFor { it.capabilities.search }
+            ?: return noProviderOrUnsupported { it.capabilities.search }
+        return run(provider) { it.searchFiltered(query, filter, pageToken) }
+    }
+
     suspend fun trending(pageToken: String? = null): ProviderResult<ProviderContentPage> {
         val provider = firstFor { it.capabilities.trending }
             ?: return noProviderOrUnsupported { it.capabilities.trending }

@@ -35,6 +35,18 @@ interface MediaProvider {
     suspend fun search(query: String, pageToken: String? = null): ProviderResult<ProviderContentPage> =
         ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "search")
 
+    /**
+     * Search [query] restricted to [filter] (for example Videos, Channels or Playlists), continuing a
+     * previous page when [pageToken] is given. Providers that only support unfiltered search keep this
+     * default, which delegates to [search] and ignores [filter]; a provider that really supports
+     * filters overrides it instead of pretending.
+     */
+    suspend fun searchFiltered(
+        query: String,
+        filter: SearchFilter,
+        pageToken: String? = null
+    ): ProviderResult<ProviderContentPage> = search(query, pageToken)
+
     /** Load the provider's trending/ranked content. */
     suspend fun trending(pageToken: String? = null): ProviderResult<ProviderContentPage> =
         ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED, "trending")

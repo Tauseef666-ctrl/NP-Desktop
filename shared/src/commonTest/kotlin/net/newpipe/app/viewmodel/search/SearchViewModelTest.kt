@@ -31,6 +31,7 @@ import net.newpipe.app.provider.ProviderFailureReason
 import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.provider.ProviderRegistry
 import net.newpipe.app.provider.ProviderResult
+import net.newpipe.app.provider.SearchFilter
 import net.newpipe.app.player.MediaItem
 import net.newpipe.app.search.SearchHistoryStore
 
@@ -79,6 +80,31 @@ private class PagingSearchProvider(
     ): ProviderResult<ProviderContentPage> {
         seenTokens.add(pageToken)
         return onSearch(pageToken)
+    }
+}
+
+private class FilteringSearchProvider(
+    private val onSearchFiltered: suspend (String, SearchFilter, String?) -> ProviderResult<ProviderContentPage> =
+        { _, _, _ -> ProviderResult.Success(ProviderContentPage(emptyList())) }
+) : MediaProvider {
+    override val id: String = "filtering"
+    override val name: String = "Filtering provider"
+    override val isAvailable: Boolean = true
+    override val capabilities: ProviderCapabilities = ProviderCapabilities(search = true)
+
+    val seenQueries: MutableList<String> = mutableListOf()
+    val seenFilters: MutableList<SearchFilter> = mutableListOf()
+    val seenTokens: MutableList<String?> = mutableListOf()
+
+    override suspend fun searchFiltered(
+        query: String,
+        filter: SearchFilter,
+        pageToken: String?
+    ): ProviderResult<ProviderContentPage> {
+        seenQueries.add(query)
+        seenFilters.add(filter)
+        seenTokens.add(pageToken)
+        return onSearchFiltered(query, filter, pageToken)
     }
 }
 
@@ -372,5 +398,86 @@ class SearchViewModelTest {
         vm.play(target)
 
         assertEquals(listOf(target), playback.playedItems)
+    }
+
+    @Test
+    fun selectedFilterDefaultsToAll() {
+        val vm = viewModel()
+
+        assertEquals(SearchFilter.ALL, vm.selectedFilter.value)
+    }
+
+    @Test
+    fun searchUsesSelectedFilter() = runTest {
+        val provider = FilteringSearchProvider()
+        val vm = viewModel(registry = ProviderRegistry().apply { register(provider) })
+
+        vm.setFilter(SearchFilter.CHANNELS)
+        vm.search("x")
+        vm.awaitSettled()
+
+        assertEquals(listOf("x"), provider.seenQueries)
+        assertEquals(listOf(SearchFilter.CHANNELS), provider.seenFilters)
+    }
+
+    @Test
+    fun setFilterRerunsActiveQuery() = runTest {
+        val provider = FilteringSearchProvider()
+        val vm = viewModel(registry = ProviderRegistry().apply { register(provider) })
+
+        vm.search("x")
+        vm.awaitSettled()
+        vm.setFilter(SearchFilter.VIDEOS)
+        vm.awaitSettled()
+
+        assertEquals(listOf("x", "x"), provider.seenQueries)
+        assertEquals(listOf(SearchFilter.ALL, SearchFilter.VIDEOS), provider.seenFilters)
+        assertEquals(SearchFilter.VIDEOS, vm.selectedFilter.value)
+    }
+
+    @Test
+    fun setFilterWithNoActiveQueryDoesNotSearch() = runTest {
+        val provider = FilteringSearchProvider()
+        val vm = viewModel(registry = ProviderRegistry().apply { register(provider) })
+
+        vm.setFilter(SearchFilter.PLAYLISTS)
+
+        assertEquals(SearchFilter.PLAYLISTS, vm.selectedFilter.value)
+        assertTrue(provider.seenFilters.isEmpty())
+    }
+
+    @Test
+    fun setFilterSameValueIsNoop() = runTest {
+        val provider = FilteringSearchProvider()
+        val vm = viewModel(registry = ProviderRegistry().apply { register(provider) })
+
+        vm.search("x")
+        vm.awaitSettled()
+        vm.setFilter(SearchFilter.ALL)
+        vm.awaitSettled()
+
+        assertEquals(1, provider.seenFilters.size)
+    }
+
+    @Test
+    fun loadMoreUsesSelectedFilter() = runTest {
+        val provider = FilteringSearchProvider { _, _, token ->
+            if (token == null) {
+                ProviderResult.Success(ProviderContentPage(listOf(item("v1")), nextPageToken = "T1"))
+            } else {
+                ProviderResult.Success(ProviderContentPage(listOf(item("v2"))))
+            }
+        }
+        val vm = viewModel(registry = ProviderRegistry().apply { register(provider) })
+
+        vm.search("x")
+        vm.awaitSettled()
+        vm.setFilter(SearchFilter.VIDEOS)
+        vm.awaitSettled()
+        vm.loadMore()
+        vm.results.first { it is SearchResultsState.Success && it.items.size == 2 }
+
+        assertEquals(SearchFilter.VIDEOS, provider.seenFilters.last())
+        assertEquals("T1", provider.seenTokens.last())
     }
 }

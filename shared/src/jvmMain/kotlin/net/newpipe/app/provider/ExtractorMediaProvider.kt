@@ -42,6 +42,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  *    request beyond the one [resolve] already needs.
  *  * Subtitle/caption tracks are likewise read from that same page, so [subtitles] adds no request
  *    beyond the one the stream page already needed.
+ *  * Live streams (including audio-only live) are reported with [ProviderContentKind.LIVE], and
+ *    search can be restricted to a content filter (Videos/Channels/Playlists) via [searchFiltered].
  */
 @Singleton(binds = [MediaProvider::class])
 class ExtractorMediaProvider : MediaProvider {
@@ -68,6 +70,26 @@ class ExtractorMediaProvider : MediaProvider {
     override suspend fun search(query: String, pageToken: String?): ProviderResult<ProviderContentPage> =
         guarded {
             val extractor = ServiceList.YouTube.getSearchExtractor(query)
+            val page = resolvePage(pageToken, extractor)
+            pureMapPage(page, pureNextPageToken(page))
+        }
+
+    /**
+     * Search YouTube restricted to [filter] (Videos/Channels/Playlists). [SearchFilter.ALL] keeps the
+     * search unfiltered. A null/blank [pageToken] fetches the first page; otherwise the token
+     * continues the same filtered search (see class KDoc).
+     */
+    override suspend fun searchFiltered(
+        query: String,
+        filter: SearchFilter,
+        pageToken: String?
+    ): ProviderResult<ProviderContentPage> =
+        guarded {
+            val extractor = ServiceList.YouTube.getSearchExtractor(
+                query,
+                listOf(contentFilterId(filter)).filter { it.isNotBlank() },
+                ""
+            )
             val page = resolvePage(pageToken, extractor)
             pureMapPage(page, pureNextPageToken(page))
         }
@@ -145,8 +167,7 @@ class ExtractorMediaProvider : MediaProvider {
     override suspend fun resolve(url: String): ProviderResult<ResolvedMedia> {
         val result = guarded {
             val info = StreamInfo.getInfo(ServiceList.YouTube, url)
-            val isLive = info.streamType == StreamType.LIVE_STREAM ||
-                info.streamType == StreamType.AUDIO_LIVE_STREAM
+            val isLive = isLiveStreamType(info.streamType)
             pickResolvedMedia(
                 isLive = isLive,
                 hlsUrl = info.hlsUrl,
@@ -172,8 +193,7 @@ class ExtractorMediaProvider : MediaProvider {
     override suspend fun streamMetadata(url: String): ProviderResult<StreamMetadata> =
         guarded {
             val info = StreamInfo.getInfo(ServiceList.YouTube, url)
-            val isLive = info.streamType == StreamType.LIVE_STREAM ||
-                info.streamType == StreamType.AUDIO_LIVE_STREAM
+            val isLive = isLiveStreamType(info.streamType)
             pureStreamMetadata(
                 title = info.name,
                 uploaderName = info.uploaderName,
@@ -232,6 +252,14 @@ class ExtractorMediaProvider : MediaProvider {
         const val ID = "newpipe-extractor"
         private const val SERVICE_NAME = "YouTube"
 
+        /** The provider content-filter id for [filter]; an empty string means "no filter" (all). */
+        fun contentFilterId(filter: SearchFilter): String =
+            if (filter == SearchFilter.ALL) "" else filter.id
+
+        /** True when [type] is a stream that is currently live (video or audio). */
+        fun isLiveStreamType(type: StreamType): Boolean =
+            type == StreamType.LIVE_STREAM || type == StreamType.AUDIO_LIVE_STREAM
+
         private val initStarted = AtomicBoolean(false)
         private val initSucceeded = AtomicBoolean(false)
 
@@ -267,7 +295,7 @@ class ExtractorMediaProvider : MediaProvider {
                     uploader = stream.uploaderName?.takeIf { it.isNotBlank() },
                     uploaderUrl = stream.uploaderUrl?.takeIf { it.isNotBlank() },
                     durationSeconds = stream.duration.takeIf { it > 0L },
-                    kind = if (stream.streamType == StreamType.LIVE_STREAM) {
+                    kind = if (isLiveStreamType(stream.streamType)) {
                         ProviderContentKind.LIVE
                     } else {
                         ProviderContentKind.VIDEO

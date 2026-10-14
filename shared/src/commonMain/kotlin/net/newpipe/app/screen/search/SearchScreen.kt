@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.newpipe.app.component.EmptyState
 import net.newpipe.app.component.ErrorState
+import net.newpipe.app.component.FilterChipRow
 import net.newpipe.app.component.LoadingState
 import net.newpipe.app.component.PlaybackStatusMessage
 import net.newpipe.app.component.PlusScaffold
@@ -48,6 +49,7 @@ import net.newpipe.app.provider.ProviderClickAction
 import net.newpipe.app.provider.ProviderContentItem
 import net.newpipe.app.provider.ProviderContentKind
 import net.newpipe.app.provider.ProviderPlaybackState
+import net.newpipe.app.provider.SearchFilter
 import net.newpipe.app.provider.providerClickAction
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
@@ -86,6 +88,7 @@ fun SearchScreen(
     var query by remember { mutableStateOf("") }
     val history by viewModel.historyEntries.collectAsStateWithLifecycle()
     val results by viewModel.results.collectAsStateWithLifecycle()
+    val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
     val playbackState by viewModel.playbackState.collectAsStateWithLifecycle()
     LaunchedEffect(playbackState) {
         if (playbackState is ProviderPlaybackState.Launched) {
@@ -103,9 +106,11 @@ fun SearchScreen(
         history = history,
         suggestions = viewModel.suggestions(query),
         results = results,
+        selectedFilter = selectedFilter,
         playbackState = playbackState,
         onClearHistory = { viewModel.clearHistory() },
         onSubmitQuery = { viewModel.search(it) },
+        onFilterChange = { viewModel.setFilter(it) },
         onItemClick = { item ->
             when (providerClickAction(item)) {
                 ProviderClickAction.PLAY -> viewModel.play(item)
@@ -136,9 +141,11 @@ fun SearchScreenContent(
     history: List<String> = emptyList(),
     suggestions: List<String> = emptyList(),
     results: SearchResultsState = SearchResultsState.Idle,
+    selectedFilter: SearchFilter = SearchFilter.ALL,
     playbackState: ProviderPlaybackState = ProviderPlaybackState.Idle,
     onClearHistory: () -> Unit = {},
     onSubmitQuery: (String) -> Unit = {},
+    onFilterChange: (SearchFilter) -> Unit = {},
     onItemClick: (ProviderContentItem) -> Unit = {},
     onLoadMore: () -> Unit = {}
 ) {
@@ -163,6 +170,14 @@ fun SearchScreenContent(
                 placeholder = stringResource(Res.string.search_screen_placeholder),
                 onSubmit = { onSubmitQuery(query) }
             )
+            if (query.isNotBlank()) {
+                FilterChipRow(
+                    options = SearchFilter.entries.map { it.label },
+                    selectedIndex = SearchFilter.entries.indexOf(selectedFilter).coerceAtLeast(0),
+                    onSelect = { index -> onFilterChange(SearchFilter.entries[index]) },
+                    modifier = Modifier.padding(horizontal = spaceLarge)
+                )
+            }
             when {
                 query.isBlank() -> {
                     SectionHeader(title = stringResource(Res.string.search_history_title))
@@ -297,6 +312,7 @@ private fun SearchScreenPreview() {
     SearchScreenContent(
         query = "NewPipe",
         history = listOf("NewPipe updates", "Kotlin Multiplatform"),
+        selectedFilter = SearchFilter.VIDEOS,
         results = SearchResultsState.Success(
             listOf(
                 ProviderContentItem(
