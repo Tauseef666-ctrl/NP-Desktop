@@ -259,12 +259,25 @@ class PlaylistViewModelTest {
     }
 
     @Test
-    fun playPassesItemToMediaPlayback() {
-        val playback = FakePlaylistPlayback()
-        val vm = viewModel(mediaPlayback = playback)
+    fun playAllOnSuccessPublishesLaunched() = runTest {
+        val nav = PlaylistNavigation()
+        nav.select(PLAYLIST_URL, "My Playlist")
+        val page = ProviderContentPage(listOf(VIDEO, LIVE), nextPageToken = null)
+        register(FakePlaylistProvider { _, _ -> ProviderResult.Success(page) })
+        val vm = viewModel(nav)
+        vm.state.first { it is PlaylistState.Success }
 
-        vm.play(VIDEO)
+        vm.playAll()
 
-        assertEquals(VIDEO, playback.lastItem)
+        assertEquals(ProviderPlaybackState.Launched, vm.playbackState.value)
+    }
+
+    @Test
+    fun playAllNoopWhenIdle() {
+        val vm = viewModel()
+
+        vm.playAll()
+
+        assertEquals(ProviderPlaybackState.Idle, vm.playbackState.value)
     }
 }
