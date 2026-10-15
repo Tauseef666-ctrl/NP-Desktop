@@ -178,4 +178,73 @@ class DownloadOpsTest {
         assertFalse(task("d", DownloadState.DOWNLOADING).isReorderable())
         assertFalse(task("c", DownloadState.COMPLETED).isReorderable())
     }
+
+    // --- subtitle companion ---
+
+    @Test
+    fun subtitlePathSitsBesideMainFileWithLanguageAndExtension() {
+        assertEquals(
+            "/dl/video.en.vtt",
+            subtitleDestinationPath("/dl/video.mp4", "en", "vtt")
+        )
+        assertEquals(
+            "C:\\dl\\video.de.srt",
+            subtitleDestinationPath("C:\\dl\\video.mp4", "de", "srt")
+        )
+    }
+
+    @Test
+    fun subtitlePathFallsBackToSubtitleAndVttWhenBlank() {
+        assertEquals("/dl/video.subtitle.vtt", subtitleDestinationPath("/dl/video.mp4", "", null))
+        assertEquals("/dl/video.subtitle.vtt", subtitleDestinationPath("/dl/video.mp4", "  ", "  "))
+    }
+
+    @Test
+    fun subtitlePathIsEmptyWhenMainDestinationIsBlank() {
+        assertEquals("", subtitleDestinationPath("", "en", "vtt"))
+        assertEquals("", subtitleDestinationPath("   ", "en", "vtt"))
+    }
+
+    @Test
+    fun companionRequestIsNullWithoutSubtitleUrl() {
+        val request = DownloadRequest(id = "m", url = "https://e.org/v", destinationPath = "/dl/v.mp4")
+        assertEquals(null, subtitleCompanionRequest(request))
+        assertEquals(
+            null,
+            subtitleCompanionRequest(request.copy(subtitleUrl = "   "))
+        )
+    }
+
+    @Test
+    fun companionRequestDerivesPathAndIdFromMainRequest() {
+        val request = DownloadRequest(
+            id = "m",
+            url = "https://e.org/v",
+            destinationPath = "/dl/v.mp4",
+            title = "v",
+            format = "high",
+            subtitleUrl = "https://e.org/subs.en.vtt",
+            subtitleLanguageTag = "en"
+        )
+        val companion = subtitleCompanionRequest(request)!!
+        assertEquals("m-sub", companion.id)
+        assertEquals("https://e.org/subs.en.vtt", companion.url)
+        assertEquals("/dl/v.en.vtt", companion.destinationPath)
+        assertEquals("v", companion.title)
+        assertEquals("high", companion.format)
+        assertEquals(null, companion.subtitleUrl)
+        assertEquals("en", companion.subtitleLanguageTag)
+    }
+
+    @Test
+    fun companionRequestExtensionComesFromSubtitleUrl() {
+        val request = DownloadRequest(
+            id = "m",
+            url = "https://e.org/v",
+            destinationPath = "/dl/v.mp4",
+            subtitleUrl = "https://e.org/subs.de.srt?v=2",
+            subtitleLanguageTag = "de"
+        )
+        assertEquals("/dl/v.de.srt", subtitleCompanionRequest(request)!!.destinationPath)
+    }
 }

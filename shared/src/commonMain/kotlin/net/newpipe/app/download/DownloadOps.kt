@@ -22,6 +22,55 @@ fun formatLabel(format: DownloadFormat): String = when (format) {
     DownloadFormat.LOW -> "low"
 }
 
+/**
+ * Companion file path for the subtitle document of [mainDestination], sitting next to the main file
+ * and named `<name>.<languageTag>.<ext>` (for example `/dl/video.en.vtt`). The language tag
+ * defaults to `subtitle` when blank, and the extension to `vtt` when the track reports none.
+ * A blank [mainDestination] yields an empty path (a mission can never be started without one).
+ */
+fun subtitleDestinationPath(
+    mainDestination: String,
+    languageTag: String?,
+    extension: String?
+): String {
+    if (mainDestination.isBlank()) return ""
+    val separator = if (mainDestination.contains('\\')) "\\" else "/"
+    val directory = mainDestination.substringBeforeLast(separator, missingDelimiterValue = "")
+    val base = mainDestination.substringAfterLast(separator).substringBeforeLast('.')
+    val tag = languageTag?.trim().orEmpty().ifBlank { "subtitle" }
+    val ext = extension?.trim().orEmpty().ifBlank { "vtt" }
+    val name = "$base.$tag.$ext"
+    return if (directory.isEmpty()) name else directory + separator + name
+}
+
+/**
+ * Companion mission that downloads the subtitle document of [request] to
+ * [subtitleDestinationPath], or `null` when the request carries no subtitle URL. The companion
+ * reuses the main mission's id with a `-sub` suffix, so it is addressed independently in the queue
+ * and never collides with the main mission.
+ */
+fun subtitleCompanionRequest(request: DownloadRequest): DownloadRequest? {
+    val subtitleUrl = request.subtitleUrl?.trim().orEmpty()
+    if (subtitleUrl.isEmpty()) return null
+    val destination = subtitleDestinationPath(
+        mainDestination = request.destinationPath,
+        languageTag = request.subtitleLanguageTag,
+        extension = subtitleUrl.substringBefore('?').substringAfterLast('.').ifBlank { null }
+    )
+    if (destination.isBlank()) return null
+    return DownloadRequest(
+        id = request.id + "-sub",
+        url = subtitleUrl,
+        destinationPath = destination,
+        title = request.title,
+        mimeType = null,
+        expectedSizeBytes = 0L,
+        format = request.format,
+        subtitleUrl = null,
+        subtitleLanguageTag = request.subtitleLanguageTag
+    )
+}
+
 /** A mission in one of these states still occupies the URL it points at. */
 private val DownloadState.holdsUrl: Boolean
     get() = this == DownloadState.QUEUED ||

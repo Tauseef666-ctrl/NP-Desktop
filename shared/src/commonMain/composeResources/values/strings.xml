@@ -246,6 +246,9 @@
     <string name="downloads_duplicate_message">This URL is already queued or downloading.</string>
     <string name="downloads_reorder_hint">Reorder queued tasks; active downloads keep their slot.</string>
     <string name="downloads_format_hint">Format is recorded as metadata; the desktop engine downloads the raw stream.</string>
+    <string name="downloads_subtitle_url_label">Subtitle file URL (optional)</string>
+    <string name="downloads_subtitle_language_label">Language</string>
+    <string name="downloads_subtitle_hint">A subtitle URL downloads as a real companion file beside the video, named with the language tag.</string>
     <string name="downloads_reorder_move_up">Move task up</string>
     <string name="downloads_reorder_move_down">Move task down</string>
 

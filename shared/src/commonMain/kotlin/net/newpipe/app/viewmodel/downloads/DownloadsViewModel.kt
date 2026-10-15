@@ -21,6 +21,7 @@ import net.newpipe.app.download.DownloadStore
 import net.newpipe.app.download.DownloadTask
 import net.newpipe.app.download.formatLabel
 import net.newpipe.app.download.isDuplicate
+import net.newpipe.app.download.subtitleCompanionRequest
 import net.newpipe.app.download.reorder as reorderTasks
 import net.newpipe.app.platform.defaultDownloadDirectory
 import net.newpipe.app.preferences.DownloadsPreferences
@@ -102,8 +103,17 @@ class DownloadsViewModel(
      * Register and start a download, recording the chosen [format] as metadata on the request.
      * Rejects a URL that is already active (see [isDuplicateUrl]) and reports it via
      * [lastAddRejectedDuplicate]; returns `true` only when a new mission was started.
+     *
+     * When [subtitleUrl] is non-blank, a real companion mission downloads the subtitle document
+     * beside the main file (see [subtitleDestinationPath]); [subtitleLanguageTag] names that file.
      */
-    fun addFromUrl(url: String, folder: String, format: DownloadFormat): Boolean {
+    fun addFromUrl(
+        url: String,
+        folder: String,
+        format: DownloadFormat,
+        subtitleUrl: String? = null,
+        subtitleLanguageTag: String? = null
+    ): Boolean {
         val clean = url.trim()
         if (clean.isEmpty() || folder.isBlank()) return false
         if (isDuplicate(engine.tasks.value, clean)) {
@@ -119,9 +129,12 @@ class DownloadsViewModel(
             url = clean,
             destinationPath = destinationPath,
             title = fileName,
-            format = formatLabel(format)
+            format = formatLabel(format),
+            subtitleUrl = subtitleUrl?.trim()?.ifBlank { null },
+            subtitleLanguageTag = subtitleLanguageTag?.trim()?.ifBlank { null }
         )
         engine.enqueue(request).let { engine.start(it.id) }
+        subtitleCompanionRequest(request)?.let { engine.enqueue(it).let { sub -> engine.start(sub.id) } }
         return true
     }
 

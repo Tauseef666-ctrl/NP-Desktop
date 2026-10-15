@@ -22,6 +22,8 @@ import net.newpipe.app.extensions.withKoin
 import newpipe.shared.generated.resources.Res
 import newpipe.shared.generated.resources.downloads_open_file
 import newpipe.shared.generated.resources.downloads_open_folder
+import newpipe.shared.generated.resources.downloads_subtitle_language_label
+import newpipe.shared.generated.resources.downloads_subtitle_url_label
 import newpipe.shared.generated.resources.downloads_tab_completed
 import newpipe.shared.generated.resources.downloads_tab_empty_title
 import org.jetbrains.compose.resources.getString
@@ -90,6 +92,20 @@ class DownloadsTabsTest {
             },
             onContent = {
                 onNodeWithText(getString(Res.string.downloads_tab_empty_title)).assertIsDisplayed()
+            }
+        )
+    }
+
+    @Test
+    fun newDownloadSectionShowsSubtitleFields() = runComposeUiTest {
+        withKoin(
+            modules = emptyList(),
+            content = {
+                DownloadsScreenContent(defaultDirectory = "/downloads")
+            },
+            onContent = {
+                onNodeWithText(getString(Res.string.downloads_subtitle_url_label)).assertIsDisplayed()
+                onNodeWithText(getString(Res.string.downloads_subtitle_language_label)).assertIsDisplayed()
             }
         )
     }

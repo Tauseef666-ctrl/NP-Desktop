@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -31,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.newpipe.app.component.DownloadItem
 import net.newpipe.app.component.DownloadStatus
@@ -67,6 +69,9 @@ import newpipe.shared.generated.resources.downloads_quality_original
 import newpipe.shared.generated.resources.downloads_reorder_hint
 import newpipe.shared.generated.resources.downloads_reorder_move_down
 import newpipe.shared.generated.resources.downloads_reorder_move_up
+import newpipe.shared.generated.resources.downloads_subtitle_hint
+import newpipe.shared.generated.resources.downloads_subtitle_language_label
+import newpipe.shared.generated.resources.downloads_subtitle_url_label
 import newpipe.shared.generated.resources.downloads_tab_all
 import newpipe.shared.generated.resources.downloads_tab_completed
 import newpipe.shared.generated.resources.downloads_tab_downloading
@@ -94,7 +99,9 @@ fun DownloadsScreen(
         isEngineAvailable = viewModel.isEngineAvailable,
         defaultDirectory = viewModel.defaultDirectory.collectAsStateWithLifecycle().value,
         lastAddRejectedDuplicate = duplicateRejected,
-        onAdd = { url, folder, format -> viewModel.addFromUrl(url, folder, format) },
+        onAdd = { url, folder, format, subtitleUrl, subtitleLanguage ->
+            viewModel.addFromUrl(url, folder, format, subtitleUrl, subtitleLanguage)
+        },
         onDismissDuplicate = viewModel::dismissDuplicate,
         onReorder = viewModel::reorder,
         onStart = viewModel::start,
@@ -116,7 +123,7 @@ fun DownloadsScreenContent(
     isEngineAvailable: Boolean = true,
     defaultDirectory: String = "",
     lastAddRejectedDuplicate: Boolean = false,
-    onAdd: (String, String, DownloadFormat) -> Unit = { _, _, _ -> },
+    onAdd: (String, String, DownloadFormat, String?, String?) -> Unit = { _, _, _, _, _ -> },
     onDismissDuplicate: () -> Unit = {},
     onReorder: (Int, Int) -> Unit = { _, _ -> },
     onStart: (String) -> Unit = {},
@@ -222,12 +229,14 @@ private fun NewDownloadSection(
     enabled: Boolean,
     lastAddRejectedDuplicate: Boolean,
     onDismissDuplicate: () -> Unit,
-    onAdd: (String, String, DownloadFormat) -> Unit
+    onAdd: (String, String, DownloadFormat, String?, String?) -> Unit
 ) {
     val colors = plusColors()
     var url by remember { mutableStateOf("") }
     var destination by remember { mutableStateOf(defaultDirectory) }
     var format by remember { mutableStateOf(DownloadFormat.ORIGINAL) }
+    var subtitleUrl by remember { mutableStateOf("") }
+    var subtitleLanguage by remember { mutableStateOf("") }
 
     SectionHeader(title = "New download")
     Text(
@@ -274,6 +283,34 @@ private fun NewDownloadSection(
         color = colors.textSecondary,
         modifier = Modifier.padding(horizontal = spaceNormal, vertical = spaceSmall)
     )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spaceNormal, vertical = spaceSmall),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spaceNormal)
+    ) {
+        OutlinedTextField(
+            value = subtitleUrl,
+            onValueChange = { subtitleUrl = it },
+            singleLine = true,
+            label = { Text(stringResource(Res.string.downloads_subtitle_url_label)) },
+            modifier = Modifier.weight(1f)
+        )
+        OutlinedTextField(
+            value = subtitleLanguage,
+            onValueChange = { subtitleLanguage = it },
+            singleLine = true,
+            label = { Text(stringResource(Res.string.downloads_subtitle_language_label)) },
+            modifier = Modifier.width(180.dp)
+        )
+    }
+    Text(
+        text = stringResource(Res.string.downloads_subtitle_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = colors.textSecondary,
+        modifier = Modifier.padding(horizontal = spaceNormal, vertical = spaceSmall)
+    )
     if (lastAddRejectedDuplicate) {
         Column(
             modifier = Modifier
@@ -312,7 +349,9 @@ private fun NewDownloadSection(
                 onAdd(
                     url.trim(),
                     destination.ifBlank { defaultDirectory },
-                    format
+                    format,
+                    subtitleUrl.trim().ifBlank { null },
+                    subtitleLanguage.trim().ifBlank { null }
                 )
             },
             enabled = enabled && url.isNotBlank() && destination.isNotBlank()

@@ -19,6 +19,10 @@ enum class DownloadState { QUEUED, DOWNLOADING, PAUSED, COMPLETED, FAILED }
  *   in progress and renames it on success).
  * @param format Requested quality label, recorded as metadata only (the engine downloads the raw
  *   stream and never re-encodes). `null` means "not recorded".
+ * @param subtitleUrl Optional direct URL of a subtitle document to download as a real companion file
+ *   next to the main file (see [subtitleDestinationPath]); `null` means "no subtitle requested".
+ * @param subtitleLanguageTag Optional language tag of the companion subtitle, used to name the
+ *   companion file (for example `en`); `null` falls back to `subtitle`.
  */
 @Serializable
 data class DownloadRequest(
@@ -28,7 +32,9 @@ data class DownloadRequest(
     val title: String = "",
     val mimeType: String? = null,
     val expectedSizeBytes: Long = 0L,
-    val format: String? = null
+    val format: String? = null,
+    val subtitleUrl: String? = null,
+    val subtitleLanguageTag: String? = null
 )
 
 /**
