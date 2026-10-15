@@ -239,6 +239,8 @@ fun PlayerScreenContent(
                             PlayerAction.VOLUME_UP -> onVolume((state.volume + 0.1f).coerceIn(0f, 1f))
                             PlayerAction.VOLUME_DOWN -> onVolume((state.volume - 0.1f).coerceIn(0f, 1f))
                             PlayerAction.MUTE -> onToggleMute()
+                            PlayerAction.FOCUS_SEARCH, PlayerAction.TOGGLE_MINI_PLAYER ->
+                                return@onPlayerKeyEvent false
                             null -> return@onPlayerKeyEvent false
                         }
                         true

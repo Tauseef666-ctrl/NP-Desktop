@@ -20,7 +20,9 @@ enum class PlayerAction(val label: String, val description: String) {
     SEEK_BACKWARD("Seek backward", "Jump back by the configured skip interval (large step with Shift)"),
     VOLUME_UP("Volume up", "Increase volume by 10 percent"),
     VOLUME_DOWN("Volume down", "Decrease volume by 10 percent"),
-    MUTE("Mute / Unmute", "Toggle muting")
+    MUTE("Mute / Unmute", "Toggle muting"),
+    FOCUS_SEARCH("Focus search", "Move the keyboard cursor to the search field"),
+    TOGGLE_MINI_PLAYER("Mini player", "Open or close the floating mini player")
 }
 
 /**
@@ -61,7 +63,9 @@ object PlayerShortcuts {
         Shortcut(PlayerAction.VOLUME_DOWN, Key.DirectionDown),
         Shortcut(PlayerAction.VOLUME_DOWN, Key.VolumeDown),
         Shortcut(PlayerAction.MUTE, Key.M),
-        Shortcut(PlayerAction.MUTE, Key.VolumeMute)
+        Shortcut(PlayerAction.MUTE, Key.VolumeMute),
+        Shortcut(PlayerAction.FOCUS_SEARCH, Key.F, withCtrl = true),
+        Shortcut(PlayerAction.TOGGLE_MINI_PLAYER, Key.M, withCtrl = true)
     )
 
     /** Media-keys that must never be re-bound because they are safety/accessibility affordances. */

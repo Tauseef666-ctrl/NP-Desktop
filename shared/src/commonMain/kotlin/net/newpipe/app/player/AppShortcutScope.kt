@@ -41,7 +41,9 @@ object AppShortcutScope {
         Key.MediaStop to PlayerAction.STOP,
         Key.Spacebar to PlayerAction.PLAY_PAUSE,
         Key.DirectionLeft to PlayerAction.SEEK_BACKWARD,
-        Key.DirectionRight to PlayerAction.SEEK_FORWARD
+        Key.DirectionRight to PlayerAction.SEEK_FORWARD,
+        Key.F to PlayerAction.FOCUS_SEARCH,
+        Key.M to PlayerAction.TOGGLE_MINI_PLAYER
     )
 
     /** True for the four reserved transport media keys (volume keys are intentionally excluded). */

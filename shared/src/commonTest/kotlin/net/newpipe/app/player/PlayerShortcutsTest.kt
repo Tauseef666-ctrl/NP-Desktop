@@ -27,6 +27,18 @@ class PlayerShortcutsTest {
     }
 
     @Test
+    fun `ctrl f and ctrl m resolve to focus-search and mini-player`() {
+        assertEquals(PlayerAction.FOCUS_SEARCH, resolver.actionFor(Key.F, isCtrlPressed = true))
+        assertEquals(PlayerAction.TOGGLE_MINI_PLAYER, resolver.actionFor(Key.M, isCtrlPressed = true))
+    }
+
+    @Test
+    fun `plain f is unbound and plain m stays mute`() {
+        assertNull(resolver.actionFor(Key.F))
+        assertEquals(PlayerAction.MUTE, resolver.actionFor(Key.M))
+    }
+
+    @Test
     fun `media keys resolve to transport actions`() {
         assertEquals(PlayerAction.PLAY_PAUSE, resolver.actionFor(Key.MediaPlayPause))
         assertEquals(PlayerAction.NEXT, resolver.actionFor(Key.MediaNext))

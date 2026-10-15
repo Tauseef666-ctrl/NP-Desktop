@@ -66,6 +66,19 @@ class AppShortcutScopeTest {
     }
 
     @Test
+    fun `ctrl f and ctrl m are the focus-search and mini-player app-wide bindings`() {
+        assertEquals(PlayerAction.FOCUS_SEARCH, appAction(Key.F, ctrl = true))
+        assertEquals(PlayerAction.TOGGLE_MINI_PLAYER, appAction(Key.M, ctrl = true))
+    }
+
+    @Test
+    fun `plain f and plain m are never claimed app-wide`() {
+        assertNull(appAction(Key.F, ctrl = false))
+        // Plain M stays a player-only MUTE and must not be hijacked as the mini-player toggle.
+        assertNull(appAction(Key.M, ctrl = false))
+    }
+
+    @Test
     fun `shift does not change the resolved app-wide action`() {
         assertEquals(PlayerAction.SEEK_FORWARD, appAction(Key.DirectionRight, shift = true))
         assertEquals(PlayerAction.PLAY_PAUSE, appAction(Key.Spacebar, shift = true))
