@@ -6,6 +6,7 @@
 package net.newpipe.app.platform
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import net.newpipe.app.player.BackgroundPlaybackController
 import net.newpipe.app.player.PlaybackController
 import org.koin.core.annotation.Singleton
 
@@ -19,6 +20,7 @@ import org.koin.core.annotation.Singleton
 object DesktopMiniPlayerBridge {
     val isOpen = MutableStateFlow(false)
     val controller = MutableStateFlow<PlaybackController?>(null)
+    val background = MutableStateFlow<BackgroundPlaybackController?>(null)
 
     fun toggle() {
         isOpen.value = !isOpen.value

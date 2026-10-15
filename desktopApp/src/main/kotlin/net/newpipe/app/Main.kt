@@ -39,6 +39,7 @@ import net.newpipe.app.platform.LocalWorkspaceModeChange
 import net.newpipe.app.platform.WindowBounds
 import net.newpipe.app.platform.WorkspaceMode
 import net.newpipe.app.platform.WorkspacePreferences
+import net.newpipe.app.player.BackgroundPlaybackController
 import net.newpipe.app.player.PlaybackController
 import net.newpipe.app.player.PlayerAction
 import net.newpipe.app.player.PlayerShortcuts
@@ -156,12 +157,22 @@ fun main() = application {
                     )
                 }
             }
-            exitApplication()
+            val background = DesktopMiniPlayerBridge.background.value
+            val keepRunning = background?.onCloseRequested() ?: false
+            if (keepRunning) {
+                windowState.isMinimized = true
+            } else {
+                exitApplication()
+            }
         },
         title = "NewPipe+",
         icon = rememberVectorPainter(AppIcon),
         state = windowState
     ) {
+        val isMinimized = windowState.isMinimized
+        LaunchedEffect(isMinimized) {
+            if (!isMinimized) DesktopMiniPlayerBridge.background.value?.returnToForeground()
+        }
         var workspaceMode by remember {
             mutableStateOf(workspace?.mode() ?: WorkspaceMode.BALANCED)
         }
@@ -180,6 +191,8 @@ fun main() = application {
                         // Share the same singleton controller with the floating mini-player window.
                         val playback: PlaybackController = koinInject()
                         LaunchedEffect(playback) { DesktopMiniPlayerBridge.controller.value = playback }
+                        val background: BackgroundPlaybackController = koinInject()
+                        LaunchedEffect(background) { DesktopMiniPlayerBridge.background.value = background }
                     }
                 )
             }

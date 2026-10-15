@@ -21,4 +21,13 @@ interface PopOutCoordinator {
 
     /** Open/close the platform mini player. No-op when [supported] is false. */
     fun toggle()
+
+    /**
+     * Deterministically open ([open] = true) or close ([open] = false) the mini player. The default
+     * only calls [toggle] when the state actually differs, so callers never flip an already-open
+     * player closed by mistake. No-op when [supported] is false.
+     */
+    fun setOpen(open: Boolean) {
+        if (supported && isOpen.value != open) toggle()
+    }
 }
