@@ -58,6 +58,9 @@ class PlayerViewModel(
     private val _settings: MutableStateFlow<VideoSettings> = MutableStateFlow(loadGlobalSettings())
     val settings: StateFlow<VideoSettings> = _settings.asStateFlow()
 
+    private val _panelExpanded: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val panelExpanded: StateFlow<Boolean> = _panelExpanded.asStateFlow()
+
     private var lastRecordedId: String? = null
 
     // Dedicated scope (not viewModelScope) so recording works on any platform dispatcher and does
@@ -138,6 +141,14 @@ class PlayerViewModel(
 
     /** Persisted audio-track selection (see `AUDIO_TRACK_AUTO` / `AUDIO_TRACK_NONE`). */
     fun setAudioTrack(track: String) = updateGlobal { it.copy(audioTrack = track) }
+
+    fun togglePanelExpanded() {
+        _panelExpanded.value = !_panelExpanded.value
+    }
+
+    fun setPanelExpanded(expanded: Boolean) {
+        _panelExpanded.value = expanded
+    }
 
     private fun loadGlobalSettings(): VideoSettings =
         normalize(videoSettingsStore.load(VideoSettingsStore.GLOBAL_MEDIA_ID) ?: VideoSettings())

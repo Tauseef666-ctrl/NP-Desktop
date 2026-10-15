@@ -98,6 +98,7 @@ fun PlayerScreen(
     val savedPlaylists by controller.savedPlaylists.collectAsStateWithLifecycle()
     val metadataState by streamMetadataViewModel.state.collectAsStateWithLifecycle()
     val captionsState by captionsViewModel.state.collectAsStateWithLifecycle()
+    val panelExpanded by viewModel.panelExpanded.collectAsStateWithLifecycle()
     LaunchedEffect(queue.current?.id) {
         streamMetadataViewModel.load(queue.current?.id)
     }
@@ -113,6 +114,9 @@ fun PlayerScreen(
         engine = engine,
         isEngineAvailable = viewModel.isEngineAvailable,
         popOut = popOut,
+        panelExpanded = panelExpanded,
+        onTogglePanelExpanded = viewModel::togglePanelExpanded,
+        onSetPanelExpanded = viewModel::setPanelExpanded,
         onPlayPause = viewModel::togglePlayPause,
         onStop = viewModel::stop,
         onPrevious = viewModel::previous,
@@ -160,6 +164,9 @@ fun PlayerScreenContent(
     isEngineAvailable: Boolean = true,
     popOut: PopOutCoordinator? = null,
     shortcuts: ShortcutResolver = remember { ShortcutResolver() },
+    panelExpanded: Boolean = false,
+    onTogglePanelExpanded: () -> Unit = {},
+    onSetPanelExpanded: (Boolean) -> Unit = {},
     onPlayPause: () -> Unit = {},
     onStop: () -> Unit = {},
     onPrevious: () -> Unit = {},
@@ -185,7 +192,12 @@ fun PlayerScreenContent(
     onQueueRestorePlaylist: suspend () -> Boolean = { false },
     onQueueSkipUnavailable: suspend () -> Boolean = { false }
 ) {
-    var settingsExpanded by remember { mutableStateOf(false) }
+    var settingsExpanded by remember { mutableStateOf(panelExpanded) }
+    LaunchedEffect(panelExpanded) {
+        if (settingsExpanded != panelExpanded) {
+            settingsExpanded = panelExpanded
+        }
+    }
     PlusScaffold(
         toolbar = {
             val miniPlayerOpen = popOut?.isOpen?.collectAsStateWithLifecycle()?.value ?: false
@@ -272,7 +284,10 @@ fun PlayerScreenContent(
                     settings = settings,
                     isEngineAvailable = isEngineAvailable,
                     expanded = settingsExpanded,
-                    onToggleExpanded = { settingsExpanded = !settingsExpanded },
+                    onToggleExpanded = {
+                        settingsExpanded = !settingsExpanded
+                        onTogglePanelExpanded()
+                    },
                     onRepeatMode = onRepeatMode,
                     onAutoplayNext = onAutoplayNext,
                     onSubtitles = onSubtitles,

@@ -157,4 +157,33 @@ class PlayerViewModelTest {
         assertEquals("en", viewModel.settings.value.audioTrack)
         assertEquals("en", store.load(VideoSettingsStore.GLOBAL_MEDIA_ID)?.audioTrack)
     }
+
+    @Test
+    fun panelExpandedDefaultsToCollapsed() {
+        val viewModel = playerViewModel(MapSettings())
+
+        assertEquals(false, viewModel.panelExpanded.value)
+    }
+
+    @Test
+    fun togglePanelExpandedFlipsState() {
+        val viewModel = playerViewModel(MapSettings())
+
+        viewModel.togglePanelExpanded()
+        assertEquals(true, viewModel.panelExpanded.value)
+
+        viewModel.togglePanelExpanded()
+        assertEquals(false, viewModel.panelExpanded.value)
+    }
+
+    @Test
+    fun setPanelExpandedSetsAbsoluteState() {
+        val viewModel = playerViewModel(MapSettings())
+
+        viewModel.setPanelExpanded(true)
+        assertEquals(true, viewModel.panelExpanded.value)
+
+        viewModel.setPanelExpanded(false)
+        assertEquals(false, viewModel.panelExpanded.value)
+    }
 }

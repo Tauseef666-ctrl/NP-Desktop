@@ -100,7 +100,12 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 - [~] Video surface + control overlay inside the player frame: native libVLC AWT surface embedded via `expect/actual PlayerVideoSurface` (`JVMPlayerVideoSurface` → `SwingPanel` + `EmbeddedMediaPlayer.videoSurface().set(...)`); video shows once a real item is loaded (verification needs libVLC).
 - [~] Integrated expandable settings panel (speed, volume/mute, quality wired; subtitles/audio track/loop/autoplay/PiP/background pending). **Default playback speed** persisted (`PlayerPreferences.KEY_DEFAULT_PLAYBACK_SPEED`) and really applied to the engine on every newly loaded item (`PlaybackController.prepareResumed`), with a picker in the JVM player-settings section; 11 new tests.
 - [x] Timeline scrub, time, volume/mute, next/prev, queue (wired to engine + `PlayQueue`).
-- [ ] State preserved on panel open/close; settings change **real** playback.
+- [~] State preserved on panel open/close; settings change **real** playback. → panel expanded/collapsed state
+  now hoisted into `PlayerViewModel` (`panelExpanded` StateFlow + `togglePanelExpanded`/`setPanelExpanded`, seeded
+  collapsed, survives navigation back to the player screen; `PlayerScreen` wires it through `panelExpanded`/
+  `onTogglePanelExpanded`/`onSetPanelExpanded` params so the same state drives recomposition). Speed/volume/quality
+  and repeat-mode already reach the engine/controller; subtitles/audio-track remain gated honest-unavailable because
+  the `PlayerEngine` interface exposes no subtitle/audio-track API (no fake toggle shown).
 - [x] Buffering / loading / error states (`PlaybackStatus` chip + `ErrorState` for unavailable/errors).
 - [~] Keyboard shortcuts + accessibility: default bindings + conflict detection + reserved media keys (`player/PlayerShortcuts.kt`, 13 tests), wired into `PlayerScreen` via platform-normalized key interceptor (`player/KeyInput.kt` + jvm/android/ios actuals); **searchable reference UI in settings done** (`ShortcutReference` + `ShortcutReferenceSection`, wired into the JVM player-settings section; 9 pure + 3 UI tests); **app-wide scope done** (`player/AppShortcutScope.kt` — `isMediaKey`/`appActionFor`, `Modifier.plusAppShortcuts` bubble-phase `onKeyEvent`, wired into desktopApp `Main.kt` via `AppShortcutHost`, 7 tests; scope tags + hints in ShortcutsReference section). Focus-search & mini-player keys pending.
 - [~] Verify no control is a no-op (or mark unavailable) — controls disabled when engine unavailable; video surface explicitly honest.
