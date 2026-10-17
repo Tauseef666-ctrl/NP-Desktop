@@ -86,9 +86,8 @@ Launch the desktop app:
 
 ### Releases
 
-* Desktop (`v*` tag): Windows `.exe` + `.msi` and Linux `.deb`, e.g. `v0.29.1-desktop.7`.
-* Android (`android-v*` tag): a single debug-signed `continuous` APK for phones and Android TV,
-  e.g. `android-v0.29.1.1`.
+* A single `v*` tag publishes everything into one GitHub Release: Windows `.exe` + `.msi`, Linux
+  `.deb`, and a debug-signed `continuous` Android APK for phones and Android TV, e.g. `v0.29.2`.
 
 Real video playback requires libVLC; the JVM engine reports `isAvailable=false` when it is absent, and it is not installed on the current development machine. Desktop installers and the Android APK are built by CI; the Windows installer run, Android device install, and libVLC playback have not been verified on real hardware. The Android `:app` remains the reference implementation and the real playback path.
 

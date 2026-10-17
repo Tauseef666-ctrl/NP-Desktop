@@ -47,11 +47,11 @@ project (the iOS targets, `iosApp/`, and the `.dmg` packaging format were remove
 
 | Release | Trigger tag | Assets |
 | --- | --- | --- |
-| `v0.29.1-desktop.7` | `v*` | `net.newpipe.app-0.29.1.exe` (56.1 MB), `.msi` (55.2 MB), `_amd64.deb` (49.4 MB) |
-| `android-v0.29.1.1` | `android-v*` | `NewPipe_v0.29.1_phone_tv.apk` (11.7 MB) |
+| `v0.29.2` | `v*` | `yt-desktop-0.29.2.exe` (59.6 MB), `.msi` (58.7 MB), `yt-desktop_0.29.2_amd64.deb` (52.4 MB), `NewPipe_v0.29.2_phone_tv.apk` (12.2 MB) |
 
-Workflows: `.github/workflows/release-desktop.yml` (Windows builds MSI + EXE; Linux builds DEB) and
-`.github/workflows/release-android.yml`. The Android APK is built with
+Workflows: a single `.github/workflows/release.yml` publishes every artifact into one GitHub
+Release — the Windows job builds MSI + EXE, the Linux job builds the DEB, and the Android job builds
+the APK. The Android APK is built with
 `:app:assembleContinuous` — upstream's `continuous` build type, which is `release` initialised but
 **debug-signed**, so it installs without a release key. A single APK serves phones and Android TV:
 the manifest declares `android.software.leanback`, a TV banner, and a `LEANBACK_LAUNCHER` intent.
