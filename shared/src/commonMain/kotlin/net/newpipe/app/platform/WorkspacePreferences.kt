@@ -24,7 +24,9 @@ data class WindowBounds(
 @Serializable
 data class WorkspaceSnapshot(
     val mode: WorkspaceMode = WorkspaceMode.BALANCED,
-    val windowBounds: WindowBounds? = null
+    val windowBounds: WindowBounds? = null,
+    val miniPlayerBounds: WindowBounds? = null,
+    val miniPlayerCompact: Boolean = false
 )
 
 /**
@@ -51,6 +53,23 @@ class WorkspacePreferences(
     fun setWindowBounds(bounds: WindowBounds) {
         val current = snapshot() ?: WorkspaceSnapshot()
         settings.putString(key, json.encodeToString(current.copy(windowBounds = bounds)))
+    }
+
+    /** Returns the saved mini-player bounds, or null when missing/corrupt or the size is not positive. */
+    fun miniPlayerBounds(): WindowBounds? =
+        snapshot()?.miniPlayerBounds?.takeIf { it.width > 0 && it.height > 0 }
+
+    fun setMiniPlayerBounds(bounds: WindowBounds) {
+        val current = snapshot() ?: WorkspaceSnapshot()
+        settings.putString(key, json.encodeToString(current.copy(miniPlayerBounds = bounds)))
+    }
+
+    /** Whether the mini-player was last left in its compact (collapsed) layout. */
+    fun miniPlayerCompact(): Boolean = snapshot()?.miniPlayerCompact ?: false
+
+    fun setMiniPlayerCompact(compact: Boolean) {
+        val current = snapshot() ?: WorkspaceSnapshot()
+        settings.putString(key, json.encodeToString(current.copy(miniPlayerCompact = compact)))
     }
 
     fun clear() {

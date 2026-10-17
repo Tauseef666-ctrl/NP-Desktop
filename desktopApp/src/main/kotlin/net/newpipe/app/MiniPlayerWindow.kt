@@ -41,18 +41,25 @@ import net.newpipe.app.util.formatDuration
  * Compact always-on-top companion window (F1). It drives the SAME shared [PlaybackController] as
  * the main player, so transport/queue state is identical in both places.
  *
+ * The window is user-resizable and user-repositionable; its bounds are persisted by the host
+ * (desktopApp `Main.kt`). [compact] collapses the surface to a single transport row (title +
+ * play/pause + expand/close) for a minimal, unobtrusive footprint.
+ *
  * Honest note: the VLCJ video surface is embedded in the main window and cannot be re-parented, so
  * this window is audio/control focused — video keeps rendering in the full player.
  */
 @Composable
-fun MiniPlayerWindow() {
+fun MiniPlayerWindow(
+    compact: Boolean = false,
+    onToggleCompact: () -> Unit = {}
+) {
     AppTheme {
         val controller by DesktopMiniPlayerBridge.controller.collectAsState()
         val current = controller
         if (current == null) {
             EmptyMiniPlayer()
         } else {
-            MiniPlayerContent(current)
+            MiniPlayerContent(current, compact, onToggleCompact)
         }
     }
 }
@@ -72,7 +79,11 @@ private fun EmptyMiniPlayer() {
 }
 
 @Composable
-private fun MiniPlayerContent(playback: PlaybackController) {
+private fun MiniPlayerContent(
+    playback: PlaybackController,
+    compact: Boolean,
+    onToggleCompact: () -> Unit
+) {
     val state by playback.state.collectAsState()
     val queue by playback.queueState.collectAsState()
 
@@ -88,11 +99,30 @@ private fun MiniPlayerContent(playback: PlaybackController) {
                     modifier = Modifier.weight(1f)
                 )
                 TextButton(
+                    onClick = onToggleCompact,
+                    modifier = Modifier.width(84.dp)
+                ) {
+                    Text(if (compact) "Expand" else "Compact")
+                }
+                TextButton(
                     onClick = { DesktopMiniPlayerBridge.toggle() },
                     modifier = Modifier.width(72.dp)
                 ) {
                     Text("Close")
                 }
+            }
+            if (compact) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = { playback.togglePlayPause() },
+                        enabled = playback.isEngineAvailable
+                    ) { Text(if (state.isPlaying) "Pause" else "Play") }
+                }
+                return@Column
             }
             Text(
                 text = playbackStatusLabel(state.status),

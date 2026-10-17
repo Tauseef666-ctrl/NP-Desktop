@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,6 +30,7 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.russhwolf.settings.PreferencesSettings
+import java.awt.Dimension
 import java.util.prefs.Preferences
 import kotlin.math.roundToInt
 import kotlinx.serialization.json.Json
@@ -200,14 +202,52 @@ fun main() = application {
     }
 
     if (isMiniPlayerOpen) {
+        val savedMini = workspace?.miniPlayerBounds()?.takeIf { it.width >= 220 && it.height >= 80 }
+        var miniCompact by remember { mutableStateOf(workspace?.miniPlayerCompact() ?: false) }
+        val miniState = rememberWindowState(
+            position = savedMini?.let { WindowPosition(it.x.dp, it.y.dp) }
+                ?: WindowPosition(Alignment.BottomEnd),
+            size = savedMini?.let { DpSize(it.width.dp, it.height.dp) }
+                ?: DpSize(if (miniCompact) 300.dp else 420.dp, if (miniCompact) 84.dp else 160.dp)
+        )
+        // Persist the mini-player bounds on any close path (window X or the in-app Close button).
+        DisposableEffect(Unit) {
+            onDispose {
+                workspace?.let {
+                    runCatching {
+                        it.setMiniPlayerBounds(
+                            WindowBounds(
+                                x = miniState.position.x.value.roundToInt(),
+                                y = miniState.position.y.value.roundToInt(),
+                                width = miniState.size.width.value.roundToInt(),
+                                height = miniState.size.height.value.roundToInt()
+                            )
+                        )
+                    }
+                }
+            }
+        }
         Window(
             title = "Mini player",
             icon = rememberVectorPainter(AppIcon),
             alwaysOnTop = true,
-            state = rememberWindowState(size = DpSize(420.dp, 160.dp)),
+            resizable = true,
+            state = miniState,
             onCloseRequest = { DesktopMiniPlayerBridge.toggle() }
         ) {
-            MiniPlayerWindow()
+            window.minimumSize = Dimension(220, 72)
+            MiniPlayerWindow(
+                compact = miniCompact,
+                onToggleCompact = {
+                    miniCompact = !miniCompact
+                    workspace?.setMiniPlayerCompact(miniCompact)
+                    miniState.size = if (miniCompact) {
+                        DpSize(300.dp, 84.dp)
+                    } else {
+                        DpSize(420.dp, 160.dp)
+                    }
+                }
+            )
         }
     }
 }
