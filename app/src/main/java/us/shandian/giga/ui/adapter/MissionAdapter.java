@@ -64,6 +64,7 @@ import org.schabi.newpipe.error.ErrorUtil;
 import org.schabi.newpipe.error.UserAction;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.local.play.DownloadPlayerActivity;
+import org.schabi.newpipe.local.play.LocalPlaybackHelper;
 import org.schabi.newpipe.streams.io.StoredFileHelper;
 import org.schabi.newpipe.util.Localization;
 import org.schabi.newpipe.util.NavigationHelper;
@@ -369,8 +370,17 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
         if (checkInvalidFile(mission)) return;
 
         final Uri uri = resolveShareableUri(mission);
+        final String mimeType = resolveMimeType(mission);
+
+        // Play locally downloaded files with the exact same player used for online streams, so
+        // that the full set of controls and settings is available. Only fall back to the minimal
+        // standalone player if the standard main player cannot be opened.
+        if (LocalPlaybackHelper.playLocalFile(mContext, uri, mission.storage.getName(), mimeType)) {
+            return;
+        }
+
         final Intent intent = new Intent(mContext, DownloadPlayerActivity.class);
-        intent.setDataAndType(uri, resolveMimeType(mission));
+        intent.setDataAndType(uri, mimeType);
         intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
         intent.putExtra(DownloadPlayerActivity.EXTRA_URI, uri.toString());
         intent.putExtra(DownloadPlayerActivity.EXTRA_TITLE, mission.storage.getName());
