@@ -88,6 +88,10 @@ fun SettingsHomeScreen(
                             Destination.AdvancedSettings
                         )
 
+                        SettingsCategoryType.NOTIFICATIONS -> navigator.navigateTo(
+                            Destination.NotificationsSettings
+                        )
+
                         // TODO: wire remaining sub-screens as they are migrated
                         else -> Unit
                     }

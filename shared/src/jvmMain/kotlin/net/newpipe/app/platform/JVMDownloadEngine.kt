@@ -39,7 +39,9 @@ import java.net.URL
  */
 @Singleton(binds = [DownloadEngine::class])
 class JVMDownloadEngine(
-    private val store: DownloadStore
+    private val store: DownloadStore,
+    private val notifier: Notifier,
+    private val notifications: NotificationsPreferences
 ) : DownloadEngine {
 
     override val isAvailable: Boolean = true
@@ -185,6 +187,7 @@ class JVMDownloadEngine(
                     error = null
                 )
             }
+            notifyCompleted(request)
         } catch (cancellation: CancellationException) {
             // File/stream handles are now closed by the `use` blocks above, so deletion succeeds.
             if (cancelled.remove(request.id)) part.delete()
@@ -203,6 +206,18 @@ class JVMDownloadEngine(
     }
 
     private fun partFile(request: DownloadRequest): File = File(request.destinationPath + PART_SUFFIX)
+
+    /**
+     * Posts a system notification when a download finishes, honoring the user's notification toggle.
+     * The injected [notifier] decides whether the host can actually deliver; an unsupported host
+     * simply returns `false`. Never throws.
+     */
+    private fun notifyCompleted(request: DownloadRequest) {
+        if (!notifications.isEnabled()) return
+        runCatching {
+            notifier.notify(NOTIFICATION_TITLE, request.title.ifBlank { request.destinationPath })
+        }
+    }
 
     private fun update(id: String, transform: (DownloadTask) -> DownloadTask) {
         _tasks.value = _tasks.value.map { if (it.id == id) transform(it) else it }
@@ -224,5 +239,6 @@ class JVMDownloadEngine(
         const val CONNECT_TIMEOUT_MS = 15_000
         const val READ_TIMEOUT_MS = 30_000
         const val PART_SUFFIX = ".part"
+        const val NOTIFICATION_TITLE = "Download complete"
     }
 }

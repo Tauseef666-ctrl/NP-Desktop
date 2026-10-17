@@ -27,6 +27,7 @@ import net.newpipe.app.screen.settings.content.ContentSettingsScreen
 import net.newpipe.app.screen.settings.downloads.DownloadsSettingsScreen
 import net.newpipe.app.screen.settings.history.HistorySettingsScreen
 import net.newpipe.app.screen.settings.localmedia.LocalMediaSettingsScreen
+import net.newpipe.app.screen.settings.notifications.NotificationsSettingsScreen
 import net.newpipe.app.screen.settings.search.SearchServicesSettingsScreen
 import net.newpipe.app.screen.subscriptions.SubscriptionsScreen
 import net.newpipe.app.screen.trending.TrendingScreen
@@ -124,6 +125,10 @@ fun navModule() = module {
 
     navigation<Destination.AdvancedSettings> {
         AdvancedSettingsScreen()
+    }
+
+    navigation<Destination.NotificationsSettings> {
+        NotificationsSettingsScreen()
     }
 
     navigation<Destination.AppearanceSettings> {

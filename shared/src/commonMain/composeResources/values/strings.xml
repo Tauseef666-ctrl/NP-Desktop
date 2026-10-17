@@ -373,6 +373,15 @@
     <string name="history_settings_items_count">%1$d item(s)</string>
     <string name="history_settings_cleared">Cleared</string>
 
+    <!-- Notifications settings -->
+    <string name="notifications_settings_title">Notifications</string>
+    <string name="notifications_settings_enable">Desktop notifications</string>
+    <string name="notifications_settings_enable_summary">Show a system notification when a download finishes.</string>
+    <string name="notifications_settings_unsupported">Notifications are not supported on this system.</string>
+    <string name="notifications_settings_test">Send test notification</string>
+    <string name="notifications_settings_test_sent">Test notification sent</string>
+    <string name="notifications_settings_test_failed">Could not send a notification</string>
+
     <!-- Subscriptions manager (workstream A) -->
     <string name="subscriptions_screen_title">Subscriptions</string>
     <string name="subscriptions_add">Add subscription</string>

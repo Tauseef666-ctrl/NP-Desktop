@@ -27,6 +27,16 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+private class RecordingNotifier : Notifier {
+    override val isSupported: Boolean = true
+    val calls = mutableListOf<Pair<String, String>>()
+
+    override fun notify(title: String, body: String): Boolean {
+        calls += title to body
+        return true
+    }
+}
+
 class JVMDownloadEngineTest {
 
     private val payload = ByteArray(64 * 1024) { (it % 251).toByte() }
@@ -61,8 +71,11 @@ class JVMDownloadEngineTest {
             .first { it.id == id }
     }
 
-    private fun engine(settings: MapSettings = MapSettings()): JVMDownloadEngine =
-        JVMDownloadEngine(DownloadStore(settings, Json))
+    private fun engine(
+        settings: MapSettings = MapSettings(),
+        notifier: Notifier = NoopNotifier,
+        notifications: NotificationsPreferences = NotificationsPreferences(settings)
+    ): JVMDownloadEngine = JVMDownloadEngine(DownloadStore(settings, Json), notifier, notifications)
 
     @Test
     fun downloadsWholeFileAndOnlyThenCompletes() {
@@ -84,8 +97,51 @@ class JVMDownloadEngineTest {
     }
 
     @Test
-    fun resumesFromExistingPartFileViaRange() {
+    fun postsNotificationOnCompletion() {
         val server = server()
+        try {
+            val dest = tempFile()
+            val notifier = RecordingNotifier()
+            val engine = engine(notifier = notifier)
+            engine.enqueue(request("t9", server, dest))
+
+            engine.start("t9")
+
+            runBlocking { engine.awaitTask("t9", 10_000) { it.status == DownloadState.COMPLETED } }
+            val deadline = System.currentTimeMillis() + 2_000
+            while (notifier.calls.isEmpty() && System.currentTimeMillis() < deadline) {
+                Thread.sleep(10)
+            }
+            assertEquals(1, notifier.calls.size, "completion must notify exactly once")
+            assertEquals("Download complete", notifier.calls.single().first)
+            assertEquals("t9", notifier.calls.single().second)
+        } finally {
+            server.close()
+        }
+    }
+
+    @Test
+    fun skipsNotificationWhenDisabled() {
+        val server = server()
+        try {
+            val dest = tempFile()
+            val notifier = RecordingNotifier()
+            val preferences = NotificationsPreferences(MapSettings()).apply { setEnabled(false) }
+            val engine = engine(notifier = notifier, notifications = preferences)
+            engine.enqueue(request("t10", server, dest))
+
+            engine.start("t10")
+
+            runBlocking { engine.awaitTask("t10", 10_000) { it.status == DownloadState.COMPLETED } }
+            Thread.sleep(100)
+            assertTrue(notifier.calls.isEmpty(), "disabled notifications must not be posted")
+        } finally {
+            server.close()
+        }
+    }
+
+    @Test
+    fun resumesFromExistingPartFileViaRange() {        val server = server()
         try {
             val dest = tempFile()
             File(dest.absolutePath + ".part").writeBytes(payload.copyOfRange(0, 20_000))
