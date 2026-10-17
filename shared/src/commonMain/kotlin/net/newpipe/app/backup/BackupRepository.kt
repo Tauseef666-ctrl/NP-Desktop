@@ -17,20 +17,29 @@ interface BackupRepository {
 
     /**
      * Writes [entries] (plus the [BackupOps.MANIFEST_ENTRY] header) into [directory] under a
-     * name derived from [manifest]. Returns the full archive path, or `null` when the directory is
-     * unusable or writing fails. Never throws.
+     * name derived from [manifest]. When [passphrase] is non-blank the whole archive is encrypted
+     * with a standard AEAD (see [BackupEnvelope]); otherwise it is written as a plain ZIP. Returns
+     * the full archive path, or `null` when the directory is unusable or writing fails. Never throws.
      */
     fun createBackup(
         directory: String,
         manifest: BackupManifest,
-        entries: Map<String, ByteArray>
+        entries: Map<String, ByteArray>,
+        passphrase: String? = null
     ): String?
 
     /**
-     * Reads every archive entry, including the manifest, keyed by entry name. Returns an empty map
-     * for a missing file, a corrupt archive or an invalid/foreign manifest. Never throws.
+     * Reads every archive entry, including the manifest, keyed by entry name. Encrypted archives are
+     * decrypted with [passphrase] first; a missing/wrong passphrase, a missing file, a corrupt
+     * archive or an invalid/foreign manifest all resolve to an empty map. Never throws.
      */
-    fun readBackup(filePath: String): Map<String, ByteArray>
+    fun readBackup(filePath: String, passphrase: String? = null): Map<String, ByteArray>
+
+    /**
+     * True when [filePath] is an encrypted archive (its [BackupEnvelope.MAGIC] prefix is present), so
+     * the UI can ask for a passphrase before attempting a read. `false` for missing/unreadable files.
+     */
+    fun isEncrypted(filePath: String): Boolean = false
 
     /**
      * Lists the backup file names in [directory], newest first, or an empty list when [directory] is

@@ -292,6 +292,11 @@
     <string name="backup_invalid_title">Invalid backup</string>
     <string name="backup_invalid_message">This is not a NewPipe+ backup file.</string>
     <string name="backup_contains_label">Contains</string>
+    <string name="backup_passphrase_label">Passphrase (optional)</string>
+    <string name="backup_passphrase_hint">Leave empty to create a plain backup. Enter it again to restore a passphrase-protected backup.</string>
+    <string name="backup_restore_wrong_passphrase">Wrong passphrase — backup not restored</string>
+    <string name="backup_encrypted_locked_title">Passphrase required</string>
+    <string name="backup_encrypted_locked_message">This backup is passphrase-protected. Enter the passphrase above and try viewing it again.</string>
 
     <!-- Player quick settings & advanced panel (workstream B) -->
     <string name="player_quick_settings">Quick settings</string>

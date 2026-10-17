@@ -13,6 +13,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -20,7 +21,8 @@ import kotlin.test.assertTrue
 class JVMBackupRepositoryTest {
 
     private val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
-    private val repository = JVMBackupRepository(json)
+    private val cipher = JVMBackupCipher()
+    private val repository = JVMBackupRepository(json, cipher)
     private val tempDirectories = mutableListOf<File>()
 
     @AfterTest
@@ -141,5 +143,61 @@ class JVMBackupRepositoryTest {
                 emptyMap()
             )
         )
+    }
+
+    @Test
+    fun encryptedBackupRoundTripsWithPassphrase() {
+        val directory = tempDirectory()
+        val payload = mapOf("queue.json" to byteArrayOf(9, 8, 7, 6))
+
+        val path = assertNotNull(
+            repository.createBackup(directory.absolutePath, manifest(), payload, "hunter2")
+        )
+
+        val read = repository.readBackup(path, "hunter2")
+        assertContentEquals(payload["queue.json"], read["queue.json"])
+        assertTrue(read.containsKey(BackupOps.MANIFEST_ENTRY))
+    }
+
+    @Test
+    fun encryptedBackupIsNotReadableWithoutOrWithWrongPassphrase() {
+        val directory = tempDirectory()
+        val path = assertNotNull(
+            repository.createBackup(directory.absolutePath, manifest(), mapOf("a" to byteArrayOf(1)), "secret")
+        )
+
+        assertTrue(repository.readBackup(path).isEmpty(), "no passphrase must not decrypt")
+        assertTrue(repository.readBackup(path, "wrong").isEmpty(), "wrong passphrase must not decrypt")
+    }
+
+    @Test
+    fun encryptedBackupIsFramedAsEnvelopeNotPlainZip() {
+        val directory = tempDirectory()
+        val path = assertNotNull(
+            repository.createBackup(directory.absolutePath, manifest(), emptyMap(), "pw")
+        )
+        val bytes = File(path).readBytes()
+        assertTrue(BackupEnvelope.isEncrypted(bytes), "archive must carry the envelope magic")
+        assertNotNull(BackupEnvelope.decode(bytes), "envelope must be well-formed")
+    }
+
+    @Test
+    fun isEncryptedDistinguishesPlainEncryptedAndMissing() {
+        val directory = tempDirectory()
+        val plain = assertNotNull(
+            repository.createBackup(directory.absolutePath, manifest(), emptyMap())
+        )
+        val encrypted = assertNotNull(
+            repository.createBackup(
+                directory.absolutePath,
+                BackupManifest(createdAtEpochMs = 1_700_000_500_000L, entries = emptyList()),
+                emptyMap(),
+                "pw"
+            )
+        )
+
+        assertFalse(repository.isEncrypted(plain))
+        assertTrue(repository.isEncrypted(encrypted))
+        assertFalse(repository.isEncrypted(File(directory, "absent.nppbackup").absolutePath))
     }
 }

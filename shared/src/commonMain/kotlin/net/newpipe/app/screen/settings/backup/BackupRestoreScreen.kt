@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -27,7 +28,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -51,16 +54,21 @@ import newpipe.shared.generated.resources.backup_contents_file_count
 import newpipe.shared.generated.resources.backup_create_failed
 import newpipe.shared.generated.resources.backup_create_label
 import newpipe.shared.generated.resources.backup_created_status
+import newpipe.shared.generated.resources.backup_encrypted_locked_message
+import newpipe.shared.generated.resources.backup_encrypted_locked_title
 import newpipe.shared.generated.resources.backup_invalid_message
 import newpipe.shared.generated.resources.backup_invalid_title
 import newpipe.shared.generated.resources.backup_last_created
 import newpipe.shared.generated.resources.backup_no_backups
 import newpipe.shared.generated.resources.backup_no_location
+import newpipe.shared.generated.resources.backup_passphrase_hint
+import newpipe.shared.generated.resources.backup_passphrase_label
 import newpipe.shared.generated.resources.backup_restore_complete
 import newpipe.shared.generated.resources.backup_restore_confirm_message
 import newpipe.shared.generated.resources.backup_restore_confirm_title
 import newpipe.shared.generated.resources.backup_restore_failed
 import newpipe.shared.generated.resources.backup_restore_label
+import newpipe.shared.generated.resources.backup_restore_wrong_passphrase
 import newpipe.shared.generated.resources.backup_view_contents
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -79,6 +87,8 @@ fun BackupRestoreScreen(
     val contents by viewModel.contents.collectAsStateWithLifecycle()
     val pendingRestore by viewModel.pendingRestore.collectAsStateWithLifecycle()
     val invalid by viewModel.invalid.collectAsStateWithLifecycle()
+    val encryptedLocked by viewModel.encryptedLocked.collectAsStateWithLifecycle()
+    var passphrase by remember { mutableStateOf("") }
 
     BackupRestoreScreenContent(
         directory = directory,
@@ -89,14 +99,18 @@ fun BackupRestoreScreen(
         contents = contents,
         pendingRestore = pendingRestore,
         invalid = invalid,
+        encryptedLocked = encryptedLocked,
+        passphrase = passphrase,
+        onPassphraseChange = { passphrase = it },
         onChooseFolder = { viewModel.chooseFolder(chooseDirectory()) },
-        onCreateBackup = viewModel::createBackup,
-        onViewContents = viewModel::viewContents,
+        onCreateBackup = { viewModel.createBackup(it) },
+        onViewContents = { viewModel.viewContents(it, passphrase) },
         onDismissContents = viewModel::dismissContents,
         onRequestRestore = viewModel::requestRestore,
         onCancelRestore = viewModel::cancelRestore,
-        onConfirmRestore = viewModel::confirmRestore,
+        onConfirmRestore = { viewModel.confirmRestore(it) },
         onDismissInvalid = viewModel::dismissInvalid,
+        onDismissEncryptedLocked = viewModel::dismissEncryptedLocked,
         onStatusConsumed = viewModel::consumeStatus,
         onNavigateUp = { navigator.navigateUp() }
     )
@@ -112,14 +126,18 @@ fun BackupRestoreScreenContent(
     contents: BackupContents? = null,
     pendingRestore: String? = null,
     invalid: Boolean = false,
+    encryptedLocked: Boolean = false,
+    passphrase: String = "",
+    onPassphraseChange: (String) -> Unit = {},
     onChooseFolder: () -> Unit = {},
-    onCreateBackup: () -> Unit = {},
+    onCreateBackup: (String?) -> Unit = {},
     onViewContents: (String) -> Unit = {},
     onDismissContents: () -> Unit = {},
     onRequestRestore: (String) -> Unit = {},
     onCancelRestore: () -> Unit = {},
-    onConfirmRestore: () -> Unit = {},
+    onConfirmRestore: (String?) -> Unit = {},
     onDismissInvalid: () -> Unit = {},
+    onDismissEncryptedLocked: () -> Unit = {},
     onStatusConsumed: () -> Unit = {},
     onNavigateUp: () -> Unit = {}
 ) {
@@ -134,6 +152,8 @@ fun BackupRestoreScreenContent(
             BackupStatus.CreateFailed -> getString(Res.string.backup_create_failed)
             BackupStatus.RestoreComplete -> getString(Res.string.backup_restore_complete)
             BackupStatus.RestoreFailed -> getString(Res.string.backup_restore_failed)
+            BackupStatus.RestoreWrongPassphrase ->
+                getString(Res.string.backup_restore_wrong_passphrase)
         }
         snackbarHostState.showSnackbar(message)
         onStatusConsumed()
@@ -161,11 +181,22 @@ fun BackupRestoreScreenContent(
                 text = directory ?: stringResource(Res.string.backup_no_location),
                 style = MaterialTheme.typography.bodyMedium
             )
+            OutlinedTextField(
+                value = passphrase,
+                onValueChange = onPassphraseChange,
+                label = { Text(stringResource(Res.string.backup_passphrase_label)) },
+                supportingText = { Text(stringResource(Res.string.backup_passphrase_hint)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onChooseFolder) {
                     Text(stringResource(Res.string.backup_choose_location))
                 }
-                Button(onClick = onCreateBackup, enabled = isAvailable && directory != null) {
+                Button(
+                    onClick = { onCreateBackup(passphrase.ifBlank { null }) },
+                    enabled = isAvailable && directory != null
+                ) {
                     Text(stringResource(Res.string.backup_create_label))
                 }
             }
@@ -220,7 +251,7 @@ fun BackupRestoreScreenContent(
             title = stringResource(Res.string.backup_restore_confirm_title),
             text = stringResource(Res.string.backup_restore_confirm_message),
             confirmLabel = stringResource(Res.string.backup_restore_label),
-            onConfirm = onConfirmRestore,
+            onConfirm = { onConfirmRestore(passphrase.ifBlank { null }) },
             onDismiss = onCancelRestore,
             destructive = true
         )
@@ -231,6 +262,14 @@ fun BackupRestoreScreenContent(
             title = stringResource(Res.string.backup_invalid_title),
             text = stringResource(Res.string.backup_invalid_message),
             onDismiss = onDismissInvalid
+        )
+    }
+
+    if (encryptedLocked) {
+        PlusDialog(
+            title = stringResource(Res.string.backup_encrypted_locked_title),
+            text = stringResource(Res.string.backup_encrypted_locked_message),
+            onDismiss = onDismissEncryptedLocked
         )
     }
 }

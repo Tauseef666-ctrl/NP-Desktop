@@ -23,10 +23,11 @@ class AndroidBackupRepository : BackupRepository {
     override fun createBackup(
         directory: String,
         manifest: BackupManifest,
-        entries: Map<String, ByteArray>
+        entries: Map<String, ByteArray>,
+        passphrase: String?
     ): String? = null
 
-    override fun readBackup(filePath: String): Map<String, ByteArray> = emptyMap()
+    override fun readBackup(filePath: String, passphrase: String?): Map<String, ByteArray> = emptyMap()
 
     override fun listBackups(directory: String): List<String> = emptyList()
 }

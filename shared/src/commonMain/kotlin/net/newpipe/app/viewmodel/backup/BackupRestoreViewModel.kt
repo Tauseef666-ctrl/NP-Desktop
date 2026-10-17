@@ -28,6 +28,9 @@ sealed interface BackupStatus {
 
     /** The archive was read but could not be applied; local data is untouched. */
     data object RestoreFailed : BackupStatus
+
+    /** The archive is passphrase-encrypted and the supplied passphrase was missing or wrong. */
+    data object RestoreWrongPassphrase : BackupStatus
 }
 
 /** Names and byte counts of a single backup's payload, for the "View contents" dialog. */
@@ -68,6 +71,9 @@ class BackupRestoreViewModel(
     private val _invalid = MutableStateFlow(false)
     val invalid: StateFlow<Boolean> = _invalid.asStateFlow()
 
+    private val _encryptedLocked = MutableStateFlow(false)
+    val encryptedLocked: StateFlow<Boolean> = _encryptedLocked.asStateFlow()
+
     /** Whether the current platform can actually create and read archives. */
     val isAvailable: Boolean get() = repository.isAvailable
 
@@ -84,8 +90,11 @@ class BackupRestoreViewModel(
         _backups.value = repository.listBackups(directory)
     }
 
-    /** Packs every readable store blob and writes a real archive into the chosen folder. */
-    fun createBackup() {
+    /**
+     * Packs every readable store blob and writes a real archive into the chosen folder. A non-blank
+     * [passphrase] encrypts the whole archive with a standard AEAD; blank keeps it a plain ZIP.
+     */
+    fun createBackup(passphrase: String? = null) {
         val directory = _directory.value
         if (directory.isNullOrBlank() || !repository.isAvailable) {
             _status.value = BackupStatus.CreateFailed
@@ -97,7 +106,7 @@ class BackupRestoreViewModel(
             createdAtEpochMs = nowEpochMs,
             entries = entries.keys.toList()
         )
-        val path = repository.createBackup(directory, manifest, entries)
+        val path = repository.createBackup(directory, manifest, entries, passphrase)
         if (path == null) {
             _status.value = BackupStatus.CreateFailed
             return
@@ -108,13 +117,18 @@ class BackupRestoreViewModel(
         refresh()
     }
 
-    /** Reads a listed backup and exposes its payload names/byte counts. */
-    fun viewContents(fileName: String) {
+    /**
+     * Reads a listed backup and exposes its payload names/byte counts. Encrypted archives are
+     * decrypted with [passphrase]; a missing/wrong one raises the honest locked signal instead of a
+     * generic "invalid archive".
+     */
+    fun viewContents(fileName: String, passphrase: String? = null) {
         val directory = _directory.value ?: return
-        val entries = repository.readBackup(resolvePath(directory, fileName))
+        val path = resolvePath(directory, fileName)
+        val entries = repository.readBackup(path, passphrase)
         val manifest = manifestOf(entries)
         if (manifest == null) {
-            _invalid.value = true
+            if (repository.isEncrypted(path)) _encryptedLocked.value = true else _invalid.value = true
             return
         }
         val payload = entries.filterKeys { it != BackupOps.MANIFEST_ENTRY }
@@ -138,8 +152,12 @@ class BackupRestoreViewModel(
         _pendingRestore.value = null
     }
 
-    /** Reads the archive fully, validates it, then writes every blob back through the stores. */
-    fun confirmRestore() {
+    /**
+     * Reads the archive fully, validates it, then writes every blob back through the stores.
+     * Encrypted archives are decrypted with [passphrase]; a missing/wrong one is reported distinctly
+     * and leaves local data untouched.
+     */
+    fun confirmRestore(passphrase: String? = null) {
         val directory = _directory.value
         val fileName = _pendingRestore.value
         _pendingRestore.value = null
@@ -147,9 +165,14 @@ class BackupRestoreViewModel(
             _status.value = BackupStatus.RestoreFailed
             return
         }
-        val entries = repository.readBackup(resolvePath(directory, fileName))
+        val path = resolvePath(directory, fileName)
+        val entries = repository.readBackup(path, passphrase)
         if (manifestOf(entries) == null) {
-            _invalid.value = true
+            _status.value = if (repository.isEncrypted(path)) {
+                BackupStatus.RestoreWrongPassphrase
+            } else {
+                BackupStatus.RestoreFailed
+            }
             return
         }
         val payload = entries.filterKeys { it != BackupOps.MANIFEST_ENTRY }
@@ -162,6 +185,10 @@ class BackupRestoreViewModel(
 
     fun dismissInvalid() {
         _invalid.value = false
+    }
+
+    fun dismissEncryptedLocked() {
+        _encryptedLocked.value = false
     }
 
     /** Clears the one-shot status once the UI has shown it. */

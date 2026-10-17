@@ -27,6 +27,9 @@ object BackupOps {
     /** Archive layout version this build produces and accepts. */
     const val SCHEMA_VERSION = 1
 
+    /** Schema version stamped into the encryption header of an encrypted archive. */
+    const val ENCRYPTED_SCHEMA_VERSION = 1
+
     private const val FILE_PREFIX = "npp-backup-"
 
     private val json = Json { ignoreUnknownKeys = true }
