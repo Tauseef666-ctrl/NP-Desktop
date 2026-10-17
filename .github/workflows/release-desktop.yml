@@ -54,6 +54,7 @@ jobs:
   release:
     name: Publish GitHub release
     needs: package
+    if: ${{ always() && needs.package.result != 'cancelled' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -63,6 +64,14 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Fail when no installer was produced
+        run: |
+          if [ -z "$(ls -A dist)" ]; then
+            echo "No installers were produced by any platform." >&2
+            exit 1
+          fi
+          ls -R dist
+
       - name: Resolve release tag
         id: tag
         run: |
@@ -71,9 +80,6 @@ jobs:
           else
             echo "tag=desktop-0.29.1-build.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: List installers
-        run: ls -R dist
 
       - name: Create or update GitHub release
         env:
