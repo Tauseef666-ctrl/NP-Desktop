@@ -26,7 +26,7 @@ jobs:
             task: packageReleaseMsi
             path: desktopApp/build/compose/binaries/main-release/msi/*.msi
           - label: macos-dmg
-            os: macos-latest
+            os: macos-14
             task: packageReleaseDmg
             path: desktopApp/build/compose/binaries/main-release/dmg/*.dmg
 
@@ -86,10 +86,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" dist/* --clobber
+          REPO="${GITHUB_REPOSITORY}"
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber --repo "$REPO"
           else
             gh release create "$TAG" dist/* \
+              --repo "$REPO" \
               --target "${GITHUB_SHA}" \
               --title "NewPipe+ Desktop $TAG" \
               --generate-notes
