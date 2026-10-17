@@ -230,12 +230,13 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 
 - [x] Window icon: programmatic `ImageVector` (dark `#0F0F12` tile + red `#E53935` glyph) applied to the main + mini-player windows (`desktopApp/Main.kt`); shared vector drawable avoided because shared `Res` is module-internal.
 - [x] Repo professionalization: README "NewPipe+ (desktop port)" section (modules, build/run, status, limitations), `.github/workflows/desktop-ci.yml` (runs `:shared:jvmTest` + `:desktopApp:compileKotlin`), `.gitignore` KMP/desktop entries (`*.hprof`, `hs_err_pid*.log`, `replay_pid*.log`); LICENSE GPL-3.0 confirmed, upstream files untouched.
-- [ ] Add `TargetFormat.Exe` (+ icon, vendor, upgradeUuid) to `desktopApp`.
-- [ ] Produce real Windows MSI/EXE; verify resources load; boot smoke.
-- [x] Real packaging in CI: `.github/workflows/release-desktop.yml` builds Windows `packageReleaseMsi` + Linux `packageReleaseDeb` and publishes a GitHub Release (`gh release`) with both installers; ProGuard non-obfuscating config (`desktopApp/proguard-rules.pro`) fixes jsoup/re2j `-dontwarn`. First **published release**: `v0.29.1-desktop.4` — `net.newpipe.app-0.29.1.msi` (54.9 MB) + `net.newpipe.app_0.29.1_amd64.deb` (49.3 MB). macOS/iOS dropped from the project.
-- [ ] Preserve/extend versioning (`buildSrc/ProjectConfig.kt`).
-- [ ] Release notes (changes + limitations); licenses/attribution intact.
-- [ ] Only report an artifact path once it truly exists.
+- [x] Add `TargetFormat.Exe` (+ icon, vendor, upgradeUuid) to `desktopApp`: `targetFormats(TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Deb)`; `windows { iconFile = desktopApp/icon.ico (multi-size ICO generated from the 192×192 launcher PNG), menu/shortcut/menuGroup, dirChooser, perUserInstall, upgradeUuid }`; `vendor = "NewPipe e.V."`, `description`, `copyright`.
+- [~] Produce real Windows MSI/EXE; verify resources load; boot smoke. MSI + EXE + DEB are built by CI and published (`release-desktop.yml`, windows job runs `packageReleaseMsi packageReleaseExe`); boot smoke on a physical Windows machine still pending.
+- [x] Real packaging in CI: `.github/workflows/release-desktop.yml` builds Windows `packageReleaseMsi` + `packageReleaseExe` and Linux `packageReleaseDeb`, and publishes a GitHub Release (`gh release`, assets gathered via `find dist -type f`) with all installers; ProGuard non-obfuscating config (`desktopApp/proguard-rules.pro`) fixes jsoup/re2j `-dontwarn`. Latest **published release**: `v0.29.1-desktop.7` — `net.newpipe.app-0.29.1.exe` (56.1 MB) + `net.newpipe.app-0.29.1.msi` (55.2 MB) + `net.newpipe.app_0.29.1_amd64.deb` (49.4 MB). macOS/iOS dropped from the project.
+- [x] Preserve/extend versioning (`buildSrc/ProjectConfig.kt`): `NEWPIPE_VERSION_NAME=0.29.1` drives both desktop `packageVersion` and Android `versionName`.
+- [x] Release notes: releases are created with `--generate-notes`, and the Android release carries an explicit note that it is a debug-signed `continuous` build with a `.continuous` app-id suffix. Limitations are recorded in README/todo.
+- [x] Only report an artifact path once it truly exists: all reported assets were confirmed via `gh release view` (`v0.29.1-desktop.7` = EXE+MSI+DEB; `android-v0.29.1.1` = APK).
+- [x] Android phone + TV release pipeline: single APK (`:app`, leanback launcher + banner → one artifact for phones and Android TV). `.github/workflows/release-android.yml` builds `:app:assembleContinuous` (debug-signed, installable) and publishes to a GitHub Release. First **published release**: `android-v0.29.1.1` — `NewPipe_v0.29.1_phone_tv.apk` (11.7 MB).
 
 ---
 
@@ -254,8 +255,8 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 - [~] Existing providers still work; one provider failure doesn't crash others (JVM extractor failures mapped to `ProviderFailureReason` + repository last-resort guard, tested; Android live path unverified).
 - [ ] No fake progress/buttons/toggles.
 - [ ] Lint + tests + production build succeed (or pre-existing failures documented).
-- [ ] Real Windows `.exe`/MSI built, packaged resources load, app runs.
-- [ ] `FEATURE_INVENTORY.md` and implementation report produced.
+- [~] Real Windows `.exe`/MSI built, packaged resources load, app runs. EXE + MSI built and published by CI; packaged-resources load + app run must be confirmed on a physical Windows machine.
+- [~] `FEATURE_INVENTORY.md` produced; standalone implementation report still to be written.
 
 ---
 
@@ -263,6 +264,6 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 
 - [!] **Reference image not received** — using described dark+red design system.
 - [!] **Scope**: full desktop parity + 10 features ≈ multi-week port (ExoPlayer→VLCJ, downloads, Room→JVM store).
-- [ ] Confirm desktop strategy (§2 decision).
-- [ ] Confirm whether Android TV builds are expected to be produced here (no TV config found yet — verify).
+- [x] Confirm desktop strategy (§2 decision): desktop (Windows/Linux) is the port's deliverable; macOS/iOS dropped.
+- [x] Android TV builds confirmed: this repo **does** have TV config — `AndroidManifest.xml` declares `android.software.leanback`, `android.hardware.touchscreen` not required, a TV `android:banner`, and `LEANBACK_LAUNCHER`. Phone and TV share a single APK; `release-android.yml` publishes it.
 - [!] New toolchain (AGP 9.3.1 / Kotlin 2.4.10 / Gradle 9.7.1) may need Android SDK + WiX for MSI locally.
