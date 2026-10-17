@@ -30,9 +30,23 @@ compose.desktop {
         mainClass = "net.newpipe.app.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Deb)
             packageName = NEWPIPE_APPLICATION_ID_NEW
             packageVersion = NEWPIPE_VERSION_NAME
+            vendor = "NewPipe e.V."
+            description = "NewPipe+ desktop client"
+            copyright = "GPL-3.0-or-later"
+
+            windows {
+                iconFile.set(project.file("icon.ico"))
+                menu = true
+                shortcut = true
+                menuGroup = "NewPipe+"
+                dirChooser = true
+                perUserInstall = true
+                // Stable identity so future installers upgrade in place instead of stacking.
+                upgradeUuid = "66F7DD50-2C8A-42CE-A996-7ECEE1A51416"
+            }
         }
 
         // Release packaging runs ProGuard; keep it enabled but non-obfuscating (a stable, testable

@@ -19,12 +19,15 @@ jobs:
         include:
           - label: linux-deb
             os: ubuntu-latest
-            task: packageReleaseDeb
-            path: desktopApp/build/compose/binaries/main-release/deb/*.deb
-          - label: windows-msi
+            tasks: ":desktopApp:packageReleaseDeb"
+            path: |
+              desktopApp/build/compose/binaries/main-release/deb/*.deb
+          - label: windows
             os: windows-latest
-            task: packageReleaseMsi
-            path: desktopApp/build/compose/binaries/main-release/msi/*.msi
+            tasks: ":desktopApp:packageReleaseMsi :desktopApp:packageReleaseExe"
+            path: |
+              desktopApp/build/compose/binaries/main-release/msi/*.msi
+              desktopApp/build/compose/binaries/main-release/exe/*.exe
 
     steps:
       - uses: actions/checkout@v6
@@ -38,7 +41,7 @@ jobs:
           cache: gradle
 
       - name: Package desktop distribution
-        run: ./gradlew :desktopApp:${{ matrix.task }} --stacktrace
+        run: ./gradlew ${{ matrix.tasks }} --stacktrace
 
       - name: Upload ${{ matrix.label }} artifact
         uses: actions/upload-artifact@v7
