@@ -76,12 +76,21 @@ Launch the desktop app:
 
 ### Status
 
-* 193 tests passing in `:shared:jvmTest`, 0 failures.
+* 752 tests passing in `:shared:jvmTest` (97 suites), 0 failures.
 * Ten enhancements (F1–F10) are tracked in [`todo.md`](todo.md), alongside phases 1–14.
 * The dark cinematic design system (red `#E53935` accent) is documented in [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md).
 * The feature-preservation contract is recorded in [`FEATURE_INVENTORY.md`](FEATURE_INVENTORY.md).
+* The port status and releases are summarised in [`IMPLEMENTATION_REPORT.md`](IMPLEMENTATION_REPORT.md).
+* Preference/schema evolution rules live in [`MIGRATION.md`](MIGRATION.md), and the desktop backup
+  archive layout in [`BACKUP_FORMAT.md`](BACKUP_FORMAT.md).
 
-Real video playback requires libVLC; the JVM engine reports `isAvailable=false` when it is absent, and it is not installed on the current development machine. Windows MSI/EXE packaging is declared but not produced on this machine (no WiX toolchain). The Android `:app` remains the reference implementation and the real playback path.
+### Releases
+
+* Desktop (`v*` tag): Windows `.exe` + `.msi` and Linux `.deb`, e.g. `v0.29.1-desktop.7`.
+* Android (`android-v*` tag): a single debug-signed `continuous` APK for phones and Android TV,
+  e.g. `android-v0.29.1.1`.
+
+Real video playback requires libVLC; the JVM engine reports `isAvailable=false` when it is absent, and it is not installed on the current development machine. Desktop installers and the Android APK are built by CI; the Windows installer run, Android device install, and libVLC playback have not been verified on real hardware. The Android `:app` remains the reference implementation and the real playback path.
 
 ### Keyboard shortcuts
 

@@ -53,7 +53,7 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 - [x] Define preservation contract: nothing removed; behaviours mapped, not dropped.
 - [x] Decide desktop strategy: **port to `shared`/JVM incrementally**; Android `:app` stays the reference + buildable.
 - [x] Design system spec: dark cinematic palette, red accent, spacing scale, type scale, card/rail/button/dialog tokens (`DESIGN_SYSTEM.md`).
-- [ ] Migration plan for any schema/pref change (backward compatible; keep keys).
+- [x] Migration plan for any schema/pref change (backward compatible; keep keys): [`MIGRATION.md`](MIGRATION.md) — permanent keys, additive-only changes, defaults for missing keys, `ignoreUnknownKeys` for blobs, version markers, rollback notes, and the Android-vs-desktop storage distinction.
 
 > **Decision (owner-approved):** (a) Port to `shared`/JVM incrementally (real `.exe`, long effort); `:app` stays untouched-but-buildable.
 
@@ -140,7 +140,7 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 - [ ] Every setting: accurate value, correct control, persists, affects real behaviour.
 - [x] Backup: create, choose location, status, dated files (no overwrite), list contents — common `backup/` package (`BackupManifest` @Serializable, pure `BackupOps`, `BackupRepository` seam) + JVM `JVMBackupRepository` (real java.util.zip archive, manifest first, never throws; 12 ops + 5 content + 8 JVM repo round-trip tests) + honest unavailable Android no-op; `BackupRestoreScreen` + VM + `Destination.BackupRestore` registered + Settings entry; `chooseDirectory()` expect/actual (JVM `JFileChooser`, android no-op).
 - [x] Restore: validate + inspect + confirm + non-destructive-on-failure — archive inspection dialog (`backup_contents_file_count`), validation before apply, honest failure states; wired into the store/restore pipeline via `BackupContent` + `JVMBackupRepository`.
-- [ ] Preserve existing ZIP format (`newpipe.db` + prefs) where feasible; document contents.
+- [x] Preserve existing ZIP format (`newpipe.db` + prefs) where feasible; document contents: [`BACKUP_FORMAT.md`](BACKUP_FORMAT.md) documents the desktop `.nppbackup` ZIP (manifest-first + JSON blobs), the AES-GCM envelope, validation/rejection rules, the replace-only-on-valid restore contract, and honestly records that upstream's `newpipe.db` + prefs ZIP is a *different* format with no desktop Room DB (a future converter is feasible but unsupported until tested).
 - [x] Optional encrypted backup (authenticated encryption, KDF; no custom crypto) — `BackupEnvelope` framing + `JVMBackupCipher` (JCE AES-256-GCM + PBKDF2WithHmacSHA256); optional passphrase in `BackupRestoreScreen`, wrong-passphrase/locked states, `isEncrypted` detection.
 
 ---
@@ -256,7 +256,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 - [ ] No fake progress/buttons/toggles.
 - [ ] Lint + tests + production build succeed (or pre-existing failures documented).
 - [~] Real Windows `.exe`/MSI built, packaged resources load, app runs. EXE + MSI built and published by CI; packaged-resources load + app run must be confirmed on a physical Windows machine.
-- [~] `FEATURE_INVENTORY.md` produced; standalone implementation report still to be written.
+- [x] `FEATURE_INVENTORY.md` produced; standalone implementation report written in [`IMPLEMENTATION_REPORT.md`](IMPLEMENTATION_REPORT.md) (modules, verification counts, changes, releases, honest limitations).
 
 ---
 
