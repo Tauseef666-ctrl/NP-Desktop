@@ -79,6 +79,20 @@ fun WorkspaceMode.gridDensity(): Float = when (this) {
 }
 
 /**
+ * Whether the navigation rail should render its expanded (icon + label) form right now.
+ *
+ * The user's explicit choice ([pinnedExpanded]) always wins. When it is not pinned and the rail is
+ * collapsed, an active pointer [hovering] over the rail temporarily "peeks" it open, provided the
+ * host allows it ([hoverPeekEnabled]) — the "dense nav-rail hover" behaviour. This is pure so the
+ * policy is unit-testable independently of pointer plumbing.
+ */
+fun navRailExpanded(
+    pinnedExpanded: Boolean,
+    hovering: Boolean,
+    hoverPeekEnabled: Boolean
+): Boolean = pinnedExpanded || (hoverPeekEnabled && hovering)
+
+/**
  * Active workspace mode exposed to the shared UI. Defaults to [WorkspaceMode.BALANCED] so previews,
  * tests and non-desktop hosts render without an explicit provider.
  */

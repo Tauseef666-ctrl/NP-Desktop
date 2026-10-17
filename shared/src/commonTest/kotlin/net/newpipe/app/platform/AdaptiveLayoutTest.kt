@@ -81,4 +81,23 @@ class AdaptiveLayoutTest {
         assertTrue(compact < balanced && balanced < expanded, "density not monotonic")
         assertEquals(1.0f, balanced)
     }
+
+    @Test
+    fun navRailExpandedPinnedChoiceAlwaysWins() {
+        assertTrue(navRailExpanded(pinnedExpanded = true, hovering = false, hoverPeekEnabled = true))
+        assertTrue(navRailExpanded(pinnedExpanded = true, hovering = true, hoverPeekEnabled = false))
+        assertTrue(navRailExpanded(pinnedExpanded = true, hovering = false, hoverPeekEnabled = false))
+    }
+
+    @Test
+    fun navRailExpandedPeeksOnHoverWhenCollapsed() {
+        assertTrue(navRailExpanded(pinnedExpanded = false, hovering = true, hoverPeekEnabled = true))
+        assertFalse(navRailExpanded(pinnedExpanded = false, hovering = false, hoverPeekEnabled = true))
+    }
+
+    @Test
+    fun navRailExpandedRespectsHoverPeekDisabled() {
+        assertFalse(navRailExpanded(pinnedExpanded = false, hovering = true, hoverPeekEnabled = false))
+        assertFalse(navRailExpanded(pinnedExpanded = false, hovering = false, hoverPeekEnabled = false))
+    }
 }

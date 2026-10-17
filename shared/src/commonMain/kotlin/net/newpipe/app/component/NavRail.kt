@@ -5,7 +5,11 @@
 
 package net.newpipe.app.component
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +28,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +43,7 @@ import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
 import net.newpipe.app.platform.LocalWorkspaceMode
 import net.newpipe.app.platform.isCompactSidebar
+import net.newpipe.app.platform.navRailExpanded
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceNormal
@@ -75,6 +82,9 @@ data class NavEntry(
  * @param expanded When true shows labels; when false only icons/initials.
  * @param onToggleExpanded Optional collapse/expand affordance rendered above the footer. The label
  *   follows the current state ("Collapse sidebar" when expanded, "Expand sidebar" when collapsed).
+ * @param expandOnHover When collapsed, a pointer hovering the rail temporarily reveals labels (the
+ *   "dense nav-rail hover" behaviour) without changing the pinned state. Yields to an explicit
+ *   [expanded] choice, which always wins.
  * @param header Optional slot pinned above the entries (logo, account, ...).
  * @param entries Destinations, in order.
  * @param footer Optional slot pinned to the bottom (settings, version, ...).
@@ -85,14 +95,26 @@ fun NavRail(
     modifier: Modifier = Modifier,
     expanded: Boolean = !LocalWorkspaceMode.current.isCompactSidebar,
     onToggleExpanded: (() -> Unit)? = null,
+    expandOnHover: Boolean = true,
     header: (@Composable () -> Unit)? = null,
     footer: (@Composable () -> Unit)? = null
 ) {
     val colors = plusColors()
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val shownExpanded = navRailExpanded(
+        pinnedExpanded = expanded,
+        hovering = hovered,
+        hoverPeekEnabled = expandOnHover
+    )
+    val railWidth by animateDpAsState(
+        targetValue = if (shownExpanded) NavRailExpandedWidth else NavRailCollapsedWidth
+    )
     Column(
         modifier = modifier
             .fillMaxHeight()
-            .width(if (expanded) NavRailExpandedWidth else NavRailCollapsedWidth)
+            .width(railWidth)
+            .hoverable(interactionSource = interactionSource)
             .background(colors.surface)
     ) {
         if (header != null) {
@@ -106,7 +128,7 @@ fun NavRail(
                 .padding(horizontal = spaceSmall, vertical = spaceSmall),
             verticalArrangement = Arrangement.spacedBy(spaceSmall)
         ) {
-            entries.forEach { entry -> NavRailItem(entry = entry, expanded = expanded) }
+            entries.forEach { entry -> NavRailItem(entry = entry, expanded = shownExpanded) }
         }
         if (onToggleExpanded != null) {
             NavRailToggle(expanded = expanded, onToggle = onToggleExpanded)
