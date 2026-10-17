@@ -102,12 +102,12 @@ jobs:
   release:
     name: Publish GitHub release
     needs: [package, android]
-    if: ${{ always() && needs.package.result != 'cancelled' && needs.android.result != 'cancelled' }}
+    if: ${{ needs.package.result == 'success' && needs.android.result == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           path: dist
           merge-multiple: true
