@@ -65,7 +65,8 @@ jobs:
 
       - name: Fail when no installer was produced
         run: |
-          if [ -z "$(ls -A dist)" ]; then
+          FILES=$(find dist -type f)
+          if [ -z "$FILES" ]; then
             echo "No installers were produced by any platform." >&2
             exit 1
           fi
@@ -86,10 +87,11 @@ jobs:
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
           REPO="${GITHUB_REPOSITORY}"
+          mapfile -t FILES < <(find dist -type f)
           if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
-            gh release upload "$TAG" dist/* --clobber --repo "$REPO"
+            gh release upload "$TAG" "${FILES[@]}" --clobber --repo "$REPO"
           else
-            gh release create "$TAG" dist/* \
+            gh release create "$TAG" "${FILES[@]}" \
               --repo "$REPO" \
               --target "${GITHUB_SHA}" \
               --title "NewPipe+ Desktop $TAG" \
