@@ -33,14 +33,13 @@
 
 ## NewPipe+ (desktop port)
 
-NewPipe+ adds a desktop (Windows/Linux/macOS via JVM + Compose Multiplatform) companion to NewPipe, sharing the private, advertisement-free ethos of the Android app. This is a work-in-progress port and a superset of the upstream codebase.
+NewPipe+ adds a desktop (Windows/Linux via JVM + Compose Multiplatform) companion to NewPipe, sharing the private, advertisement-free ethos of the Android app. This is a work-in-progress port and a superset of the upstream codebase.
 
 ### Modules
 
 * `:app` — the upstream Android app, preserved and unchanged-but-buildable.
-* `:shared` — Kotlin Multiplatform module (Android/JVM/iOS) containing the new Compose UI, theme, and the player/downloads/library/settings view models plus pure logic.
+* `:shared` — Kotlin Multiplatform module (Android/JVM) containing the new Compose UI, theme, and the player/downloads/library/settings view models plus pure logic.
 * `:desktopApp` — a plain JVM Compose Desktop shell that hosts the shared UI, plus a floating mini-player window and window-size/workspace persistence.
-* `:iosApp` — an Xcode shell (stub only; no iOS support is claimed).
 
 ### Design & ethos
 

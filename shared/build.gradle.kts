@@ -10,7 +10,6 @@ plugins {
     alias(libs.plugins.jetbrains.compose.multiplatform)
     alias(libs.plugins.koin)
     alias(libs.plugins.jetbrains.kotlinx.serialization)
-    alias(libs.plugins.about.libraries)
 }
 
 // Better than adding a third-party dependency for something as simple as this
@@ -74,16 +73,6 @@ kotlin {
             sourceSetTreeName = "test"
         }.configure {
             instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        }
-    }
-
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
         }
     }
 
@@ -153,13 +142,4 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.jetbrains.compose.tooling)
-}
-
-aboutLibraries {
-    export {
-        outputFile = file("src/iosMain/resources/aboutlibraries.json")
-        prettyPrint = true
-        variant = "metadataIosMain"
-        excludeFields.addAll("organization", "scm", "funding")
-    }
 }

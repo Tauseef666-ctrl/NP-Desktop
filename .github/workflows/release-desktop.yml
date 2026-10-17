@@ -25,10 +25,6 @@ jobs:
             os: windows-latest
             task: packageReleaseMsi
             path: desktopApp/build/compose/binaries/main-release/msi/*.msi
-          - label: macos-dmg
-            os: macos-14
-            task: packageReleaseDmg
-            path: desktopApp/build/compose/binaries/main-release/dmg/*.dmg
 
     steps:
       - uses: actions/checkout@v6

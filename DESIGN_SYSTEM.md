@@ -157,7 +157,7 @@ JVM `actual`s in `jvmMain`/`:desktopApp`.
 ## 9. Non-goals / limitations
 
 - No bypass of DRM, auth, or access controls.
-- iOS remains a shell (documented, not claimed).
+- iOS/macOS are out of scope (targets, sources and packaging removed).
 - Android `:app` stays as-is reference until screens are migrated; must keep building.
 - No new telemetry/analytics.
 - No custom cryptography (use vetted AES-GCM + KDF only).

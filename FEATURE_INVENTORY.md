@@ -13,9 +13,8 @@ removed, disabled, or silently replaced. When a feature moves, its behaviour mov
 | Module | Language / stack | What it actually is |
 |---|---|---|
 | `:app` | Java/Kotlin + XML Views, ExoPlayer 2.19.1, Room, giga download engine, RxJava3 | **The complete NewPipe app.** Android-only. |
-| `shared` | Kotlin Multiplatform + Compose Multiplatform (android / jvm / ios) | **New Compose UI skeleton.** Currently About + Settings only. |
-| `:desktopApp` | Compose Desktop (JVM) | 18-line `Main.kt` hosting `shared`'s `App()`; starts on About. |
-| `iosApp` | SwiftUI host | Xcode shell only. |
+| `shared` | Kotlin Multiplatform + Compose Multiplatform (android / jvm) | **New Compose UI skeleton.** Currently About + Settings only. |
+| `:desktopApp` | Compose Desktop (JVM) | `Main.kt` hosting `shared`'s `App()`; starts on About. |
 
 Design system lives in `shared/src/commonMain/.../theme`; UI strings/drawables in
 `shared/src/commonMain/composeResources`. Version = `buildSrc/ProjectConfig.kt` (`0.29.1`).

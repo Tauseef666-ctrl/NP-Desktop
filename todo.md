@@ -12,10 +12,10 @@ Legend: `[x] done` · `[~] in progress` · `[ ] todo` · `[!] blocked/unsupporte
 | Area | Where it lives | State |
 |---|---|---|
 | Full app (player, downloads, subs, feed, history, settings, backup) | `:app` (Android, Java/XML + ExoPlayer 2.19.1 + giga + Room) | **exists**, Android-only |
-| New Compose UI | `shared` (KMP: android/jvm/ios) | **skeleton**, only About + Settings |
+| New Compose UI | `shared` (KMP: android/jvm) | **skeleton**, only About + Settings |
 | Desktop shell | `:desktopApp` (18-line `Main.kt`) | **empty**, hosts `shared` About screen |
-| Windows packaging | `:desktopApp` targets MSI/DMG/DEB | MSI declared, **no EXE**, never built in CI |
-| iOS | `iosApp` Xcode shell + `shared` iosMain | shell only |
+| Desktop packaging | `:desktopApp` targets MSI/DEB/EXE | MSI/DEB built + released in CI |
+| iOS / macOS | — | **dropped** (out of scope; targets + sources removed) |
 | Design reference image | — | **not received** (proceed on described dark+red system) |
 
 Implication: desktop functionality + the 10 features are **new ports** onto `shared`/`desktopApp`/JVM, using `:app` as the reference. This is a large, multi-stage effort; items are checked only with evidence.
@@ -107,7 +107,7 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
   and repeat-mode already reach the engine/controller; subtitles/audio-track remain gated honest-unavailable because
   the `PlayerEngine` interface exposes no subtitle/audio-track API (no fake toggle shown).
 - [x] Buffering / loading / error states (`PlaybackStatus` chip + `ErrorState` for unavailable/errors).
-- [~] Keyboard shortcuts + accessibility: default bindings + conflict detection + reserved media keys (`player/PlayerShortcuts.kt`, 13 tests), wired into `PlayerScreen` via platform-normalized key interceptor (`player/KeyInput.kt` + jvm/android/ios actuals); **searchable reference UI in settings done** (`ShortcutReference` + `ShortcutReferenceSection`, wired into the JVM player-settings section; 9 pure + 3 UI tests); **app-wide scope done** (`player/AppShortcutScope.kt` — `isMediaKey`/`appActionFor`, `Modifier.plusAppShortcuts` bubble-phase `onKeyEvent`, wired into desktopApp `Main.kt` via `AppShortcutHost`, 7 tests; scope tags + hints in ShortcutsReference section). Focus-search & mini-player keys pending.
+- [~] Keyboard shortcuts + accessibility: default bindings + conflict detection + reserved media keys (`player/PlayerShortcuts.kt`, 13 tests), wired into `PlayerScreen` via platform-normalized key interceptor (`player/KeyInput.kt` + jvm/android actuals); **searchable reference UI in settings done** (`ShortcutReference` + `ShortcutReferenceSection`, wired into the JVM player-settings section; 9 pure + 3 UI tests); **app-wide scope done** (`player/AppShortcutScope.kt` — `isMediaKey`/`appActionFor`, `Modifier.plusAppShortcuts` bubble-phase `onKeyEvent`, wired into desktopApp `Main.kt` via `AppShortcutHost`, 7 tests; scope tags + hints in ShortcutsReference section). Focus-search & mini-player keys pending.
 - [~] Verify no control is a no-op (or mark unavailable) — controls disabled when engine unavailable; video surface explicitly honest.
 
 ---
@@ -116,7 +116,7 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 
 - [x] JVM download engine behind a shared interface: `download/DownloadEngine.kt` + `platform/JVMDownloadEngine.kt` — real `HttpURLConnection` transfers to a `.part` file, HTTP `Range` resume, pause/cancel/remove/clear, honest progress/speed, only marked COMPLETED after the file exists (5 tests against a real local HTTP server).
 - [x] Downloads screen (`screen/downloads/DownloadsScreen.kt`, route `Destination.Downloads` + Home entry): single mission list with status chip/progress/speed/size, per-row Pause/Resume/Retry/Cancel/Remove, Clear-completed, and an "add URL + destination folder" form. **Category tabs done** (`screen/downloads/DownloadCategory.kt`: All/Queued/Downloading/Paused/Completed/Failed + `select`/`tabCounts`, 7 pure tests + 3 tab-bar UI tests).
-- [x] Actions: start/resume, pause, cancel, retry, remove, clear completed, **open file + open folder** (`platform/FileActions.kt` expect + JVM AWT `SystemFileActions` actuals, no-op android/ios actuals; surfaced as Open-file/Open-folder on COMPLETED rows); **reorder done** (`download/DownloadOps.reorder` — queued/paused/failed missions movable, downloading/completed pinned to slot).
+- [x] Actions: start/resume, pause, cancel, retry, remove, clear completed, **open file + open folder** (`platform/FileActions.kt` expect + JVM AWT `SystemFileActions` actuals, no-op android actuals; surfaced as Open-file/Open-folder on COMPLETED rows); **reorder done** (`download/DownloadOps.reorder` — queued/paused/failed missions movable, downloading/completed pinned to slot).
 - [~] Destination folder per download supported (default `~/Downloads` via `defaultDownloadDirectory()` expect/actual); **format/quality selection + duplicate detection done** (`download/DownloadFormat` + `formatLabel`, `isDuplicate` on live missions, `DownloadOps` 18 tests); **subtitle selection done** — `DownloadRequest` gained `subtitleUrl`/`subtitleLanguageTag`; pure `subtitleDestinationPath` (companion file `<name>.<lang>.<ext>` beside the main file) + `subtitleCompanionRequest` (independent `-sub` mission reusing the subtitle document URL) in `DownloadOps`; `DownloadsViewModel.addFromUrl` optionally enqueues + starts the companion; add-download UI shows Subtitle-URL + Language fields; 5 pure + 3 VM + 1 UI tests.
 - [x] Real progress/speed/size; verifies the file before marking complete.
 - [x] Persist queue/status across restarts: `download/DownloadStore.kt` (`@Serializable DownloadSnapshot`, key `npp_download_tasks`, blank/corrupt/empty → null), `DownloadRequest`/`DownloadTask` `@Serializable`, engine restores on init (active → QUEUED, speed reset) and persists on every mutation (`@Configuration` DownloadModule needed for the Koin checker) — 6 store tests + 2 engine restart tests; 156 total green.
@@ -125,7 +125,7 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 
 ## 7. Phase 7 — Local media library
 
-- [~] Indexed folders (user-selected, persisted via `LibraryPreferences.KEY_INDEXED_FOLDERS`), recursive scan, **never mutates files** (`player/LocalMedia.kt` + `platform/JVMLocalMediaScanner.kt`, 11 tests); incremental scan done (`ScanDiff` + pure `diffByPath` + `JVMLocalMediaScanner.incrementalScan(dir, previous)`, reports added/removed/changed/unchanged); Android/iOS scanners pending.
+- [~] Indexed folders (user-selected, persisted via `LibraryPreferences.KEY_INDEXED_FOLDERS`), recursive scan, **never mutates files** (`player/LocalMedia.kt` + `platform/JVMLocalMediaScanner.kt`, 11 tests); incremental scan done (`ScanDiff` + pure `diffByPath` + `JVMLocalMediaScanner.incrementalScan(dir, previous)`, reports added/removed/changed/unchanged); Android scanner pending.
 - [x] Views: single list + **derived views done** (`screen/library/LibraryViews.kt` — `KIND`/`LibraryViewTab` RECENT/CONTINUE/DOWNLOADED, `DerivedViewItem`, pure `continueWatching`/`recentlyPlayed`/`downloadedTasks`, honest empty titles/messages, 10 tests): **Videos / Audio / Folders / Playlists views done** (`LibraryViews.kt` — `audioTracks`/`videoTracks`/`FolderGroup`+`folderGroups` w/ Root fallback /`playlistTracks`, tabs + empty states + thumbnail-pending + missing-file markers on `LocalMediaRow`, saved-playlist queue wiring; 15 tests); Recently-played history persists (`player/RecentlyPlayedStore.kt`, key `npp_recently_played`, cap 50, 13 tests); **Continue watching reuses the resume store** (`PlaybackResumeStore` now records title/url/updatedAt and exposes `entries()`, keeps near-end drop rule).
 - [~] Metadata: extension, MIME, **real** size (`formatBytes`), playable `file://` URL; duration intentionally null until learned at playback (never guessed). Resolution/artist/album/location pending.
 - [~] Search/filter/sort + list/grid done (`screen/library/LibraryFilter.kt` — pure `applyFilters`, query/path match, Videos/Audio/All, Name/Size/Date, stable order; 12 pure tests + 2 UI tests); thumbnail cache + missing-file detection pending (file removed mid-session surfaces via rescan error).
@@ -138,7 +138,7 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 - [~] Preserve **all** existing settings (Android 234 keys) and add desktop equivalents with the same semantics; **Downloads/Storage** (`screen/settings/downloads/DownloadsSettingsScreen.kt` + VM, persisted default folder `npp_default_download_directory` really consumed by `DownloadsScreen`) and **History/Privacy** (`screen/settings/history/HistorySettingsScreen.kt` + VM, `npp_watch_history_enabled` gates `RecentlyPlayedStore.record`, resume toggle + clear history/resume) done; remaining categories pending.
 - [~] Settings categories: General, Player, Downloads/Storage, **Local Media (done)**, Subs/Playlists, **Search/Services (done)**, History/Privacy, Appearance, Notifications, Network, **Advanced (desktop done)**/Debug, Backup & Restore, About, Content.
 - [ ] Every setting: accurate value, correct control, persists, affects real behaviour.
-- [x] Backup: create, choose location, status, dated files (no overwrite), list contents — common `backup/` package (`BackupManifest` @Serializable, pure `BackupOps`, `BackupRepository` seam) + JVM `JVMBackupRepository` (real java.util.zip archive, manifest first, never throws; 12 ops + 5 content + 8 JVM repo round-trip tests) + honest unavailable Android no-op; `BackupRestoreScreen` + VM + `Destination.BackupRestore` registered + Settings entry; `chooseDirectory()` expect/actual (JVM `JFileChooser`, android/iOS no-ops).
+- [x] Backup: create, choose location, status, dated files (no overwrite), list contents — common `backup/` package (`BackupManifest` @Serializable, pure `BackupOps`, `BackupRepository` seam) + JVM `JVMBackupRepository` (real java.util.zip archive, manifest first, never throws; 12 ops + 5 content + 8 JVM repo round-trip tests) + honest unavailable Android no-op; `BackupRestoreScreen` + VM + `Destination.BackupRestore` registered + Settings entry; `chooseDirectory()` expect/actual (JVM `JFileChooser`, android no-op).
 - [x] Restore: validate + inspect + confirm + non-destructive-on-failure — archive inspection dialog (`backup_contents_file_count`), validation before apply, honest failure states; wired into the store/restore pipeline via `BackupContent` + `JVMBackupRepository`.
 - [ ] Preserve existing ZIP format (`newpipe.db` + prefs) where feasible; document contents.
 - [x] Optional encrypted backup (authenticated encryption, KDF; no custom crypto) — `BackupEnvelope` framing + `JVMBackupCipher` (JCE AES-256-GCM + PBKDF2WithHmacSHA256); optional passphrase in `BackupRestoreScreen`, wrong-passphrase/locked states, `isEncrypted` detection.
@@ -171,7 +171,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 
 ### F5 — Unified local media library
 - [x] Android: local playlists/bookmarks/history (no generic file scan).
-- [~] Shared/desktop: file-library scan (§7) with `LocalMediaScanner` interface + JVM impl (11 tests), persisted indexed folders, **incremental scan (added/removed/changed/unchanged via `diffByPath`)**, and a Library screen that queues scanned files on the shared `PlaybackController`; **search/filter/sort + list/grid view done** (LibraryFilter, 14 tests). **Folders/audio/video/playlist views done** (LibraryViews, 15 tests). Android/iOS scanners, thumbnails pending.
+- [~] Shared/desktop: file-library scan (§7) with `LocalMediaScanner` interface + JVM impl (11 tests), persisted indexed folders, **incremental scan (added/removed/changed/unchanged via `diffByPath`)**, and a Library screen that queues scanned files on the shared `PlaybackController`; **search/filter/sort + list/grid view done** (LibraryFilter, 14 tests). **Folders/audio/video/playlist views done** (LibraryViews, 15 tests). Android scanner, thumbnails pending.
 
 ### F6 — Smart queue & playlist system
 - [x] Android: `PlayQueue` + local playlists — keep.
@@ -210,7 +210,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 - [ ] Android phone/tablet: keep `:app` working; migrate screens to `shared` Compose where done, preserve everything.
 - [x] Android TV: upstream has TV? verify; keep/retain any TV behaviour.
 - [ ] Desktop: responsive at supported sizes; no overflow/clipping.
-- [-]/[!] iOS: shell only; document state, do not claim support.
+- [-] iOS / macOS: out of scope — dropped from the project (targets, sources, packaging removed).
 
 ---
 
