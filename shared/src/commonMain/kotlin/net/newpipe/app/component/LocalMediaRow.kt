@@ -38,6 +38,7 @@ import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.theme.spaceSmall
 import net.newpipe.app.theme.spaceXXSmall
 import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.library_missing_file
 import newpipe.shared.generated.resources.library_thumbnail_pending
 import org.jetbrains.compose.resources.stringResource
 
@@ -55,6 +56,7 @@ fun LocalMediaRow(
     sizeText: String? = null,
     thumbnail: Painter? = null,
     isPlaying: Boolean = false,
+    isMissing: Boolean = false,
     showThumbnailPlaceholder: Boolean = false,
     onClick: () -> Unit = {}
 ) {
@@ -97,7 +99,11 @@ fun LocalMediaRow(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium,
-                color = if (isPlaying) colors.accent else colors.textPrimary,
+                color = when {
+                    isMissing -> colors.textSecondary
+                    isPlaying -> colors.accent
+                    else -> colors.textPrimary
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -113,7 +119,15 @@ fun LocalMediaRow(
                 )
             }
         }
-        if (isPlaying) {
+        if (isMissing) {
+            Spacer(Modifier.width(spaceSmall))
+            Text(
+                text = stringResource(Res.string.library_missing_file),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.error
+            )
+        } else if (isPlaying) {
             Spacer(Modifier.width(spaceSmall))
             Text(
                 text = "PLAYING",

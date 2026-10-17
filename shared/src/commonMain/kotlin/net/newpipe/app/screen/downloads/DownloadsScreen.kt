@@ -48,6 +48,7 @@ import net.newpipe.app.download.DownloadTask
 import net.newpipe.app.download.isReorderable
 import net.newpipe.app.download.reorder
 import net.newpipe.app.navigation.Navigator
+import net.newpipe.app.platform.chooseDirectory
 import net.newpipe.app.platform.openDownloadedFile
 import net.newpipe.app.platform.openDownloadedFileFolder
 import net.newpipe.app.preview.ThemePreviewProvider
@@ -102,6 +103,7 @@ fun DownloadsScreen(
         onAdd = { url, folder, format, subtitleUrl, subtitleLanguage ->
             viewModel.addFromUrl(url, folder, format, subtitleUrl, subtitleLanguage)
         },
+        onBrowseFolder = { chooseDirectory() },
         onDismissDuplicate = viewModel::dismissDuplicate,
         onReorder = viewModel::reorder,
         onStart = viewModel::start,
@@ -124,6 +126,7 @@ fun DownloadsScreenContent(
     defaultDirectory: String = "",
     lastAddRejectedDuplicate: Boolean = false,
     onAdd: (String, String, DownloadFormat, String?, String?) -> Unit = { _, _, _, _, _ -> },
+    onBrowseFolder: () -> String? = { null },
     onDismissDuplicate: () -> Unit = {},
     onReorder: (Int, Int) -> Unit = { _, _ -> },
     onStart: (String) -> Unit = {},
@@ -164,6 +167,7 @@ fun DownloadsScreenContent(
                 enabled = isEngineAvailable,
                 lastAddRejectedDuplicate = lastAddRejectedDuplicate,
                 onDismissDuplicate = onDismissDuplicate,
+                onBrowseFolder = onBrowseFolder,
                 onAdd = onAdd
             )
             val tabs = DownloadCategory.tabsInOrder
@@ -229,6 +233,7 @@ private fun NewDownloadSection(
     enabled: Boolean,
     lastAddRejectedDuplicate: Boolean,
     onDismissDuplicate: () -> Unit,
+    onBrowseFolder: () -> String?,
     onAdd: (String, String, DownloadFormat, String?, String?) -> Unit
 ) {
     val colors = plusColors()
@@ -344,6 +349,15 @@ private fun NewDownloadSection(
             label = { Text("Destination folder") },
             modifier = Modifier.weight(1f)
         )
+        TextButton(
+            onClick = {
+                val picked = onBrowseFolder()
+                if (!picked.isNullOrBlank()) destination = picked
+            },
+            enabled = enabled
+        ) {
+            Text("Browse…")
+        }
         Button(
             onClick = {
                 onAdd(

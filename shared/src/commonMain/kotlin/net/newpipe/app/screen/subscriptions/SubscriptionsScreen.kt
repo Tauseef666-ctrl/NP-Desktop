@@ -5,7 +5,10 @@
 
 package net.newpipe.app.screen.subscriptions
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,14 +35,20 @@ import net.newpipe.app.component.EmptyState
 import net.newpipe.app.component.PlusDialog
 import net.newpipe.app.component.PlusScaffold
 import net.newpipe.app.component.TopToolbar
+import net.newpipe.app.component.VideoCard
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preview.ThemePreviewProvider
+import net.newpipe.app.provider.ProviderContentItem
+import net.newpipe.app.provider.ProviderContentKind
+import net.newpipe.app.provider.SubscriptionFeed
 import net.newpipe.app.subscription.Subscription
 import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.theme.spaceSmall
 import net.newpipe.app.theme.spaceXXSmall
+import net.newpipe.app.viewmodel.subscriptions.SubscriptionFeedViewModel
+import net.newpipe.app.viewmodel.subscriptions.SubscriptionFeedViewModel.FeedState
 import net.newpipe.app.viewmodel.subscriptions.SubscriptionsViewModel
 import net.newpipe.app.viewmodel.subscriptions.SubscriptionsViewModel.AddResult
 import newpipe.shared.generated.resources.Res
@@ -61,20 +71,30 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Local subscriptions manager (Phase 4). No streaming provider is bundled yet, so this only manages
- * the user's hand-entered channel list; it never shows fabricated videos.
+ * Local subscriptions manager (Phase 4). It manages the user's channel list and, once a provider is
+ * available, shows the newest videos of each subscribed channel. It never shows fabricated videos.
  */
 @Composable
 fun SubscriptionsScreen(
     navigator: Navigator = koinInject(),
-    viewModel: SubscriptionsViewModel = koinViewModel()
+    viewModel: SubscriptionsViewModel = koinViewModel(),
+    feedViewModel: SubscriptionFeedViewModel = koinViewModel()
 ) {
     val subscriptions by viewModel.subscriptions.collectAsStateWithLifecycle()
+    val feedState by feedViewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(subscriptions) {
+        feedViewModel.load()
+    }
 
     SubscriptionsScreenContent(
         subscriptions = subscriptions,
+        feedState = feedState,
         onAdd = viewModel::add,
         onRemove = viewModel::remove,
+        onPlayItem = feedViewModel::play,
+        onPlayGroup = feedViewModel::playAll,
+        onRetryFeed = { feedViewModel.load() },
         onNavigateUp = { navigator.navigateUp() }
     )
 }
@@ -82,8 +102,12 @@ fun SubscriptionsScreen(
 @Composable
 fun SubscriptionsScreenContent(
     subscriptions: List<Subscription> = emptyList(),
+    feedState: FeedState = FeedState.Idle,
     onAdd: (String, String) -> AddResult = { _, _ -> AddResult.Added },
     onRemove: (String) -> Unit = {},
+    onPlayItem: (ProviderContentItem) -> Unit = {},
+    onPlayGroup: (List<ProviderContentItem>) -> Unit = {},
+    onRetryFeed: () -> Unit = {},
     onNavigateUp: () -> Unit = {}
 ) {
     val colors = plusColors()
@@ -114,12 +138,21 @@ fun SubscriptionsScreenContent(
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = spaceNormal)
         ) {
-            Text(
-                text = stringResource(Res.string.subscriptions_provider_pending),
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.textSecondary,
-                modifier = Modifier.padding(horizontal = spaceLarge, vertical = spaceSmall)
+            FeedSection(
+                feedState = feedState,
+                onPlayItem = onPlayItem,
+                onPlayGroup = onPlayGroup,
+                onRetry = onRetryFeed
             )
+            val feedHasContent = (feedState as? FeedState.Content)?.feed?.isEmpty == false
+            if (!feedHasContent) {
+                Text(
+                    text = stringResource(Res.string.subscriptions_provider_pending),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textSecondary,
+                    modifier = Modifier.padding(horizontal = spaceLarge, vertical = spaceSmall)
+                )
+            }
             if (subscriptions.isEmpty()) {
                 EmptyState(
                     title = stringResource(Res.string.subscriptions_empty_title),
@@ -154,6 +187,103 @@ fun SubscriptionsScreenContent(
             },
             onDismiss = { pendingRemove = null },
             destructive = true
+        )
+    }
+}
+
+/**
+ * Renders the provider-backed feed. It only shows content the provider actually returned: a loading
+ * hint, an explicit unavailable state with a retry, or the per-channel groups. Channels that failed
+ * to load are named so the user is not misled by their absence.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FeedSection(
+    feedState: FeedState,
+    onPlayItem: (ProviderContentItem) -> Unit,
+    onPlayGroup: (List<ProviderContentItem>) -> Unit,
+    onRetry: () -> Unit
+) {
+    val colors = plusColors()
+    when (feedState) {
+        FeedState.Idle -> Unit
+        FeedState.Loading -> Text(
+            text = "Loading subscriptions feed…",
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.textSecondary,
+            modifier = Modifier.padding(horizontal = spaceLarge, vertical = spaceSmall)
+        )
+        is FeedState.Unavailable -> Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spaceLarge, vertical = spaceSmall),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Couldn't load the subscriptions feed",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.danger,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onRetry) { Text("Retry") }
+        }
+        is FeedState.Content -> FeedContent(
+            feed = feedState.feed,
+            onPlayItem = onPlayItem,
+            onPlayGroup = onPlayGroup
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FeedContent(
+    feed: SubscriptionFeed,
+    onPlayItem: (ProviderContentItem) -> Unit,
+    onPlayGroup: (List<ProviderContentItem>) -> Unit
+) {
+    val colors = plusColors()
+    feed.groups.forEach { group ->
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spaceLarge, vertical = spaceSmall),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = group.channelName,
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = { onPlayGroup(group.items) }) { Text("Play all") }
+        }
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spaceLarge),
+            horizontalArrangement = Arrangement.spacedBy(spaceLarge),
+            verticalArrangement = Arrangement.spacedBy(spaceLarge)
+        ) {
+            group.items.forEach { item ->
+                VideoCard(
+                    title = item.title,
+                    subtitle = item.uploader,
+                    thumbnailUrl = item.thumbnailUrl,
+                    isLive = item.kind == ProviderContentKind.LIVE,
+                    onClick = { onPlayItem(item) }
+                )
+            }
+        }
+    }
+    if (feed.failedChannels.isNotEmpty()) {
+        Text(
+            text = "Couldn't load: ${feed.failedChannels.joinToString()}",
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.danger,
+            modifier = Modifier.padding(horizontal = spaceLarge, vertical = spaceSmall)
         )
     }
 }

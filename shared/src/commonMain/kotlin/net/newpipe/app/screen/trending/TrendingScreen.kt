@@ -180,6 +180,7 @@ private fun TrendingGrid(
                 row.forEach { item ->
                     VideoCard(
                         title = item.title,
+                        thumbnailUrl = item.thumbnailUrl,
                         subtitle = item.uploader,
                         durationText = item.durationSeconds
                             ?.takeIf { item.kind != ProviderContentKind.LIVE }

@@ -22,6 +22,8 @@ import net.newpipe.app.player.RecentlyPlayedEntry
 import net.newpipe.app.player.RecentlyPlayedStore
 import net.newpipe.app.player.ResumeEntry
 import net.newpipe.app.player.SavedPlaylist
+import net.newpipe.app.player.isUnderFolder
+import net.newpipe.app.player.reconcileScanned
 import net.newpipe.app.preferences.LibraryPreferences
 import net.newpipe.app.screen.library.DerivedViewItem
 import org.koin.core.annotation.KoinViewModel
@@ -103,6 +105,7 @@ class LibraryViewModel(
         if (path !in folders.value) return
         folders.value = folders.value - path
         saveFolders(folders.value)
+        items.value = items.value.filterNot { isUnderFolder(it.path, path) }
     }
 
     /** Re-scan every indexed folder. Unreadable folders are reported, not silently dropped. */
@@ -112,15 +115,21 @@ class LibraryViewModel(
             isScanning.value = true
             scanError.value = null
             val collected = mutableListOf<LocalMediaFile>()
+            val scanned = mutableListOf<String>()
             val errors = mutableListOf<String>()
             for (root in roots) {
                 try {
                     collected += scanner.scanFolder(root)
+                    scanned += root
                 } catch (t: Throwable) {
                     errors += "$root: ${t.message ?: "unreadable"}"
                 }
             }
-            items.value = collected
+            items.value = reconcileScanned(
+                previous = items.value,
+                current = collected,
+                scannedFolders = scanned
+            )
             scanError.value = errors.takeIf { it.isNotEmpty() }?.joinToString("\n")
             isScanning.value = false
         }
@@ -128,7 +137,8 @@ class LibraryViewModel(
 
     /** Queue the whole library (starting at [item]) on the shared controller and play it. */
     fun play(item: LocalMediaFile) {
-        val current = items.value
+        if (item.missing) return
+        val current = items.value.filterNot { it.missing }
         val index = current.indexOf(item)
         if (index < 0) return
         viewModelScope.launch {

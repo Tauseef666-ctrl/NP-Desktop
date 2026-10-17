@@ -168,6 +168,7 @@ private fun PlaylistItems(
         items.forEach { item ->
             VideoCard(
                 title = item.title,
+                thumbnailUrl = item.thumbnailUrl,
                 subtitle = item.uploader,
                 durationText = item.durationSeconds?.let { formatDuration(it) },
                 isLive = item.kind == ProviderContentKind.LIVE,

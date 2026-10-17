@@ -53,6 +53,14 @@ object LocalMediaFormats {
  * @param path Human-readable location, shown in the UI.
  * @param url Engine-playable location (e.g. a `file://` URI).
  * @param durationMs Known duration, or null when not yet determined (never faked).
+ * @param missing True when the file was indexed before but is gone from disk; kept so nothing is
+ *   silently lost and the row can be flagged instead of vanishing.
+ * @param width Video width in pixels, or null when the scanner could not determine it.
+ * @param height Video height in pixels, or null when the scanner could not determine it.
+ * @param artist Track artist for audio files, or null when unknown.
+ * @param album Album name for audio files, or null when unknown.
+ * @param latitude Geographic latitude in degrees, or null when the file carries no location.
+ * @param longitude Geographic longitude in degrees, or null when the file carries no location.
  */
 data class LocalMediaFile(
     val id: String,
@@ -64,7 +72,14 @@ data class LocalMediaFile(
     val sizeBytes: Long = 0L,
     val modifiedAt: Long = 0L,
     val durationMs: Long? = null,
-    val audioOnly: Boolean = false
+    val audioOnly: Boolean = false,
+    val missing: Boolean = false,
+    val width: Int? = null,
+    val height: Int? = null,
+    val artist: String? = null,
+    val album: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null
 ) {
     val hasKnownDuration: Boolean get() = durationMs != null && durationMs > 0L
 
@@ -75,6 +90,34 @@ data class LocalMediaFile(
         durationMs = durationMs ?: 0L,
         audioOnly = audioOnly
     )
+}
+
+/**
+ * Formats [width]×[height] as a resolution label (for example `1920×1080`), or null when either
+ * dimension is missing or non-positive. Pure and platform-free so it is unit-testable.
+ */
+fun formatResolution(width: Int?, height: Int?): String? {
+    if (width == null || height == null || width <= 0 || height <= 0) return null
+    return "$width×$height"
+}
+
+/**
+ * A short, human-readable metadata line for [file], joining only the fields the scanner actually
+ * determined (resolution, artist/album, and a location pin). Returns null when nothing is known, so
+ * the UI can omit the line rather than print placeholders.
+ */
+fun localMediaMetaLine(file: LocalMediaFile): String? {
+    val resolution = formatResolution(file.width, file.height)
+    val credits = listOfNotNull(
+        file.artist?.takeIf { it.isNotBlank() },
+        file.album?.takeIf { it.isNotBlank() }
+    ).joinToString(" – ").takeIf { it.isNotBlank() }
+    val location = if (file.latitude != null && file.longitude != null) {
+        "📍 ${file.latitude}, ${file.longitude}"
+    } else {
+        null
+    }
+    return listOfNotNull(resolution, credits, location).takeIf { it.isNotEmpty() }?.joinToString(" • ")
 }
 
 /**
@@ -112,6 +155,42 @@ fun diffByPath(previous: List<LocalMediaFile>, current: List<LocalMediaFile>): S
     }
 
     return ScanDiff(added = added, removed = removed, changed = changed, unchanged = unchanged)
+}
+
+/**
+ * True when [path] is [folder] itself or lives below it. Separator-agnostic so it works for both
+ * POSIX (`/`) and Windows (`\`) paths, and avoids the `/a/b` vs `/a/bc` prefix trap.
+ */
+fun isUnderFolder(path: String, folder: String): Boolean {
+    val trimmed = folder.trimEnd('/', '\\')
+    if (trimmed.isEmpty()) return path.startsWith("/") || path.startsWith("\\")
+    return path == trimmed || path.startsWith("$trimmed/") || path.startsWith("$trimmed\\")
+}
+
+/**
+ * Reconciles a fresh scan with the previously known files, without ever losing an entry.
+ *
+ * Files present in [current] are returned as-is. Files that were known before but are absent now
+ * are kept and flagged [LocalMediaFile.missing] *only* when their folder was actually scanned this
+ * pass ([scannedFolders]); entries belonging to a folder that failed to scan are carried over
+ * unchanged, so an unreadable folder can never hide its files.
+ */
+fun reconcileScanned(
+    previous: List<LocalMediaFile>,
+    current: List<LocalMediaFile>,
+    scannedFolders: List<String>
+): List<LocalMediaFile> {
+    val currentPaths = current.mapTo(HashSet()) { it.path }
+    val carriedOver = previous
+        .filter { it.path !in currentPaths }
+        .map { file ->
+            if (scannedFolders.any { isUnderFolder(file.path, it) }) {
+                file.copy(missing = true)
+            } else {
+                file
+            }
+        }
+    return current + carriedOver
 }
 
 /**

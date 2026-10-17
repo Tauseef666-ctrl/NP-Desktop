@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import net.newpipe.app.image.rememberThumbnailPainter
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceSmall
@@ -48,6 +49,8 @@ private val DefaultCardWidth = 240.dp
  *
  * @param title Video title (max two lines).
  * @param thumbnail Optional artwork; falls back to an [surfaceElevated] placeholder.
+ * @param thumbnailUrl Remote artwork URL, loaded asynchronously (and cached) when [thumbnail] is
+ *   not supplied; ignored otherwise.
  * @param subtitle Optional metadata line (channel, views, date).
  * @param durationText Optional duration badge text, e.g. `12:34`.
  * @param isLive When true, shows a red `LIVE` badge instead of the duration.
@@ -58,6 +61,7 @@ fun VideoCard(
     title: String,
     modifier: Modifier = Modifier,
     thumbnail: Painter? = null,
+    thumbnailUrl: String? = null,
     subtitle: String? = null,
     durationText: String? = null,
     isLive: Boolean = false,
@@ -65,6 +69,7 @@ fun VideoCard(
     onClick: () -> Unit = {}
 ) {
     val colors = plusColors()
+    val artwork = thumbnail ?: rememberThumbnailPainter(thumbnailUrl)
     Column(
         modifier = modifier
             .width(cardWidth)
@@ -78,9 +83,9 @@ fun VideoCard(
                 .clip(ThumbnailShape)
                 .background(colors.surfaceElevated)
         ) {
-            if (thumbnail != null) {
+            if (artwork != null) {
                 Image(
-                    painter = thumbnail,
+                    painter = artwork,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()

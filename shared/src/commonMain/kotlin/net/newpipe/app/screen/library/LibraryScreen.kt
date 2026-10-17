@@ -53,6 +53,7 @@ import net.newpipe.app.component.TopToolbar
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.player.LocalMediaFile
+import net.newpipe.app.player.localMediaMetaLine
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceNormal
@@ -247,11 +248,15 @@ fun LibraryScreenContent(
                             else -> visible.forEach { item ->
                                 LocalMediaRow(
                                     title = item.name,
-                                    subtitle = item.extension.uppercase(),
+                                    subtitle = listOfNotNull(
+                                        item.extension.uppercase(),
+                                        localMediaMetaLine(item)
+                                    ).joinToString(" • "),
                                     durationText = item.durationMs
                                         ?.takeIf { item.hasKnownDuration }
                                         ?.let { formatDuration(it / 1000) },
                                     sizeText = formatBytes(item.sizeBytes),
+                                    isMissing = item.missing,
                                     onClick = { onPlay(item) }
                                 )
                             }
@@ -513,15 +518,19 @@ private fun MediaTile(
             text = item.name,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium,
-            color = colors.textPrimary,
+            color = if (item.missing) colors.textSecondary else colors.textPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Spacer(Modifier.height(spaceXSmall))
         Text(
-            text = formatBytes(item.sizeBytes),
+            text = if (item.missing) {
+                stringResource(Res.string.library_missing_file)
+            } else {
+                formatBytes(item.sizeBytes)
+            },
             style = MaterialTheme.typography.bodySmall,
-            color = colors.textSecondary,
+            color = if (item.missing) MaterialTheme.colorScheme.error else colors.textSecondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
