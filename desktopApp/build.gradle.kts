@@ -34,6 +34,18 @@ compose.desktop {
             packageName = NEWPIPE_APPLICATION_ID_NEW
             packageVersion = NEWPIPE_VERSION_NAME
         }
+
+        // Release packaging runs ProGuard; keep it enabled but non-obfuscating (a stable, testable
+        // build) and add the rules that silence jsoup's optional re2j references.
+        buildTypes {
+            release {
+                proguard {
+                    configurationFiles.from("proguard-rules.pro")
+                    obfuscate.set(false)
+                    optimize.set(false)
+                }
+            }
+        }
     }
 }
 
