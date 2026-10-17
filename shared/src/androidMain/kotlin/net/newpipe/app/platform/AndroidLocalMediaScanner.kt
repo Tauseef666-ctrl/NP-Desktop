@@ -54,8 +54,6 @@ class AndroidLocalMediaScanner(private val context: Context) : LocalMediaScanner
         val metadata = base + buildList {
             add(MediaStore.MediaColumns.WIDTH)
             add(MediaStore.MediaColumns.HEIGHT)
-            add(MediaStore.MediaColumns.LATITUDE)
-            add(MediaStore.MediaColumns.LONGITUDE)
             if (audioOnly) {
                 add(MediaStore.Audio.Media.ARTIST)
                 add(MediaStore.Audio.Media.ALBUM)
@@ -71,8 +69,6 @@ class AndroidLocalMediaScanner(private val context: Context) : LocalMediaScanner
             val mimeIdx = c.getColumnIndex(MediaStore.MediaColumns.MIME_TYPE)
             val widthIdx = c.getColumnIndex(MediaStore.MediaColumns.WIDTH)
             val heightIdx = c.getColumnIndex(MediaStore.MediaColumns.HEIGHT)
-            val latitudeIdx = c.getColumnIndex(MediaStore.MediaColumns.LATITUDE)
-            val longitudeIdx = c.getColumnIndex(MediaStore.MediaColumns.LONGITUDE)
             val artistIdx = c.getColumnIndex(MediaStore.Audio.Media.ARTIST)
             val albumIdx = c.getColumnIndex(MediaStore.Audio.Media.ALBUM)
             if (dataIdx < 0) return
@@ -105,9 +101,7 @@ class AndroidLocalMediaScanner(private val context: Context) : LocalMediaScanner
                     width = widthIdx.positiveInt(c),
                     height = heightIdx.positiveInt(c),
                     artist = artistIdx.nonBlankString(c),
-                    album = albumIdx.nonBlankString(c),
-                    latitude = latitudeIdx.let { if (it >= 0 && !c.isNull(it)) c.getDouble(it) else null },
-                    longitude = longitudeIdx.let { if (it >= 0 && !c.isNull(it)) c.getDouble(it) else null }
+                    album = albumIdx.nonBlankString(c)
                 )
             }
         }
