@@ -1,4 +1,10 @@
-name: Release Desktop
+name: Release
+
+# One tag publishes every artifact into a single GitHub release:
+#   - Windows: .exe + .msi        (desktop)
+#   - Linux:   .deb               (desktop)
+#   - Android: phone + TV .apk
+# Triggered by any `v*` tag, or manually via workflow_dispatch.
 
 on:
   workflow_dispatch:
@@ -50,24 +56,67 @@ jobs:
           path: ${{ matrix.path }}
           if-no-files-found: error
 
-  release:
-    name: Publish GitHub release
-    needs: package
-    if: ${{ always() && needs.package.result != 'cancelled' }}
+  android:
+    name: Package (android phone + tv)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download all installers
+      - uses: actions/checkout@v6
+      - uses: gradle/actions/wrapper-validation@v6
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: gradle
+
+      - name: Use a named branch so the continuous suffix is stable
+        # A tag checkout leaves a detached HEAD, which would make the suffix `.continuous.HEAD`.
+        run: |
+          if [ "$(git rev-parse --abbrev-ref HEAD)" = "HEAD" ]; then
+            git checkout -B dev
+          fi
+
+      - name: Build continuous APK (debug-signed, installable)
+        run: ./gradlew :app:assembleContinuous --stacktrace
+
+      - name: Locate and name the APK
+        id: apk
+        run: |
+          DIR="app/build/outputs/apk/continuous"
+          VERSION_NAME="$(jq -r ".elements[0].versionName" "$DIR/output-metadata.json")"
+          APK="$(find "$DIR" -maxdepth 1 -name '*.apk' | head -n 1)"
+          OUT="NewPipe_v${VERSION_NAME}_phone_tv.apk"
+          cp "$APK" "$OUT"
+          echo "out=$OUT" >> "$GITHUB_OUTPUT"
+          ls -l "$OUT"
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-apk
+          path: ${{ steps.apk.outputs.out }}
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    needs: [package, android]
+    if: ${{ always() && needs.package.result != 'cancelled' && needs.android.result != 'cancelled' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
         uses: actions/download-artifact@v5
         with:
           path: dist
           merge-multiple: true
 
-      - name: Fail when no installer was produced
+      - name: Fail when nothing was produced
         run: |
           FILES=$(find dist -type f)
           if [ -z "$FILES" ]; then
-            echo "No installers were produced by any platform." >&2
+            echo "No artifacts were produced." >&2
             exit 1
           fi
           ls -R dist
@@ -78,7 +127,7 @@ jobs:
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           else
-            echo "tag=desktop-0.29.1-build.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+            echo "tag=build-0.29.1.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create or update GitHub release
@@ -94,6 +143,7 @@ jobs:
             gh release create "$TAG" "${FILES[@]}" \
               --repo "$REPO" \
               --target "${GITHUB_SHA}" \
-              --title "NewPipe+ Desktop $TAG" \
+              --title "YT Desktop + Android $TAG" \
+              --notes "Windows desktop: .exe + .msi. Linux desktop: .deb. Android: phone + TV .apk (debug-signed continuous build)." \
               --generate-notes
           fi

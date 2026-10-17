@@ -31,17 +31,24 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = NEWPIPE_APPLICATION_ID_NEW
+            // Lowercase, dash-only: valid for the Windows exe/msi AND the Debian package name.
+            packageName = "yt-desktop"
             packageVersion = NEWPIPE_VERSION_NAME
             vendor = "NewPipe e.V."
-            description = "NewPipe+ desktop client"
+            description = "YT Desktop - a libre, ad-free video front-end for the desktop"
             copyright = "GPL-3.0-or-later"
+
+            // The jlink runtime bundled by jpackage is minimal. The JDK HttpClient (used by the
+            // NewPipe extractor) and EC TLS crypto are NOT part of it by default, which made the
+            // installed app die at startup with a java/net/http/HttpClient error followed by
+            // "Failed to launch JVM". Add every module the app actually needs explicitly.
+            modules("java.net.http", "jdk.crypto.ec", "java.naming", "java.xml", "jdk.unsupported")
 
             windows {
                 iconFile.set(project.file("icon.ico"))
                 menu = true
                 shortcut = true
-                menuGroup = "NewPipe+"
+                menuGroup = "YT Desktop"
                 dirChooser = true
                 perUserInstall = true
                 // Stable identity so future installers upgrade in place instead of stacking.

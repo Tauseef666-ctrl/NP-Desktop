@@ -167,7 +167,7 @@ fun main() = application {
                 exitApplication()
             }
         },
-        title = "NewPipe+",
+        title = "YT Desktop",
         icon = rememberVectorPainter(AppIcon),
         state = windowState
     ) {
@@ -228,7 +228,7 @@ fun main() = application {
             }
         }
         Window(
-            title = "Mini player",
+            title = "YT Desktop - Mini player",
             icon = rememberVectorPainter(AppIcon),
             alwaysOnTop = true,
             resizable = true,
