@@ -63,6 +63,7 @@ import org.schabi.newpipe.error.ErrorInfo;
 import org.schabi.newpipe.error.ErrorUtil;
 import org.schabi.newpipe.error.UserAction;
 import org.schabi.newpipe.extractor.NewPipe;
+import org.schabi.newpipe.local.play.DownloadPlayerActivity;
 import org.schabi.newpipe.streams.io.StoredFileHelper;
 import org.schabi.newpipe.util.Localization;
 import org.schabi.newpipe.util.NavigationHelper;
@@ -362,6 +363,18 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
         chooserIntent.addFlags(FLAG_GRANT_PREFIX_URI_PERMISSION);
 
         ShareUtils.openIntentInApp(mContext, chooserIntent);
+    }
+
+    private void playDownload(Mission mission) {
+        if (checkInvalidFile(mission)) return;
+
+        final Uri uri = resolveShareableUri(mission);
+        final Intent intent = new Intent(mContext, DownloadPlayerActivity.class);
+        intent.setDataAndType(uri, resolveMimeType(mission));
+        intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
+        intent.putExtra(DownloadPlayerActivity.EXTRA_URI, uri.toString());
+        intent.putExtra(DownloadPlayerActivity.EXTRA_TITLE, mission.storage.getName());
+        mContext.startActivity(intent);
     }
 
     private void shareFile(Mission mission) {
@@ -671,6 +684,9 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
         if (id == R.id.menu_item_share) {
             shareFile(h.item.mission);
             return true;
+        } else if (id == R.id.open_with) {
+            viewWithFileProvider(h.item.mission);
+            return true;
         } else if (id == R.id.delete) {// delete the entry and the file
             mDeleter.append(h.item.mission, true);
             applyChanges();
@@ -856,6 +872,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
         MenuItem start;
         MenuItem pause;
         MenuItem open;
+        MenuItem openWith;
         MenuItem queue;
         MenuItem showError;
         MenuItem delete;
@@ -892,6 +909,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
             start = menu.findItem(R.id.start);
             pause = menu.findItem(R.id.pause);
             open = menu.findItem(R.id.menu_item_share);
+            openWith = menu.findItem(R.id.open_with);
             queue = menu.findItem(R.id.queue);
             showError = menu.findItem(R.id.error_message_view);
             delete = menu.findItem(R.id.delete);
@@ -902,7 +920,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
 
             itemView.setOnClickListener(v -> {
                 if (item.mission instanceof FinishedMission)
-                    viewWithFileProvider(item.mission);
+                    playDownload(item.mission);
             });
 
             itemView.setOnLongClickListener(v -> {
@@ -923,6 +941,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
             delete.setVisible(false);
             source.setVisible(false);
             checksum.setVisible(false);
+            openWith.setVisible(false);
 
             DownloadMission mission = item.mission instanceof DownloadMission ? (DownloadMission) item.mission : null;
 
@@ -959,6 +978,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
                 }
             } else {
                 open.setVisible(true);
+                openWith.setVisible(true);
                 delete.setVisible(true);
                 checksum.setVisible(true);
             }

@@ -86,6 +86,12 @@
     <style name="Base.BlackTheme" parent="Base.V21.BlackTheme" />
     <style name="BlackTheme" parent="Base.BlackTheme"/>
 
+    <!-- In-app player for downloaded (local) media -->
+    <style name="DownloadPlayerTheme" parent="DarkTheme">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+
     <!-- Dialogs -->
     <style name="LightDialogTheme" parent="Theme.AppCompat.DayNight.Dialog">
         <item name="colorPrimary">@color/light_youtube_primary_color</item>

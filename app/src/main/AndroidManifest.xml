@@ -136,6 +136,14 @@
             android:label="@string/app_name"
             android:launchMode="singleTask" />
 
+        <!-- in-app playback of downloaded files -->
+        <activity
+            android:name=".local.play.DownloadPlayerActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden"
+            android:label="@string/app_name"
+            android:theme="@style/DownloadPlayerTheme" />
+
         <service android:name="us.shandian.giga.service.DownloadManagerService"
             android:foregroundServiceType="dataSync" />
 
