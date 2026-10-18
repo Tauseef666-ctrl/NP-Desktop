@@ -375,16 +375,27 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
         // Play locally downloaded files with the exact same player used for online streams, so
         // that the full set of controls and settings is available. Only fall back to the minimal
         // standalone player if the standard main player cannot be opened.
-        if (LocalPlaybackHelper.playLocalFile(mContext, uri, mission.storage.getName(), mimeType)) {
-            return;
+        try {
+            if (LocalPlaybackHelper.playLocalFile(mContext, uri, mission.storage.getName(), mimeType)) {
+                return;
+            }
+        } catch (final Exception e) {
+            // The synthetic-StreamInfo main-player path can fail on some devices. Fall through
+            // to the standalone player below.
+            Log.w(TAG, "Main player could not play local file, falling back", e);
         }
 
-        final Intent intent = new Intent(mContext, DownloadPlayerActivity.class);
-        intent.setDataAndType(uri, mimeType);
-        intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
-        intent.putExtra(DownloadPlayerActivity.EXTRA_URI, uri.toString());
-        intent.putExtra(DownloadPlayerActivity.EXTRA_TITLE, mission.storage.getName());
-        mContext.startActivity(intent);
+        try {
+            final Intent intent = new Intent(mContext, DownloadPlayerActivity.class);
+            intent.setDataAndType(uri, mimeType);
+            intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
+            intent.putExtra(DownloadPlayerActivity.EXTRA_URI, uri.toString());
+            intent.putExtra(DownloadPlayerActivity.EXTRA_TITLE, mission.storage.getName());
+            mContext.startActivity(intent);
+        } catch (final Exception e) {
+            Log.e(TAG, "Could not start download player", e);
+            Toast.makeText(mContext, R.string.general_error, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void shareFile(Mission mission) {
@@ -415,11 +426,20 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
      */
     private Uri resolveShareableUri(Mission mission) {
         if (mission.storage.isDirect()) {
-            return FileProvider.getUriForFile(
-                mContext,
-                BuildConfig.APPLICATION_ID + ".provider",
-                new File(URI.create(mission.storage.getUri().toString()))
-            );
+            final File file = new File(URI.create(mission.storage.getUri().toString()));
+            try {
+                return FileProvider.getUriForFile(
+                    mContext,
+                    BuildConfig.APPLICATION_ID + ".provider",
+                    file
+                );
+            } catch (final IllegalArgumentException e) {
+                // The file is outside the FileProvider roots (nnf_provider_paths only covers
+                // the filepicker directory). Fall back to a file:// URI, which the in-app
+                // players accept. External apps will not be able to open it via ACTION_VIEW.
+                Log.w(TAG, "File outside FileProvider roots, using file:// URI", e);
+                return Uri.fromFile(file);
+            }
         } else {
             return mission.storage.getUri();
         }

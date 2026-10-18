@@ -59,6 +59,20 @@ public final class LocalPlaybackHelper {
             return false;
         }
 
+        try {
+            return playLocalFileInternal(activity, uri, title, mimeType);
+        } catch (final Exception e) {
+            // Any failure in the synthetic-StreamInfo / main-player path must not crash the app.
+            android.util.Log.w("LocalPlaybackHelper",
+                    "Could not open main player for local file", e);
+            return false;
+        }
+    }
+
+    private static boolean playLocalFileInternal(@NonNull final AppCompatActivity activity,
+                                                 @NonNull final Uri uri,
+                                                 @NonNull final String title,
+                                                 @Nullable final String mimeType) {
         final String url = uri.toString();
         // Use a service which does not support comments, so that no failing comments tab is shown.
         final int serviceId = ServiceList.MediaCCC.getServiceId();
