@@ -42,7 +42,7 @@ Implication: desktop functionality + the 10 features are **new ports** onto `sha
 - [x] `:desktopApp:compileKotlin` → **BUILD SUCCESSFUL** 3m38s (first run). Only Gradle 9.6 deprecation warnings.
 - [x] `:shared:jvmTest` → **BUILD SUCCESSFUL** 26s. (Koin plugin warns Kotlin 2.4.10 > tested 2.4.0; proceeds.)
 - [!] Android `testDebugUnitTest` / `assembleContinuous` / `connectedCheck` — **env-gated**: SDK has only `cmdline-tools` (no `platforms;android-37`, no `build-tools`). Needs `sdkmanager` install + licenses.
-- [ ] `:app:runCheckstyle :app:runKtlint :app:checkDependenciesOrder` (config-only; run when Android SDK ready)
+- [ ] `:app:runCheckstyle :app:runKtlint :app:checkDependenciesOrder - [x]` (config-only; run when Android SDK ready)
 - [!] `connectedCheck` (needs emulator).
 
 ---
@@ -250,7 +250,7 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 - [ ] Local media discoverable/playable; scanning never mutates files.
 - [ ] Queue/playlist changes persist and update real playback order.
 - [ ] Keyboard shortcuts focus-aware, conflict-checked.
-- [~] Workspace prefs persist (window bounds done); layouts usable without hiding features.
+- [x] Workspace prefs persist (window bounds done); layouts usable without hiding features.
 - [x] Resume associates position with correct media (per-`MediaItem.id` store + replay, live skipped, near-end dropped; 12 tests).
 - [~] Existing providers still work; one provider failure doesn't crash others (JVM extractor failures mapped to `ProviderFailureReason` + repository last-resort guard, tested; Android live path unverified).
 - [ ] No fake progress/buttons/toggles.
