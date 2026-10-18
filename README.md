@@ -27,7 +27,7 @@
 </p>
 
 > [!important]
-> This is an independent fork of [NewPipe](https://github.com/TeamNewPipe/NewPipe) (GPL-3.0-or-later, NewPipe e.V.). It is **not** affiliated with Google, YouTube, or the official NewPipe project. Desktop video playback requires [VLC](https://www.videolan.org/) to be installed (libVLC).
+> This is an independent fork of [NewPipe](https://github.com/TeamNewPipe/NewPipe) (GPL-3.0-or-later, NewPipe e.V.). It is **not** affiliated with Google, YouTube, or the official NewPipe project. Windows builds bundle libVLC for video playback; on Linux, install [VLC](https://www.videolan.org/).
 
 ## Overview
 
@@ -67,7 +67,7 @@ Every release ships all builds at once: **[Releases](https://github.com/Tauseef6
 | Linux | `yt-desktop_<version>_amd64.deb` | `sudo apt install` the package |
 | Android (phone + TV) | `NewPipe_v<version>_phone_tv.apk` | Debug-signed continuous build; enable unknown sources |
 
-**Desktop playback** needs [VLC](https://www.videolan.org/) installed. Without it the player honestly reports itself as unavailable instead of pretending to play.
+**Desktop playback on Windows** ships with libVLC bundled inside the app: the VLC runtime is extracted to your user app data directory on first launch — no separate VLC install needed. On **Linux**, install [VLC](https://www.videolan.org/). Without a usable libVLC the player honestly reports itself as unavailable instead of pretending to play.
 
 ## Build from source
 

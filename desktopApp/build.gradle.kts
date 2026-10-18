@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import java.net.URI
+import java.util.Locale
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
@@ -23,6 +25,79 @@ dependencies {
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.russhwolf.settings.core)
     implementation(libs.kotlinx.serialization.json)
+}
+
+// ---------------------------------------------------------------------------
+// Bundled libVLC (Windows)
+//
+// Desktop playback needs libVLC. To spare every user a separate VLC install, the
+// official VLC win64 zip is downloaded here and shipped inside the desktop jar
+// as the `vlc-win64.zip` resource (+ `vlc-bundle.properties` carrying the
+// version). `BundledVlc` in :shared extracts it to the per-user app data dir on
+// first run and points vlcj discovery at it, falling back to a system VLC when
+// absent (non-Windows builds, tests). Native libs cannot live in the jar
+// directly — they must be files on disk to be loadable.
+// ---------------------------------------------------------------------------
+val vlcVersion = "3.0.21"
+val vlcBundleDir = layout.buildDirectory.dir("vlc-bundle")
+
+val downloadVlcBundle = tasks.register("downloadVlcBundle") {
+    group = "build"
+    description = "Download the VLC win64 runtime bundled into the desktop jar (Windows only)."
+    val zipFile = vlcBundleDir.map { it.file("vlc-win64.zip") }
+    val propsFile = vlcBundleDir.map { it.file("vlc-bundle.properties") }
+    outputs.files(zipFile, propsFile)
+    // Other platforms keep the status quo: they use a system-installed VLC.
+    onlyIf { System.getProperty("os.name").orEmpty().lowercase(Locale.ROOT).contains("windows") }
+    doLast {
+        val zip = zipFile.get().asFile
+        val props = propsFile.get().asFile
+        zip.parentFile.mkdirs()
+        // Skip the download when a previously fetched, plausibly-sized zip is present.
+        val alreadyValid = zip.isFile &&
+            zip.length() > 50_000_000 &&
+            zip.inputStream().use { it.read() } == 'P'.code // zip magic
+        if (!alreadyValid) {
+            val url = URI(
+                "https://download.videolan.org/pub/videolan/vlc/$vlcVersion/win64/vlc-$vlcVersion-win64.zip"
+            ).toURL()
+            logger.lifecycle("Downloading VLC $vlcVersion win64 from $url ...")
+            val tmp = File(zip.parentFile, ".vlc-win64.zip.part")
+            tmp.delete()
+            url.openConnection().apply {
+                connectTimeout = 30_000
+                readTimeout = 300_000
+                setRequestProperty("User-Agent", "YT-Desktop-build/1.0")
+            }.getInputStream().use { input ->
+                tmp.outputStream().use { input.copyTo(it) }
+            }
+            // A mirror can serve an HTML page with HTTP 200; never ship that as the "bundle".
+            val downloadedLooksLikeZip = tmp.length() > 50_000_000 &&
+                tmp.inputStream().use { it.read() } == 'P'.code
+            if (!downloadedLooksLikeZip) {
+                val size = tmp.length()
+                tmp.delete()
+                throw GradleException("VLC download from $url did not produce a zip (got $size bytes)")
+            }
+            tmp.copyTo(zip, overwrite = true)
+            tmp.delete()
+        }
+        props.writeText("vlc.version=$vlcVersion\n")
+        logger.lifecycle("VLC bundle ready: $zip (${zip.length()} bytes)")
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir(vlcBundleDir)
+            exclude("**/*.part")
+        }
+    }
+}
+
+tasks.named("processResources") {
+    dependsOn(downloadVlcBundle)
 }
 
 compose.desktop {

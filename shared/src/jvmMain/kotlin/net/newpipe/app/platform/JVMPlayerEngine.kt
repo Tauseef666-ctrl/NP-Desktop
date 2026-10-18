@@ -26,8 +26,9 @@ import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer
  * Desktop [PlayerEngine] backed by VLCJ/libVLC.
  *
  * If libVLC cannot be discovered the engine reports [isAvailable] `false` and surfaces an
- * [PlaybackError.Unsupported] — it never pretends to play. Install VLC (or set `VLC_HOME` /
- * `jna.library.path`) to enable playback.
+ * [PlaybackError.Unsupported] — it never pretends to play. Windows desktop builds bundle VLC
+ * (see [BundledVlc], extracted to the user's app data dir on first run), so a system install is
+ * optional there; elsewhere install VLC (or set `VLC_HOME` / `jna.library.path`).
  *
  * Discovery itself runs on a background daemon thread started with the engine: the engine is
  * constructed during the first composition (before the first frame), and a synchronous library
@@ -44,7 +45,24 @@ class JVMPlayerEngine : PlayerEngine {
             {
                 var found = false
                 try {
-                    found = NativeDiscovery().discover()
+                    val bundled = BundledVlc.ensureExtracted()
+                    if (bundled != null) {
+                        System.err.println("[NewPipe+] trying bundled libVLC at $bundled")
+                        found = NativeDiscovery(BundledVlcDiscoveryStrategy(bundled)).discover()
+                        if (found) {
+                            System.err.println("[NewPipe+] bundled libVLC discovered")
+                        } else {
+                            System.err.println("[NewPipe+] bundled libVLC failed to load; discarding it")
+                            BundledVlc.discard(bundled)
+                        }
+                    }
+                    if (!found) {
+                        found = NativeDiscovery().discover()
+                        System.err.println(
+                            if (found) "[NewPipe+] system libVLC discovered"
+                            else "[NewPipe+] no libVLC found (bundled or system)"
+                        )
+                    }
                 } finally {
                     // Completes even if discovery dies with an Error, so no reader can hang.
                     future.complete(found)
