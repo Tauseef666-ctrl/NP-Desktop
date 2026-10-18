@@ -44,6 +44,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.NotificationCompat;
@@ -64,7 +65,6 @@ import org.schabi.newpipe.error.ErrorUtil;
 import org.schabi.newpipe.error.UserAction;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.local.play.DownloadPlayerActivity;
-import org.schabi.newpipe.local.play.LocalPlaybackHelper;
 import org.schabi.newpipe.streams.io.StoredFileHelper;
 import org.schabi.newpipe.util.Localization;
 import org.schabi.newpipe.util.NavigationHelper;
@@ -353,8 +353,14 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
         if (BuildConfig.DEBUG)
             Log.v(TAG, "Mime: " + mimeType + " package: " + BuildConfig.APPLICATION_ID + ".provider");
 
+        final Uri fileUri = resolveShareableUri(mission);
+        if (fileUri == null) {
+            Toast.makeText(mContext, R.string.general_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Intent viewIntent = new Intent(Intent.ACTION_VIEW);
-        viewIntent.setDataAndType(resolveShareableUri(mission), mimeType);
+        viewIntent.setDataAndType(fileUri, mimeType);
         viewIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
         viewIntent.addFlags(FLAG_GRANT_PREFIX_URI_PERMISSION);
 
@@ -369,23 +375,13 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
     private void playDownload(Mission mission) {
         if (checkInvalidFile(mission)) return;
 
-        final Uri uri = resolveShareableUri(mission);
         final String mimeType = resolveMimeType(mission);
 
-        // Play locally downloaded files with the exact same player used for online streams, so
-        // that the full set of controls and settings is available. Only fall back to the minimal
-        // standalone player if the standard main player cannot be opened.
+        // Play the local file in the dedicated in-app ExoPlayer screen. It reads the raw
+        // file:// or content:// URI directly through the media stack, so no FileProvider
+        // mapping is involved and nothing can throw while resolving the URI.
         try {
-            if (LocalPlaybackHelper.playLocalFile(mContext, uri, mission.storage.getName(), mimeType)) {
-                return;
-            }
-        } catch (final Exception e) {
-            // The synthetic-StreamInfo main-player path can fail on some devices. Fall through
-            // to the standalone player below.
-            Log.w(TAG, "Main player could not play local file, falling back", e);
-        }
-
-        try {
+            final Uri uri = mission.storage.getUri();
             final Intent intent = new Intent(mContext, DownloadPlayerActivity.class);
             intent.setDataAndType(uri, mimeType);
             intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
@@ -401,9 +397,15 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
     private void shareFile(Mission mission) {
         if (checkInvalidFile(mission)) return;
 
+        final Uri shareUri = resolveShareableUri(mission);
+        if (shareUri == null) {
+            Toast.makeText(mContext, R.string.general_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         final Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType(resolveMimeType(mission));
-        shareIntent.putExtra(Intent.EXTRA_STREAM, resolveShareableUri(mission));
+        shareIntent.putExtra(Intent.EXTRA_STREAM, shareUri);
         shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
 
         final Intent intent = createChooser(shareIntent, null);
@@ -419,11 +421,16 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
     }
 
     /**
-     * Returns an Uri which can be shared to other applications.
+     * Returns an Uri which can be shared to other applications, or {@code null} when the file
+     * cannot be mapped to a shareable {@code content://} Uri.
+     *
+     * <p>{@code file://} Uris are deliberately not returned here: exposing them to other apps
+     * throws {@code FileUriExposedException} on API 24+.</p>
      *
      * @see <a href="https://stackoverflow.com/questions/38200282/android-os-fileuriexposedexception-file-storage-emulated-0-test-txt-exposed">
      * https://stackoverflow.com/questions/38200282/android-os-fileuriexposedexception-file-storage-emulated-0-test-txt-exposed</a>
      */
+    @Nullable
     private Uri resolveShareableUri(Mission mission) {
         if (mission.storage.isDirect()) {
             final File file = new File(URI.create(mission.storage.getUri().toString()));
@@ -435,10 +442,9 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
                 );
             } catch (final IllegalArgumentException e) {
                 // The file is outside the FileProvider roots (nnf_provider_paths only covers
-                // the filepicker directory). Fall back to a file:// URI, which the in-app
-                // players accept. External apps will not be able to open it via ACTION_VIEW.
-                Log.w(TAG, "File outside FileProvider roots, using file:// URI", e);
-                return Uri.fromFile(file);
+                // the filepicker directory, not arbitrary download folders).
+                Log.w(TAG, "File outside FileProvider roots, cannot share", e);
+                return null;
             }
         } else {
             return mission.storage.getUri();
