@@ -5,6 +5,7 @@
 
 package net.newpipe.app.platform
 
+import java.util.concurrent.CompletableFuture
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,23 +29,57 @@ import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer
  * [PlaybackError.Unsupported] — it never pretends to play. Install VLC (or set `VLC_HOME` /
  * `jna.library.path`) to enable playback.
  *
+ * Discovery itself runs on a background daemon thread started with the engine: the engine is
+ * constructed during the first composition (before the first frame), and a synchronous library
+ * search there would delay first paint. [isAvailable] waits for that result, so every consumer
+ * still gets the true answer, just never before it is known.
+ *
  * Video-surface embedding is wired separately; this engine owns control/state/URL loading.
  */
 @Singleton(binds = [PlayerEngine::class])
 class JVMPlayerEngine : PlayerEngine {
 
-    override val isAvailable: Boolean = NativeDiscovery().discover()
-
-    private val _state = MutableStateFlow(
-        if (isAvailable) {
-            PlaybackState(status = PlaybackStatus.IDLE)
-        } else {
-            PlaybackState(
-                status = PlaybackStatus.ERROR,
-                error = PlaybackError.Unsupported(UNAVAILABLE_MESSAGE)
-            )
+    private val discovery = CompletableFuture<Boolean>().also { future ->
+        Thread(
+            {
+                var found = false
+                try {
+                    found = NativeDiscovery().discover()
+                } finally {
+                    // Completes even if discovery dies with an Error, so no reader can hang.
+                    future.complete(found)
+                }
+            },
+            "vlcj-native-discovery"
+        ).apply {
+            isDaemon = true
+            start()
         }
-    )
+    }
+
+    override val isAvailable: Boolean
+        get() = try {
+            discovery.get()
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            false
+        }
+
+    private val _state = MutableStateFlow(PlaybackState(status = PlaybackStatus.IDLE))
+
+    init {
+        // Honest unknown-then-known: while discovery runs the engine looks idle; a failed
+        // discovery flips to the Unsupported error the UI shows instead of pretending to play.
+        // If discovery already finished, the callback runs right here in the constructor.
+        discovery.whenComplete { found, _ ->
+            if (found != true) {
+                _state.value = PlaybackState(
+                    status = PlaybackStatus.ERROR,
+                    error = PlaybackError.Unsupported(UNAVAILABLE_MESSAGE)
+                )
+            }
+        }
+    }
 
     override val state: StateFlow<PlaybackState> = _state.asStateFlow()
 

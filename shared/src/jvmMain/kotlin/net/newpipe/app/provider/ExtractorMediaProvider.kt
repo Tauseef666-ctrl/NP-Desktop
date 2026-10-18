@@ -23,6 +23,7 @@ import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import org.schabi.newpipe.extractor.stream.StreamType
 import java.io.IOException
 import java.util.Base64
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -63,7 +64,14 @@ class ExtractorMediaProvider : MediaProvider {
         resolve = true
     )
 
-    override val isAvailable: Boolean = ensureInitialized()
+    init {
+        // Warm the extractor on a background daemon thread the moment this provider is created —
+        // Koin's eager registrar creates it during graph start — so neither Koin start nor any UI
+        // thread ever runs NewPipe.init, and the first content request normally finds it done.
+        startInitOnce()
+    }
+
+    override val isAvailable: Boolean get() = ensureInitialized()
 
     /**
      * Search YouTube. A null/blank [pageToken] fetches the first page; otherwise the token is handed
@@ -276,23 +284,50 @@ class ExtractorMediaProvider : MediaProvider {
             type == StreamType.LIVE_STREAM || type == StreamType.AUDIO_LIVE_STREAM
 
         private val initStarted = AtomicBoolean(false)
-        private val initSucceeded = AtomicBoolean(false)
+        private val initResult = CompletableFuture<Boolean>()
 
         /**
-         * Initialise NewPipeExtractor exactly once for the process. The first caller wins the
-         * compare-and-set; later callers only read the outcome. Any failure is swallowed into a
-         * `false` result so a broken extractor can never crash dependency injection.
+         * Start the one-time extractor init on a background daemon thread. Never blocks the
+         * caller, so constructing this provider during Koin graph creation (on the UI thread,
+         * before the first frame) neither runs nor waits for [NewPipe.init].
          */
-        private fun ensureInitialized(): Boolean {
+        private fun startInitOnce() {
             if (initStarted.compareAndSet(false, true)) {
-                try {
-                    NewPipe.init(JVMHttpDownloader(), Localization.DEFAULT)
-                    initSucceeded.set(true)
-                } catch (e: Exception) {
-                    initSucceeded.set(false)
+                Thread(
+                    {
+                        var ok = false
+                        try {
+                            NewPipe.init(JVMHttpDownloader(), Localization.DEFAULT)
+                            ok = true
+                        } catch (e: Exception) {
+                            ok = false
+                        } finally {
+                            // Completes even if init dies with an Error, so no reader can hang.
+                            initResult.complete(ok)
+                        }
+                    },
+                    "newpipe-extractor-init"
+                ).apply {
+                    isDaemon = true
+                    start()
                 }
             }
-            return initSucceeded.get()
+        }
+
+        /**
+         * True once the process-wide [NewPipe.init] has succeeded. The first caller starts the
+         * background init; every caller waits for its result, so a concurrent reader can never
+         * observe "unavailable" while the init is still in flight. Any failure is reported as
+         * `false` so a broken extractor can never crash dependency injection.
+         */
+        private fun ensureInitialized(): Boolean {
+            startInitOnce()
+            return try {
+                initResult.get()
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                false
+            }
         }
 
         /**

@@ -38,7 +38,10 @@ class PlaybackController(
     private val settings: Settings
 ) {
 
-    val isEngineAvailable: Boolean = engine.isAvailable
+    // Read on demand rather than copied at construction: this controller is injected during the
+    // first composition, and a blocking engine-availability probe (VLC discovery) there would
+    // delay the first painted frame.
+    val isEngineAvailable: Boolean get() = engine.isAvailable
     val state: StateFlow<PlaybackState> = engine.state
 
     private val resumeEnabled: Boolean
