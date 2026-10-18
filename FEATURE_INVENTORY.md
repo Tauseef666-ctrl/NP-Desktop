@@ -17,7 +17,7 @@ removed, disabled, or silently replaced. When a feature moves, its behaviour mov
 | `:desktopApp` | Compose Desktop (JVM) | `Main.kt` hosting `shared`'s `App()`; starts on About. |
 
 Design system lives in `shared/src/commonMain/.../theme`; UI strings/drawables in
-`shared/src/commonMain/composeResources`. Version = `buildSrc/ProjectConfig.kt` (`0.29.1`).
+`shared/src/commonMain/composeResources`. Version = `buildSrc/ProjectConfig.kt` (`0.29.4`).
 
 **Consequence:** all real features live in `:app`. NewPipe+ desktop functionality
 (the whole point) is a **port** of `:app` behaviour onto `shared`/`jvmMain`/`:desktopApp`,

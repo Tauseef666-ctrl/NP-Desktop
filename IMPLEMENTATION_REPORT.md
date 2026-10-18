@@ -48,6 +48,8 @@ project (the iOS targets, `iosApp/`, and the `.dmg` packaging format were remove
 | Release | Trigger tag | Assets |
 | --- | --- | --- |
 | `v0.29.2` | `v*` | `yt-desktop-0.29.2.exe` (59.6 MB), `.msi` (58.7 MB), `yt-desktop_0.29.2_amd64.deb` (52.4 MB), `NewPipe_v0.29.2_phone_tv.apk` (12.2 MB) |
+| `v0.29.3` | `v*` | `yt-desktop-0.29.3.exe` (105.4 MB), `.msi` (104.5 MB), `yt-desktop_0.29.3_amd64.deb` (85.3 MB), `NewPipe_v0.29.3_phone_tv.apk` (12.2 MB) |
+| `v0.29.4` | `v*` | `yt-desktop-0.29.4.exe` (105.4 MB), `.msi` (104.5 MB), `yt-desktop_0.29.4_amd64.deb` (85.3 MB), `NewPipe_v0.29.4_phone_tv.apk` (12.2 MB) |
 
 Workflows: a single `.github/workflows/release.yml` publishes every artifact into one GitHub
 Release — the Windows job builds MSI + EXE, the Linux job builds the DEB, and the Android job builds
