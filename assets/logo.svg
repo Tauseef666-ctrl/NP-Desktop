@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 176" role="img" aria-label="YT Desktop — NewPipe+">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#12141a"/>
+      <stop offset="1" stop-color="#1a1e28"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff4d4d"/>
+      <stop offset="1" stop-color="#c62828"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="2" y="2" width="676" height="172" rx="28" fill="url(#bg)" stroke="#2a3040" stroke-width="2"/>
+
+  <g filter="url(#glow)">
+    <circle cx="88" cy="88" r="52" fill="url(#accent)"/>
+    <path d="M74 62 L114 88 L74 114 Z" fill="#ffffff"/>
+  </g>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="164" y="84" font-size="46" font-weight="700" fill="#f5f7fa" letter-spacing="4">YT&#160;DESKTOP</text>
+    <text x="166" y="120" font-size="20" font-weight="500" fill="#8b93a7" letter-spacing="1.5">NewPipe+ &#183; libre streaming front-end</text>
+    <rect x="166" y="134" width="470" height="3" rx="1.5" fill="url(#accent)"/>
+  </g>
+</svg>
