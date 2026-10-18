@@ -8,3 +8,18 @@
 
 -dontwarn org.jsoup.helper.Re2jRegex**
 -dontwarn com.google.re2j.**
+
+# VLCJ/JNA keep rules to preserve reflection/ServiceLoader
+-keep class uk.co.caprica.vlcj.** { *; }
+-keep class com.sun.jna.** { *; }
+-keep class com.sun.jna.platform.** { *; }
+-keep class net.sf.cglib.** { *; }
+-keep interface uk.co.caprica.vlcj.** { *; }
+-keep class * implements uk.co.caprica.vlcj.binding.LibVlc { *; }
+# Preserve service loaders
+-keep class uk.co.caprica.vlcj.factory.discovery.** { *; }
+-keep class uk.co.caprica.vlcj.support.** { *; }
+-keepclasseswithmembers class * { public static void main(java.lang.String[]); }
+# Don't shrink aggressively to avoid stripping providers
+-dontshrink
+-dontoptimize

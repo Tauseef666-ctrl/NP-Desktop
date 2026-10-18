@@ -42,7 +42,7 @@ compose.desktop {
             // NewPipe extractor) and EC TLS crypto are NOT part of it by default, which made the
             // installed app die at startup with a java/net/http/HttpClient error followed by
             // "Failed to launch JVM". Add every module the app actually needs explicitly.
-            modules("java.net.http", "jdk.crypto.ec", "java.naming", "java.xml", "jdk.unsupported")
+            includeAllModules = true
 
             windows {
                 iconFile.set(project.file("icon.ico"))
