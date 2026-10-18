@@ -32,12 +32,16 @@ import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.newpipe.app.component.EmptyState
+import net.newpipe.app.component.ErrorState
+import net.newpipe.app.component.LoadingState
 import net.newpipe.app.component.NavEntry
 import net.newpipe.app.component.NavRail
+import net.newpipe.app.component.PlaybackStatusMessage
 import net.newpipe.app.component.PlusScaffold
 import net.newpipe.app.component.TopToolbar
 import net.newpipe.app.component.VideoCard
 import net.newpipe.app.component.VideoRail
+import net.newpipe.app.component.providerErrorMessage
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.platform.LocalWorkspaceMode
@@ -45,10 +49,15 @@ import net.newpipe.app.platform.LocalWorkspaceModeChange
 import net.newpipe.app.platform.WorkspaceMode
 import net.newpipe.app.platform.isCompactSidebar
 import net.newpipe.app.preview.ThemePreviewProvider
+import net.newpipe.app.provider.ProviderContentItem
+import net.newpipe.app.provider.ProviderContentKind
+import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.theme.spaceSmall
+import net.newpipe.app.util.formatDuration
+import net.newpipe.app.viewmodel.home.HomeTrendingState
 import net.newpipe.app.viewmodel.home.HomeViewModel
 import newpipe.shared.generated.resources.Res
 import newpipe.shared.generated.resources.home_continue_watching_title
@@ -70,15 +79,19 @@ import newpipe.shared.generated.resources.nav_history
 import newpipe.shared.generated.resources.nav_search
 import newpipe.shared.generated.resources.nav_trending
 import newpipe.shared.generated.resources.playlists_screen_title
+import newpipe.shared.generated.resources.provider_retry
 import newpipe.shared.generated.resources.subscriptions_screen_title
+import newpipe.shared.generated.resources.trending_loading
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Desktop home shell: navigation rail + toolbar + real content rails fed by the persisted stores.
- * Only real data is shown; when every store is empty an honest empty state is displayed instead.
+ * Desktop home shell: navigation rail + toolbar + content fed by two honest sources — the live
+ * provider's trending page (the front-page online rail) and the persisted local stores. When every
+ * source is empty an honest empty state is displayed instead; provider failures show localized
+ * error text with a retry rather than fake content.
  */
 @Composable
 fun HomeScreen(
@@ -86,15 +99,25 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val sections by viewModel.sections.collectAsStateWithLifecycle()
-    val isEmpty by viewModel.isEmpty.collectAsStateWithLifecycle()
+    val trendingState by viewModel.trending.collectAsStateWithLifecycle()
+    val playbackState by viewModel.playbackState.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.refresh() }
+    LaunchedEffect(playbackState) {
+        if (playbackState is ProviderPlaybackState.Launched) {
+            viewModel.acknowledgePlayback()
+            navigator.navigateTo(Destination.Player)
+        }
+    }
     HomeScreenContent(
         sections = sections,
-        isEmpty = isEmpty,
+        trendingState = trendingState,
+        playbackState = playbackState,
         onPlayItem = { item ->
             viewModel.play(item)
             if (item.url.isNotBlank()) navigator.navigateTo(Destination.Player)
         },
+        onPlayTrending = { item -> viewModel.playTrending(item) },
+        onRetryTrending = { viewModel.retryTrending() },
         onNavigate = { destination ->
             if (destination != Destination.Home) navigator.navigateTo(destination)
         }
@@ -106,11 +129,19 @@ fun HomeScreenContent(
     selectedDestination: Destination = Destination.Home,
     onNavigate: (Destination) -> Unit = {},
     sections: List<HomeSection> = emptyList(),
-    isEmpty: Boolean = true,
-    onPlayItem: (HomeRailItem) -> Unit = {}
+    trendingState: HomeTrendingState = HomeTrendingState.Idle,
+    playbackState: ProviderPlaybackState = ProviderPlaybackState.Idle,
+    onPlayItem: (HomeRailItem) -> Unit = {},
+    onPlayTrending: (ProviderContentItem) -> Unit = {},
+    onRetryTrending: () -> Unit = {}
 ) {
     val workspaceMode = LocalWorkspaceMode.current
     val onWorkspaceModeChange = LocalWorkspaceModeChange.current
+    val trendingItems = (trendingState as? HomeTrendingState.Items)?.items.orEmpty()
+    val showEmptyState = sections.isEmpty() &&
+        trendingItems.isEmpty() &&
+        trendingState !is HomeTrendingState.Loading &&
+        trendingState !is HomeTrendingState.Failure
 
     val entries = listOf(
         NavEntry(
@@ -202,7 +233,25 @@ fun HomeScreenContent(
                     .verticalScroll(rememberScrollState())
             ) {
                 WelcomeHero()
-                if (isEmpty) {
+                PlaybackStatusMessage(playbackState)
+                when (trendingState) {
+                    HomeTrendingState.Idle -> Unit
+                    HomeTrendingState.Loading -> LoadingState(
+                        message = stringResource(Res.string.trending_loading)
+                    )
+                    is HomeTrendingState.Failure -> ErrorState(
+                        message = providerErrorMessage(trendingState.reason),
+                        retryLabel = stringResource(Res.string.provider_retry),
+                        onRetry = onRetryTrending
+                    )
+                    is HomeTrendingState.Items -> if (trendingState.items.isNotEmpty()) {
+                        TrendingRail(
+                            items = trendingState.items,
+                            onPlayItem = onPlayTrending
+                        )
+                    }
+                }
+                if (showEmptyState) {
                     EmptyState(
                         title = stringResource(Res.string.home_empty_title),
                         message = stringResource(Res.string.home_empty_message)
@@ -242,6 +291,28 @@ private fun HomeRail(
             VideoCard(
                 title = item.title,
                 subtitle = item.subtitle,
+                onClick = { onPlayItem(item) }
+            )
+        }
+    }
+}
+
+/** The provider's trending page as the front-page rail, with real artwork and duration badges. */
+@Composable
+private fun TrendingRail(
+    items: List<ProviderContentItem>,
+    onPlayItem: (ProviderContentItem) -> Unit
+) {
+    VideoRail(title = stringResource(Res.string.nav_trending)) {
+        items(items) { item ->
+            VideoCard(
+                title = item.title,
+                subtitle = item.uploader,
+                thumbnailUrl = item.thumbnailUrl,
+                durationText = item.durationSeconds
+                    ?.takeIf { item.kind != ProviderContentKind.LIVE }
+                    ?.let { formatDuration(it) },
+                isLive = item.kind == ProviderContentKind.LIVE,
                 onClick = { onPlayItem(item) }
             )
         }

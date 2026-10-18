@@ -37,8 +37,19 @@ import net.newpipe.app.player.PlaylistStore
 import net.newpipe.app.player.Quality
 import net.newpipe.app.player.RecentlyPlayedStore
 import net.newpipe.app.player.SavedPlaylist
+import net.newpipe.app.provider.MediaPlayback
+import net.newpipe.app.provider.MediaProvider
+import net.newpipe.app.provider.ProviderCapabilities
+import net.newpipe.app.provider.ProviderContentItem
+import net.newpipe.app.provider.ProviderContentPage
+import net.newpipe.app.provider.ProviderContentRepository
+import net.newpipe.app.provider.ProviderFailureReason
+import net.newpipe.app.provider.ProviderPlaybackState
+import net.newpipe.app.provider.ProviderRegistry
+import net.newpipe.app.provider.ProviderResult
 import net.newpipe.app.screen.home.HomeRailItem
 import net.newpipe.app.screen.home.HomeRailType
+import net.newpipe.app.viewmodel.home.HomeTrendingState
 
 private class FakePlayerEngine : PlayerEngine {
     override val isAvailable: Boolean = true
@@ -102,6 +113,32 @@ private class FakeDownloadEngine(
     override fun clearCompleted() = Unit
 }
 
+private class FakeHomeProvider(
+    private val onTrending: suspend () -> ProviderResult<ProviderContentPage>
+) : MediaProvider {
+    override val id: String = "fake"
+    override val name: String = "Fake provider"
+    override val isAvailable: Boolean = true
+    override val capabilities: ProviderCapabilities = ProviderCapabilities(trending = true)
+
+    override suspend fun trending(pageToken: String?): ProviderResult<ProviderContentPage> = onTrending()
+}
+
+private class FakeHomePlayback(
+    private val result: ProviderResult<Unit> = ProviderResult.Success(Unit)
+) : MediaPlayback {
+    var lastItem: ProviderContentItem? = null
+        private set
+
+    override suspend fun resolve(item: ProviderContentItem): ProviderResult<MediaItem> =
+        ProviderResult.Failure(ProviderFailureReason.UNSUPPORTED)
+
+    override suspend fun play(item: ProviderContentItem): ProviderResult<Unit> {
+        lastItem = item
+        return result
+    }
+}
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
 
@@ -123,7 +160,9 @@ class HomeViewModelTest {
 
     private fun harness(
         settings: MapSettings = MapSettings(),
-        downloadEngine: FakeDownloadEngine = FakeDownloadEngine()
+        downloadEngine: FakeDownloadEngine = FakeDownloadEngine(),
+        registry: ProviderRegistry = ProviderRegistry(),
+        mediaPlayback: MediaPlayback = FakeHomePlayback()
     ): Harness {
         val playerEngine = FakePlayerEngine()
         val playback = PlaybackController(
@@ -136,7 +175,9 @@ class HomeViewModelTest {
             RecentlyPlayedStore(settings, Json),
             PlaybackResumeStore(settings),
             downloadEngine,
-            playback
+            playback,
+            ProviderContentRepository(registry).apply { dispatcher = Dispatchers.Unconfined },
+            mediaPlayback
         )
         return Harness(viewModel, playerEngine, settings)
     }
@@ -222,4 +263,73 @@ class HomeViewModelTest {
 
         assertTrue(harness.playerEngine.prepared.isEmpty())
     }
+
+    @Test
+    fun trendingWithoutAProviderFailsHonestly() {
+        val harness = harness()
+
+        assertEquals(
+            HomeTrendingState.Failure(ProviderFailureReason.NO_PROVIDER),
+            harness.viewModel.trending.value
+        )
+    }
+
+    @Test
+    fun trendingSuccessPublishesProviderItems() {
+        val page = ProviderContentPage(
+            items = listOf(
+                ProviderContentItem(id = "v1", title = "One", url = "https://example.org/v1"),
+                ProviderContentItem(id = "v2", title = "Two", url = "https://example.org/v2")
+            )
+        )
+        val registry = ProviderRegistry().apply {
+            register(FakeHomeProvider { ProviderResult.Success(page) })
+        }
+
+        val harness = harness(registry = registry)
+
+        assertEquals(HomeTrendingState.Items(page.items), harness.viewModel.trending.value)
+    }
+
+    @Test
+    fun playTrendingHandsTheItemToThePlaybackSession() = runTest {
+        val playback = FakeHomePlayback()
+        val harness = harness(mediaPlayback = playback)
+        val item = ProviderContentItem(id = "v9", title = "Nine", url = "https://example.org/v9")
+
+        harness.viewModel.playTrending(item)
+
+        assertEquals(item, playback.lastItem)
+        assertEquals(ProviderPlaybackState.Launched, harness.viewModel.playbackState.value)
+    }
+
+    @Test
+    fun retryTrendingRecoversAfterAFailure() {
+        var shouldFail = true
+        val registry = ProviderRegistry().apply {
+            register(FakeHomeProvider {
+                if (shouldFail) {
+                    ProviderResult.Failure(ProviderFailureReason.NETWORK)
+                } else {
+                    ProviderResult.Success(ProviderContentPage(listOf(itemFor("ok"))))
+                }
+            })
+        }
+        val harness = harness(registry = registry)
+        assertEquals(
+            HomeTrendingState.Failure(ProviderFailureReason.NETWORK),
+            harness.viewModel.trending.value
+        )
+
+        shouldFail = false
+        harness.viewModel.retryTrending()
+
+        assertEquals(
+            HomeTrendingState.Items(listOf(itemFor("ok"))),
+            harness.viewModel.trending.value
+        )
+    }
+
+    private fun itemFor(id: String) =
+        ProviderContentItem(id = id, title = "Item $id", url = "https://example.org/$id")
 }
