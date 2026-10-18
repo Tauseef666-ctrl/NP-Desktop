@@ -8,11 +8,15 @@ package net.newpipe.app.provider
 import org.schabi.newpipe.extractor.InfoItem
 import org.schabi.newpipe.extractor.ListExtractor
 import org.schabi.newpipe.extractor.Page
+import org.schabi.newpipe.extractor.exceptions.ParsingException
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import org.schabi.newpipe.extractor.stream.StreamType
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Unit tests for the pure, network-free next-page-token plumbing shared by every paginated listing
@@ -36,7 +40,9 @@ class ExtractorPaginationTest {
             emptyList()
         )
 
-        assertEquals("https://www.youtube.com/next", ExtractorMediaProvider.pureNextPageToken(page))
+        val token = ExtractorMediaProvider.pureNextPageToken(page)
+        assertNotNull(token)
+        assertEquals("https://www.youtube.com/next", ExtractorMediaProvider.decodePageToken(token).url)
     }
 
     @Test
@@ -51,6 +57,62 @@ class ExtractorPaginationTest {
         val page = ListExtractor.InfoItemsPage<InfoItem>(listOf(stream()), Page(""), emptyList())
 
         assertNull(ExtractorMediaProvider.pureNextPageToken(page))
+    }
+
+    @Test
+    fun continuationStateRoundTripsThroughToken() {
+        val page = ListExtractor.InfoItemsPage<InfoItem>(
+            listOf(stream()),
+            Page(
+                "https://www.youtube.com/youtubei/v1/browse?prettyPrint=false",
+                "CONTINUATION_TOKEN",
+                """{"context":{"client":{"clientName":"WEB"}},"continuation":"X"}""".toByteArray()
+            ),
+            emptyList()
+        )
+
+        val token = ExtractorMediaProvider.pureNextPageToken(page)
+        assertNotNull(token)
+        assertTrue(token.startsWith("v1|"), "token must use the provider's own format: $token")
+
+        val decoded = ExtractorMediaProvider.decodePageToken(token)
+        assertEquals("https://www.youtube.com/youtubei/v1/browse?prettyPrint=false", decoded.url)
+        assertEquals("CONTINUATION_TOKEN", decoded.id)
+        assertEquals(
+            """{"context":{"client":{"clientName":"WEB"}},"continuation":"X"}""",
+            decoded.body?.toString(Charsets.UTF_8)
+        )
+    }
+
+    @Test
+    fun continuationTokenWithoutBodyKeepsBodyNull() {
+        val page = ListExtractor.InfoItemsPage<InfoItem>(
+            listOf(stream()),
+            Page("https://www.youtube.com/youtubei/v1/search?prettyPrint=false", "SEARCH_TOKEN"),
+            emptyList()
+        )
+
+        val token = ExtractorMediaProvider.pureNextPageToken(page)
+        assertNotNull(token)
+
+        val decoded = ExtractorMediaProvider.decodePageToken(token)
+        assertEquals("SEARCH_TOKEN", decoded.id)
+        assertNull(decoded.body)
+    }
+
+    @Test
+    fun plainTokenIsTreatedAsPageUrl() {
+        val decoded = ExtractorMediaProvider.decodePageToken("https://www.youtube.com/next")
+
+        assertEquals("https://www.youtube.com/next", decoded.url)
+        assertNull(decoded.body)
+    }
+
+    @Test
+    fun malformedOwnFormatTokenIsRejected() {
+        assertFailsWith<ParsingException> {
+            ExtractorMediaProvider.decodePageToken("v1|only|two")
+        }
     }
 
     private companion object {

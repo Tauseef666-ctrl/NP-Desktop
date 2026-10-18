@@ -22,6 +22,7 @@ import org.schabi.newpipe.extractor.stream.StreamInfo
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import org.schabi.newpipe.extractor.stream.StreamType
 import java.io.IOException
+import java.util.Base64
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -30,8 +31,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * The provider wraps the YouTube service exposed by [ServiceList]. It is honest about its limits:
  *
  *  * Every listing (search, trending, channels and playlists) paginates: the extractor's next-page
- *    URL is surfaced as the [ProviderContentPage.nextPageToken] and accepted back on the following
- *    call. A null/blank incoming `pageToken` fetches the first page; a null next-page token means the
+ *    state (endpoint, continuation id and POST body) is packed into an opaque
+ *    [ProviderContentPage.nextPageToken] and accepted back on the following call. A null/blank
+ *    incoming `pageToken` fetches the first page; a null next-page token means the
  *    provider has no more content for that listing. Channels expose their content tabs (Videos,
  *    Shorts, Live, Playlists, …) and each tab paginates the same way.
  *  * Extraction is blocking and runs on the caller's dispatcher; [ProviderContentRepository] already
@@ -111,7 +113,7 @@ class ExtractorMediaProvider : MediaProvider {
      */
     override suspend fun channel(url: String, pageToken: String?): ProviderResult<ProviderContentPage> =
         guarded {
-            val tabs = ServiceList.YouTube.getChannelExtractor(url).tabs
+            val tabs = fetchedChannel(url).tabs
             if (tabs.isEmpty()) {
                 throw ParsingException("Channel has no content tabs: $url")
             }
@@ -129,7 +131,7 @@ class ExtractorMediaProvider : MediaProvider {
      */
     override suspend fun channelTabs(url: String): ProviderResult<List<ProviderChannelTab>> =
         guarded {
-            ServiceList.YouTube.getChannelExtractor(url).tabs.map { tab ->
+            fetchedChannel(url).tabs.map { tab ->
                 ProviderChannelTab(id = tab.id, label = channelTabLabel(tab.id))
             }
         }
@@ -145,7 +147,7 @@ class ExtractorMediaProvider : MediaProvider {
         pageToken: String?
     ): ProviderResult<ProviderContentPage> =
         guarded {
-            val tabs = ServiceList.YouTube.getChannelExtractor(url).tabs
+            val tabs = fetchedChannel(url).tabs
             if (tabs.isEmpty()) throw ParsingException("Channel has no content tabs: $url")
             val tab = tabs.firstOrNull { it.id == tabId }
                 ?: tabs.firstOrNull { it.id.contains(tabId, ignoreCase = true) }
@@ -236,16 +238,29 @@ class ExtractorMediaProvider : MediaProvider {
         return try {
             ProviderResult.Success(block())
         } catch (e: ReCaptchaException) {
+            logFailure("reCAPTCHA", e, withStack = false)
             ProviderResult.Failure(ProviderFailureReason.NETWORK, "reCAPTCHA required: ${e.message}")
         } catch (e: IOException) {
+            logFailure("network", e, withStack = false)
             ProviderResult.Failure(ProviderFailureReason.NETWORK, e.message)
         } catch (e: ParsingException) {
+            logFailure("parse", e, withStack = false)
             ProviderResult.Failure(ProviderFailureReason.PARSE, e.message)
         } catch (e: ExtractionException) {
+            logFailure("extraction", e, withStack = false)
             ProviderResult.Failure(ProviderFailureReason.PARSE, e.message)
         } catch (e: Exception) {
-            ProviderResult.Failure(ProviderFailureReason.UNKNOWN, e.message)
+            // The user-visible string for UNKNOWN discards detail, so keep the class + message in
+            // the failure detail AND dump the full stack to stderr — without this the real cause of
+            // "Something went wrong while loading content." was invisible.
+            logFailure("unmapped", e, withStack = true)
+            ProviderResult.Failure(ProviderFailureReason.UNKNOWN, "${e.javaClass.name}: ${e.message}")
         }
+    }
+
+    private fun logFailure(kind: String, e: Exception, withStack: Boolean) {
+        System.err.println("[NewPipe+] extractor $kind failure: ${e.javaClass.name}: ${e.message}")
+        if (withStack) e.printStackTrace()
     }
 
     companion object {
@@ -348,11 +363,57 @@ class ExtractorMediaProvider : MediaProvider {
             )
 
         /**
-         * The opaque token that continues a paginated listing: the extractor's next-page URL, or
-         * `null` when the listing is exhausted (no next page, or a blank URL).
+         * The opaque continuation token for [page]'s next page, or `null` when the listing is
+         * exhausted (no next page, or an empty one). Continuation requests need everything the
+         * extractor packed into its [Page] — endpoint, continuation id and the POST body (YouTube's
+         * list continuations post JSON, they do not fetch a URL) — so all three are base64url-
+         * encoded into one URL-safe string that the UI only ever round-trips.
          */
-        fun pureNextPageToken(page: ListExtractor.InfoItemsPage<*>): String? =
-            page.nextPage?.url?.takeIf { it.isNotBlank() }
+        fun pureNextPageToken(page: ListExtractor.InfoItemsPage<*>): String? {
+            val next = page.nextPage ?: return null
+            val url = next.url.orEmpty()
+            val id = next.id.orEmpty()
+            val body = next.body
+            if (url.isBlank() && id.isBlank() && body == null) return null
+            val encodedBody = body?.let { Base64.getUrlEncoder().withoutPadding().encodeToString(it) }
+                .orEmpty()
+            return TOKEN_PREFIX +
+                encodeTokenPart(url) + "|" +
+                encodeTokenPart(id) + "|" +
+                encodedBody
+        }
+
+        /**
+         * Rebuild the extractor [Page] a continuation token was made of. Anything that is not in
+         * this provider's own `v1|` format is treated as a bare page URL (the format used before
+         * tokens carried state), so no already-issued token can brick pagination.
+         *
+         * @throws ParsingException when the token claims to be ours but is structurally broken
+         */
+        internal fun decodePageToken(token: String): Page {
+            if (!token.startsWith(TOKEN_PREFIX)) return Page(token)
+            val parts = token.removePrefix(TOKEN_PREFIX).split('|')
+            if (parts.size != 3) throw ParsingException("Malformed pagination token")
+            val body = parts[2].takeIf { it.isNotEmpty() }
+                ?.let { Base64.getUrlDecoder().decode(it) }
+            return Page(decodeTokenPart(parts[0]), decodeTokenPart(parts[1]), body)
+        }
+
+        private fun encodeTokenPart(value: String): String =
+            Base64.getUrlEncoder().withoutPadding().encodeToString(value.toByteArray(Charsets.UTF_8))
+
+        private fun decodeTokenPart(value: String): String =
+            String(Base64.getUrlDecoder().decode(value), Charsets.UTF_8)
+
+        private const val TOKEN_PREFIX = "v1|"
+
+        /**
+         * The channel extractor at [url] after its page has been fetched. `tabs` is populated by
+         * `onFetchPage`, so touching the tabs of an unfetched channel extractor yields an empty tab
+         * list (surfacing as a "no content tabs" parse failure).
+         */
+        private fun fetchedChannel(url: String) =
+            ServiceList.YouTube.getChannelExtractor(url).also { it.fetchPage() }
 
         /**
          * Pure mapping of an extractor channel tab id to a display label. Unknown ids fall back to
@@ -376,15 +437,22 @@ class ExtractorMediaProvider : MediaProvider {
          * Fetch one page of [extractor]'s listing: the initial page for a null/blank [pageToken],
          * otherwise the page the token points at. Widened to a concrete [InfoItem] page because the
          * extractor's item type varies per listing but the mapper always works on [InfoItem].
+         *
+         * The initial branch must call [Extractor.fetchPage] first: `onFetchPage` is what performs
+         * the request and populates the extractor's parsed state (`initialData`/`responseData`);
+         * reading `initialPage` straight after construction dereferences that state while it is
+         * still null — that NPE surfaced to users as "Something went wrong while loading content."
+         * Continuation pages carry their own request state in the token, so they need no fetch.
          */
         private fun resolvePage(
             pageToken: String?,
             extractor: ListExtractor<*>
         ): ListExtractor.InfoItemsPage<InfoItem> {
             val page = if (pageToken.isNullOrBlank()) {
+                extractor.fetchPage()
                 extractor.initialPage
             } else {
-                extractor.getPage(Page(pageToken))
+                extractor.getPage(decodePageToken(pageToken))
             }
             return widen(page)
         }

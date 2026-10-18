@@ -37,6 +37,12 @@ internal class JVMHttpDownloader : Downloader() {
 
     private val client: HttpClient by lazy {
         HttpClient.newBuilder()
+            // Force HTTP/1.1: the JDK's HTTP/2 implementation trips an internal AssertionError in
+            // ResponseSubscribers while reading YouTube's response frames (IOException with no
+            // message), which failed EVERY request on the test machine — the root cause behind the
+            // desktop's "Something went wrong while loading content." h1.1 fetches the same pages
+            // successfully.
+            .version(HttpClient.Version.HTTP_1_1)
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(Duration.ofSeconds(30))
             .build()
@@ -117,9 +123,12 @@ internal class JVMHttpDownloader : Downloader() {
     private fun inflate(input: InputStream): ByteArray = input.use { it.readBytes() }
 
     private fun looksLikeCaptcha(body: String): Boolean =
-        body.contains("recaptcha", ignoreCase = true) ||
-            body.contains("g-recaptcha", ignoreCase = true) ||
-            body.contains("sorry/index", ignoreCase = true)
+        // Only genuine block pages trip this. A plain "recaptcha" match is far too loose: the
+        // normal YouTube results page itself references recaptcha scripts, so the old check threw
+        // ReCaptchaException on healthy responses.
+        body.contains("sorry/index", ignoreCase = true) ||
+            (body.contains("g-recaptcha", ignoreCase = true) &&
+                body.contains("unusual traffic", ignoreCase = true))
 
     private fun reasonPhrase(status: Int): String = when (status) {
         200 -> "OK"

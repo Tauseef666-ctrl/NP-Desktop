@@ -267,3 +267,35 @@ Legend of current state: **exists (Android)** / **partial** / **missing**.
 - [x] Confirm desktop strategy (§2 decision): desktop (Windows/Linux) is the port's deliverable; macOS/iOS dropped.
 - [x] Android TV builds confirmed: this repo **does** have TV config — `AndroidManifest.xml` declares `android.software.leanback`, `android.hardware.touchscreen` not required, a TV `android:banner`, and `LEANBACK_LAUNCHER`. Phone and TV share a single APK; `release.yml` (Android job) publishes it.
 - [!] New toolchain (AGP 9.3.1 / Kotlin 2.4.10 / Gradle 9.7.1) may need Android SDK + WiX for MSI locally.
+
+---
+
+## 15. v0.29.5 work queue (2026-10-18)
+
+Ordered per user decision: Windows online core first, then Android download-player parity, then desktop UI, then polish + release. Each item gets checked with evidence as it lands.
+
+### Phase 1 — Windows online core
+- [x] Surface the real exception behind the user-visible "Something went wrong while loading content." (the `UNKNOWN` catch-all in `guarded()`, `ExtractorMediaProvider.kt` discards detail) — log the cause and capture it. **Evidence:** `guarded()` now logs `[NewPipe+] extractor <kind> failure: <class>: <message>` for every failure (full stack for `UNKNOWN`) and keeps class+message in the failure detail; `ProviderContentRepository.run()` prints a last-resort line. The captured stack immediately exposed `NullPointerException … responseData/jsonResponse` in `YoutubeDesktopBaseKioskExtractor.getInitialPage`.
+- [x] Live provider probe from the dev machine (trending/search/subscriptions feed) — record evidence of what YouTube actually returns. **Evidence:** `ExtractorLiveProbeTest` (env-gated `NEWPIPE_LIVE_PROBE=1`, so CI never hits the network). Before the fix: every raw GET threw `java.io.IOException` caused by JDK HTTP/2 `AssertionError` in `ResponseSubscribers`; extractor calls died in NPE. After the fix: HTTP 200, ~1 MB pages, `ytInitialData=true`.
+- [x] Fix the root cause (browser-like headers / consent cookies / captcha heuristic in `JVMHttpDownloader.kt:94-122`) — verify real videos render in desktop trending/search/feed. **Evidence:** three real root causes, all fixed: (1) `JVMHttpDownloader` forces HTTP/1.1 — the JDK's HTTP/2 client hit an internal `AssertionError` while reading YouTube's frames, failing *every* request; (2) the captcha heuristic matched bare "recaptcha", which healthy YouTube pages contain — now requires `sorry/index` or `g-recaptcha` + `unusual traffic`; (3) `ExtractorMediaProvider.resolvePage` never called `extractor.fetchPage()`, so `onFetchPage` never ran and `initialData`/`responseData` stayed null — that NPE *was* "Something went wrong while loading content." Continuation tokens now round-trip endpoint+id+body (`v1|…`, needed because list continuations POST JSON instead of fetching a URL). Live probe: trending 15 + 16 items (both pages), search 14 + 14, resolve OK (HLS URL), metadata OK; `:shared:jvmTest` **803 tests green**. In-app visual smoke still needs a human run (agent is display-less).
+- [ ] Startup: move `NewPipe.init` off the UI thread (make `ExtractorProviderRegistrar` non-eager or async) so Koin start doesn't block before first frame.
+- [ ] Startup: run VLCJ `NativeDiscovery` async so it never blocks first paint.
+- [ ] Re-measure cold start; record before/after seconds in this section.
+
+### Phase 2 — Android download player parity
+- [ ] Pass `mission.source` through the `playDownload` intent (`MissionAdapter` → `DownloadPlayerActivity`) — prerequisite for playlist + background play.
+- [ ] Playback speed: reuse `PlaybackParameterDialog` → local ExoPlayer `setPlaybackParameters`.
+- [ ] Rotate/landscape toggle: overlay button + `setRequestedOrientation`.
+- [ ] Add-to-playlist: `PlaylistDialog.createCorrespondingDialog` with `StreamEntity` (serviceId via `NewPipe.getServiceByUrl(source)`).
+- [ ] Background play: build `SinglePlayQueue` for `PlayerService` from the source URL; honest fallback if the service cannot play the local file.
+- [ ] `:app:compileDebugJavaWithJavac` + `:app:runCheckstyle` + ktlint green.
+
+### Phase 3 — Desktop UI
+- [ ] Mini player: fix borders + add proper animations (`desktopApp/.../MiniPlayerWindow.kt`).
+- [ ] Sidebar collapse: fix `NavRail` / `AdaptiveLayout.navRailExpanded` toggle behavior.
+- [ ] Appearance parity: verify all 7 appearance settings actually work on Windows (theme/night/hold-to-append/tablet/list-view/captions/tabs — they exist in `AppearanceSettingsScreen.kt`); surface workspace-mode + mini-player options in Settings > Appearance.
+
+### Phase 4 — polish + release
+- [ ] Overall UI/properties pass across screens.
+- [ ] `:shared:jvmTest` + `:app` checks green; CI + Desktop CI green on the final commit.
+- [ ] Bump `ProjectConfig.kt` to 0.29.5 (1019), tag `v0.29.5`, verify release assets via `gh release view`.

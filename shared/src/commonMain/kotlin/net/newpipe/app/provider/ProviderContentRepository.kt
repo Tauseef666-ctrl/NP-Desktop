@@ -163,8 +163,11 @@ class ProviderContentRepository(
             block(provider)
         } catch (t: Throwable) {
             // Providers are expected to map their own failures; this is only a last-resort guard so a
-            // misbehaving provider cannot crash the caller.
-            ProviderResult.Failure(ProviderFailureReason.UNKNOWN, t.message)
+            // misbehaving provider cannot crash the caller. The cause is printed and kept in the
+            // detail — the user-visible UNKNOWN string discards it, so it must not live only there.
+            val cause = "${t::class.simpleName}: ${t.message}"
+            println("[NewPipe+] provider last-resort failure: $cause")
+            ProviderResult.Failure(ProviderFailureReason.UNKNOWN, cause)
         }
     }
 }
