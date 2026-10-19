@@ -1726,6 +1726,11 @@ public final class Player implements PlaybackListener, Listener {
         if (DEBUG) {
             Log.d(TAG, "seekBy() called with: offsetMillis = [" + offsetMillis + "]");
         }
+        if (exoPlayerIsNull()) {
+            // No media is loaded (e.g. a remote's FAST_FORWARD/REWIND pressed before playback
+            // starts), so there is nothing to seek.
+            return;
+        }
         seekTo(simpleExoPlayer.getCurrentPosition() + offsetMillis);
     }
 

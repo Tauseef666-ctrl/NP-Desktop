@@ -1531,6 +1531,59 @@ public abstract class VideoPlayerUi extends PlayerUi implements SeekBar.OnSeekBa
     }
 
     public boolean onKeyDown(final int keyCode) {
+        // Dedicated media transport keys, found on TV and multimedia remotes. They are consumed
+        // here so playback stays controllable regardless of where the D-pad focus currently is,
+        // and so the event is not handled a second time by the media session.
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                player.playPause();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
+                if (!player.isPlaying()) {
+                    player.play();
+                }
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                if (player.isPlaying()) {
+                    player.pause();
+                }
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_NEXT:
+                player.playNext();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                player.playPrevious();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                player.fastForward();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+                player.fastRewind();
+                return true;
+            default:
+                break;
+        }
+
+        // On Android TV the D-pad should seek while the controls are hidden, instead of only
+        // revealing them, so a remote can scrub through a video without extra focus navigation.
+        if (DeviceUtils.isTv(context)
+                && !isControlsVisible()
+                && !isAnyListViewOpen()
+                && !(binding.getRoot().hasFocus() && !binding.playbackControlRoot.hasFocus())
+                && player.getCurrentState() != org.schabi.newpipe.player.Player.STATE_BLOCKED) {
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                player.fastRewind();
+                showControlsThenHide();
+                showSystemUIPartially();
+                return true;
+            } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                player.fastForward();
+                showControlsThenHide();
+                showSystemUIPartially();
+                return true;
+            }
+        }
+
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
                 if (DeviceUtils.isTv(context) && isControlsVisible()) {

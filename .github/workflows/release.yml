@@ -81,22 +81,60 @@ jobs:
       - name: Build continuous APK (debug-signed, installable)
         run: ./gradlew :app:assembleContinuous --stacktrace
 
-      - name: Locate and name the APK
+      - name: Locate the built APK
         id: apk
         run: |
           DIR="app/build/outputs/apk/continuous"
           VERSION_NAME="$(jq -r ".elements[0].versionName" "$DIR/output-metadata.json")"
           APK="$(find "$DIR" -maxdepth 1 -name '*.apk' | head -n 1)"
-          OUT="NewPipe_v${VERSION_NAME}_phone_tv.apk"
-          cp "$APK" "$OUT"
-          echo "out=$OUT" >> "$GITHUB_OUTPUT"
-          ls -l "$OUT"
+          if [ -z "$APK" ]; then
+            echo "::error::No APK produced in $DIR" >&2
+            exit 1
+          fi
+          echo "apk_path=$APK" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          ls -l "$APK"
+
+      - name: Verify Android TV configuration
+        # This universal APK doubles as the Android TV build, so a release must always carry the
+        # leanback launcher, the TV banner and the touchscreen-not-required declaration. Fail the
+        # release rather than publishing an APK that is no longer installable on Android TV.
+        run: |
+          APK="${{ steps.apk.outputs.apk_path }}"
+          AAPT="$(command -v aapt || find "$ANDROID_HOME/build-tools" -name aapt -type f | sort | tail -n 1)"
+          if [ -z "$AAPT" ]; then
+            echo "::error::aapt not found; cannot verify the Android TV configuration" >&2
+            exit 1
+          fi
+          BADGING="$("$AAPT" dump badging "$APK")"
+          echo "$BADGING" | grep -E "leanback-launchable-activity|^banner:|uses-feature-not-required"
+          for REQUIRED in \
+              "leanback-launchable-activity" \
+              "uses-feature-not-required: name='android.software.leanback'" \
+              "uses-feature-not-required: name='android.hardware.touchscreen'" \
+              "banner='"; do
+            if ! echo "$BADGING" | grep -qF "$REQUIRED"; then
+              echo "::error::Android TV configuration missing: $REQUIRED" >&2
+              exit 1
+            fi
+          done
+          echo "Android TV configuration OK"
+
+      - name: Name phone+TV and Android TV artifacts
+        run: |
+          APK="${{ steps.apk.outputs.apk_path }}"
+          VERSION_NAME="${{ steps.apk.outputs.version_name }}"
+          cp "$APK" "NewPipe_v${VERSION_NAME}_phone_tv.apk"
+          cp "$APK" "NewPipe_v${VERSION_NAME}_androidtv.apk"
+          ls -l NewPipe_v*_*.apk
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v7
         with:
           name: android-apk
-          path: ${{ steps.apk.outputs.out }}
+          path: |
+            NewPipe_v*_phone_tv.apk
+            NewPipe_v*_androidtv.apk
           if-no-files-found: error
 
   release:
@@ -144,6 +182,6 @@ jobs:
               --repo "$REPO" \
               --target "${GITHUB_SHA}" \
               --title "YT Desktop + Android $TAG" \
-              --notes "Windows desktop: .exe + .msi. Linux desktop: .deb. Android: phone + TV .apk (debug-signed continuous build)." \
+              --notes "Windows desktop: .exe + .msi. Linux desktop: .deb. Android: phone+TV .apk plus a dedicated Android TV .apk (both are the same universal build, debug-signed continuous)." \
               --generate-notes
           fi
