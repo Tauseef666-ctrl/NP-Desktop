@@ -43,6 +43,20 @@ private fun trimTrailingZero(value: Double): String {
 }
 
 /**
+ * Formats the Android-style metadata line for a feed item: `1.2M views · 3 days ago`. Any part
+ * the provider did not report is omitted; returns `null` when nothing is known.
+ */
+fun formatItemDetails(viewCount: Long?, uploadDate: String?): String? {
+    val views = viewCount
+        ?.takeIf { it >= 0L }
+        ?.let { "${formatCount(it)} views" }
+    val date = uploadDate?.takeIf { it.isNotBlank() }
+    return listOfNotNull(views, date)
+        .joinToString(" \u00b7 ")
+        .takeIf { it.isNotEmpty() }
+}
+
+/**
  * Formats a byte count in a human-friendly way: `0 B`, `512 B`, `1.1 KB`, `29.6 MB`, `1.2 GB`.
  * Decimal (1000-based) units are used to match common file-manager display conventions.
  */

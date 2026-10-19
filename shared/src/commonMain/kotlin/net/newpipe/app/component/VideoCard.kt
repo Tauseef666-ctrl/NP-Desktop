@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import net.newpipe.app.image.rememberThumbnailPainter
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.theme.plusColors
+import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.theme.spaceSmall
 import net.newpipe.app.theme.spaceXSmall
 import net.newpipe.app.theme.spaceXXSmall
@@ -43,6 +45,7 @@ import net.newpipe.app.theme.spaceXXSmall
 private val ThumbnailShape = RoundedCornerShape(10.dp)
 private val BadgeShape = RoundedCornerShape(4.dp)
 private val DefaultCardWidth = 240.dp
+private val ListRowThumbnailWidth = 160.dp
 
 /**
  * A 16:9 media thumbnail with a title and optional metadata line, used in rails and grids.
@@ -51,7 +54,8 @@ private val DefaultCardWidth = 240.dp
  * @param thumbnail Optional artwork; falls back to an [surfaceElevated] placeholder.
  * @param thumbnailUrl Remote artwork URL, loaded asynchronously (and cached) when [thumbnail] is
  *   not supplied; ignored otherwise.
- * @param subtitle Optional metadata line (channel, views, date).
+ * @param subtitle Optional metadata line (channel name).
+ * @param details Optional secondary metadata line (views · date), rendered muted below the subtitle.
  * @param durationText Optional duration badge text, e.g. `12:34`.
  * @param isLive When true, shows a red `LIVE` badge instead of the duration.
  * @param onClick Invoked when the card is activated.
@@ -63,6 +67,7 @@ fun VideoCard(
     thumbnail: Painter? = null,
     thumbnailUrl: String? = null,
     subtitle: String? = null,
+    details: String? = null,
     durationText: String? = null,
     isLive: Boolean = false,
     cardWidth: Dp = DefaultCardWidth,
@@ -127,6 +132,107 @@ fun VideoCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+        }
+        if (details != null) {
+            Spacer(Modifier.height(spaceXXSmall))
+            Text(
+                text = details,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+/**
+ * Android's `list_stream_item.xml` equivalent: a horizontal 16:9 thumbnail with title, uploader and
+ * views/date stacked beside it. Used by the trending list layout (and future feed lists).
+ */
+@Composable
+fun VideoListRow(
+    title: String,
+    modifier: Modifier = Modifier,
+    thumbnailUrl: String? = null,
+    subtitle: String? = null,
+    details: String? = null,
+    durationText: String? = null,
+    isLive: Boolean = false,
+    onClick: () -> Unit = {}
+) {
+    val colors = plusColors()
+    val artwork = rememberThumbnailPainter(thumbnailUrl)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(ThumbnailShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = spaceNormal, vertical = spaceSmall)
+    ) {
+        Box(
+            modifier = Modifier
+                .width(ListRowThumbnailWidth)
+                .aspectRatio(16f / 9f)
+                .clip(ThumbnailShape)
+                .background(colors.surfaceElevated)
+        ) {
+            if (artwork != null) {
+                Image(
+                    painter = artwork,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            when {
+                isLive -> Badge(
+                    text = "LIVE",
+                    background = colors.accent,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(spaceXSmall)
+                )
+
+                durationText != null -> Badge(
+                    text = durationText,
+                    background = colors.overlayScrim,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(spaceXSmall)
+                )
+            }
+        }
+        Spacer(Modifier.width(spaceNormal))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+                color = colors.textPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (subtitle != null) {
+                Spacer(Modifier.height(spaceXXSmall))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (details != null) {
+                Spacer(Modifier.height(spaceXXSmall))
+                Text(
+                    text = details,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

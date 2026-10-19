@@ -47,6 +47,7 @@ import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.provider.providerClickAction
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.util.formatDuration
+import net.newpipe.app.util.formatItemDetails
 import net.newpipe.app.viewmodel.channels.ChannelsState
 import net.newpipe.app.viewmodel.channels.ChannelsViewModel
 import newpipe.shared.generated.resources.Res
@@ -229,6 +230,7 @@ private fun ChannelItems(
                 title = item.title,
                 thumbnailUrl = item.thumbnailUrl,
                 subtitle = item.uploader,
+                details = formatItemDetails(item.viewCount, item.textualUploadDate),
                 durationText = item.durationSeconds?.let { formatDuration(it) },
                 isLive = item.kind == ProviderContentKind.LIVE,
                 onClick = { onItemClick(item) }

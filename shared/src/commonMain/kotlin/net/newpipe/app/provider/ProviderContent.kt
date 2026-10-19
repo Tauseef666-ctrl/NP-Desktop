@@ -22,7 +22,10 @@ enum class ProviderContentKind { VIDEO, AUDIO, LIVE, PLAYLIST, CHANNEL }
  * @param thumbnailUrl Best available artwork, or null when the provider gave none.
  * @param uploader Name of the uploader/channel, or null when unknown.
  * @param uploaderUrl URL of the uploader/channel, or null when unknown.
+ * @param uploaderAvatarUrl URL of the uploader's avatar image, or null when unknown.
  * @param durationSeconds Duration in seconds, or null when unknown/live.
+ * @param viewCount View count as reported by the provider, or null when unknown.
+ * @param textualUploadDate Provider-formatted upload date (e.g. "3 days ago"), or null.
  * @param kind The kind of content.
  */
 data class ProviderContentItem(
@@ -32,7 +35,10 @@ data class ProviderContentItem(
     val thumbnailUrl: String? = null,
     val uploader: String? = null,
     val uploaderUrl: String? = null,
+    val uploaderAvatarUrl: String? = null,
     val durationSeconds: Long? = null,
+    val viewCount: Long? = null,
+    val textualUploadDate: String? = null,
     val kind: ProviderContentKind = ProviderContentKind.VIDEO
 )
 

@@ -344,7 +344,10 @@ class ExtractorMediaProvider : MediaProvider {
                     thumbnailUrl = bestThumbnail(item.thumbnails),
                     uploader = stream.uploaderName?.takeIf { it.isNotBlank() },
                     uploaderUrl = stream.uploaderUrl?.takeIf { it.isNotBlank() },
+                    uploaderAvatarUrl = bestThumbnail(stream.uploaderAvatars),
                     durationSeconds = stream.duration.takeIf { it > 0L },
+                    viewCount = stream.viewCount.takeIf { it >= 0L },
+                    textualUploadDate = stream.textualUploadDate?.takeIf { it.isNotBlank() },
                     kind = if (isLiveStreamType(stream.streamType)) {
                         ProviderContentKind.LIVE
                     } else {

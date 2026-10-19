@@ -15,10 +15,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -77,6 +79,13 @@ import net.newpipe.app.viewmodel.captions.CaptionsViewModel
 import net.newpipe.app.viewmodel.player.PlayerViewModel
 import net.newpipe.app.viewmodel.streaminfo.StreamMetadataState
 import net.newpipe.app.viewmodel.streaminfo.StreamMetadataViewModel
+import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.ic_pause
+import newpipe.shared.generated.resources.ic_play_arrow
+import newpipe.shared.generated.resources.ic_skip_next
+import newpipe.shared.generated.resources.ic_skip_previous
+import newpipe.shared.generated.resources.ic_stop
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -527,13 +536,44 @@ private fun TransportControls(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(onClick = onPrevious, enabled = enabled) { Text("Prev") }
-            Button(onClick = onPlayPause, enabled = enabled) {
-                Text(if (state.isPlaying) "Pause" else "Play")
+            IconButton(onClick = onPrevious, enabled = enabled) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_skip_previous),
+                    contentDescription = "Previous",
+                    tint = plusColors().textPrimary
+                )
             }
-            Spacer(Modifier.width(spaceSmall))
-            TextButton(onClick = onStop, enabled = enabled) { Text("Stop") }
-            TextButton(onClick = onNext, enabled = enabled) { Text("Next") }
+            Spacer(Modifier.width(spaceNormal))
+            IconButton(
+                onClick = onPlayPause,
+                enabled = enabled,
+                modifier = Modifier.size(56.dp)
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (state.isPlaying) Res.drawable.ic_pause else Res.drawable.ic_play_arrow
+                    ),
+                    contentDescription = if (state.isPlaying) "Pause" else "Play",
+                    tint = plusColors().textPrimary,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+            Spacer(Modifier.width(spaceNormal))
+            IconButton(onClick = onStop, enabled = enabled) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_stop),
+                    contentDescription = "Stop",
+                    tint = plusColors().textPrimary
+                )
+            }
+            Spacer(Modifier.width(spaceNormal))
+            IconButton(onClick = onNext, enabled = enabled) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_skip_next),
+                    contentDescription = "Next",
+                    tint = plusColors().textPrimary
+                )
+            }
         }
         if (scrubbing) {
             Text(

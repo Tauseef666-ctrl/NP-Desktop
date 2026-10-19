@@ -54,6 +54,7 @@ import net.newpipe.app.provider.providerClickAction
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.util.formatDuration
+import net.newpipe.app.util.formatItemDetails
 import net.newpipe.app.viewmodel.search.SearchResultsState
 import net.newpipe.app.viewmodel.search.SearchViewModel
 import newpipe.shared.generated.resources.Res
@@ -283,6 +284,7 @@ private fun SearchResultsGrid(
                         title = item.title,
                         thumbnailUrl = item.thumbnailUrl,
                         subtitle = item.uploader,
+                        details = formatItemDetails(item.viewCount, item.textualUploadDate),
                         durationText = item.durationSeconds
                             ?.takeIf { item.kind != ProviderContentKind.LIVE }
                             ?.let { formatDuration(it) },

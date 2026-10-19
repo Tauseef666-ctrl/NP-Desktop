@@ -15,9 +15,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -32,6 +37,7 @@ import net.newpipe.app.component.ProviderLoadMore
 import net.newpipe.app.component.SectionHeader
 import net.newpipe.app.component.TopToolbar
 import net.newpipe.app.component.VideoCard
+import net.newpipe.app.component.VideoListRow
 import net.newpipe.app.component.providerErrorMessage
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
@@ -44,6 +50,7 @@ import net.newpipe.app.provider.ProviderPlaybackState
 import net.newpipe.app.provider.providerClickAction
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.util.formatDuration
+import net.newpipe.app.util.formatItemDetails
 import net.newpipe.app.viewmodel.trending.TrendingState
 import net.newpipe.app.viewmodel.trending.TrendingViewModel
 import newpipe.shared.generated.resources.Res
@@ -113,6 +120,7 @@ fun TrendingScreenContent(
     onItemClick: (ProviderContentItem) -> Unit = {},
     onLoadMore: () -> Unit = {}
 ) {
+    var listMode by rememberSaveable { mutableStateOf(false) }
     PlusScaffold(
         modifier = modifier,
         toolbar = {
@@ -147,13 +155,38 @@ fun TrendingScreenContent(
                         message = stringResource(Res.string.trending_empty_message)
                     )
                 } else {
-                    TrendingGrid(
-                        items = state.items,
-                        nextPageToken = state.nextPageToken,
-                        loadingMore = state.loadingMore,
-                        onItemClick = onItemClick,
-                        onLoadMore = onLoadMore
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = spaceNormal),
+                        horizontalArrangement = Arrangement.spacedBy(spaceNormal)
+                    ) {
+                        FilterChip(
+                            selected = !listMode,
+                            onClick = { listMode = false },
+                            label = { Text("Grid") }
+                        )
+                        FilterChip(
+                            selected = listMode,
+                            onClick = { listMode = true },
+                            label = { Text("List") }
+                        )
+                    }
+                    if (listMode) {
+                        TrendingList(
+                            items = state.items,
+                            nextPageToken = state.nextPageToken,
+                            loadingMore = state.loadingMore,
+                            onItemClick = onItemClick,
+                            onLoadMore = onLoadMore
+                        )
+                    } else {
+                        TrendingGrid(
+                            items = state.items,
+                            nextPageToken = state.nextPageToken,
+                            loadingMore = state.loadingMore,
+                            onItemClick = onItemClick,
+                            onLoadMore = onLoadMore
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(spaceNormal))
@@ -182,6 +215,7 @@ private fun TrendingGrid(
                         title = item.title,
                         thumbnailUrl = item.thumbnailUrl,
                         subtitle = item.uploader,
+                        details = formatItemDetails(item.viewCount, item.textualUploadDate),
                         durationText = item.durationSeconds
                             ?.takeIf { item.kind != ProviderContentKind.LIVE }
                             ?.let { formatDuration(it) },
@@ -194,6 +228,39 @@ private fun TrendingGrid(
                     Spacer(Modifier.weight(1f))
                 }
             }
+        }
+        if (nextPageToken != null) {
+            ProviderLoadMore(
+                loadingMore = loadingMore,
+                onLoadMore = onLoadMore,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
+    }
+}
+
+/** Android-style vertical list of full-width rows (thumbnail beside title/uploader/date). */
+@Composable
+private fun TrendingList(
+    items: List<ProviderContentItem>,
+    nextPageToken: String?,
+    loadingMore: Boolean,
+    onItemClick: (ProviderContentItem) -> Unit,
+    onLoadMore: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        items.forEach { item ->
+            VideoListRow(
+                title = item.title,
+                thumbnailUrl = item.thumbnailUrl,
+                subtitle = item.uploader,
+                details = formatItemDetails(item.viewCount, item.textualUploadDate),
+                durationText = item.durationSeconds
+                    ?.takeIf { item.kind != ProviderContentKind.LIVE }
+                    ?.let { formatDuration(it) },
+                isLive = item.kind == ProviderContentKind.LIVE,
+                onClick = { onItemClick(item) }
+            )
         }
         if (nextPageToken != null) {
             ProviderLoadMore(

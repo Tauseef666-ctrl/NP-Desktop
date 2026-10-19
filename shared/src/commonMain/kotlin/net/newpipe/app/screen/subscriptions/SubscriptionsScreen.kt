@@ -47,6 +47,7 @@ import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.theme.spaceSmall
 import net.newpipe.app.theme.spaceXXSmall
+import net.newpipe.app.util.formatItemDetails
 import net.newpipe.app.viewmodel.subscriptions.SubscriptionFeedViewModel
 import net.newpipe.app.viewmodel.subscriptions.SubscriptionFeedViewModel.FeedState
 import net.newpipe.app.viewmodel.subscriptions.SubscriptionsViewModel
@@ -272,6 +273,7 @@ private fun FeedContent(
                     title = item.title,
                     subtitle = item.uploader,
                     thumbnailUrl = item.thumbnailUrl,
+                    details = formatItemDetails(item.viewCount, item.textualUploadDate),
                     isLive = item.kind == ProviderContentKind.LIVE,
                     onClick = { onPlayItem(item) }
                 )
