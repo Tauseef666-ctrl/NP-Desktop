@@ -44,6 +44,10 @@ val vlcBundleDir = layout.buildDirectory.dir("vlc-bundle")
 val downloadVlcBundle = tasks.register("downloadVlcBundle") {
     group = "build"
     description = "Download the VLC win64 runtime bundled into the desktop jar (Windows only)."
+    // Snapshot the script property into a configuration-time local: referencing `vlcVersion`
+    // directly from the action below would capture the build script object, which the
+    // configuration cache (org.gradle.configuration-cache=true) refuses to serialize.
+    val version = vlcVersion
     val zipFile = vlcBundleDir.map { it.file("vlc-win64.zip") }
     val propsFile = vlcBundleDir.map { it.file("vlc-bundle.properties") }
     outputs.files(zipFile, propsFile)
@@ -59,9 +63,9 @@ val downloadVlcBundle = tasks.register("downloadVlcBundle") {
             zip.inputStream().use { it.read() } == 'P'.code // zip magic
         if (!alreadyValid) {
             val url = URI(
-                "https://download.videolan.org/pub/videolan/vlc/$vlcVersion/win64/vlc-$vlcVersion-win64.zip"
+                "https://download.videolan.org/pub/videolan/vlc/$version/win64/vlc-$version-win64.zip"
             ).toURL()
-            logger.lifecycle("Downloading VLC $vlcVersion win64 from $url ...")
+            logger.lifecycle("Downloading VLC $version win64 from $url ...")
             val tmp = File(zip.parentFile, ".vlc-win64.zip.part")
             tmp.delete()
             url.openConnection().apply {
@@ -82,7 +86,7 @@ val downloadVlcBundle = tasks.register("downloadVlcBundle") {
             tmp.copyTo(zip, overwrite = true)
             tmp.delete()
         }
-        props.writeText("vlc.version=$vlcVersion\n")
+        props.writeText("vlc.version=$version\n")
         logger.lifecycle("VLC bundle ready: $zip (${zip.length()} bytes)")
     }
 }
