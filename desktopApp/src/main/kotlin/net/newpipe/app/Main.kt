@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
@@ -35,6 +36,7 @@ import java.util.prefs.Preferences
 import kotlin.math.roundToInt
 import kotlinx.serialization.json.Json
 import net.newpipe.app.navigation.Destination
+import net.newpipe.app.platform.DesktopFullscreenBridge
 import net.newpipe.app.platform.DesktopMiniPlayerBridge
 import net.newpipe.app.platform.LocalWorkspaceMode
 import net.newpipe.app.platform.LocalWorkspaceModeChange
@@ -117,6 +119,7 @@ private fun AppShortcutHost(content: @Composable () -> Unit) {
                             PlayerShortcuts.seekStepMillis(isShiftPressed = false))
                             .coerceAtLeast(0L)
                     )
+                    PlayerAction.TOGGLE_FULLSCREEN -> DesktopFullscreenBridge.toggle()
                     else -> Unit
                 }
             }
@@ -147,16 +150,20 @@ fun main() = application {
 
     Window(
         onCloseRequest = {
-            workspace?.let {
-                runCatching {
-                    it.setWindowBounds(
-                        WindowBounds(
-                            x = windowState.position.x.value.roundToInt(),
-                            y = windowState.position.y.value.roundToInt(),
-                            width = windowState.size.width.value.roundToInt(),
-                            height = windowState.size.height.value.roundToInt()
+            // Persist windowed bounds only; saving fullscreen dimensions would restore a
+            // maximized-size window on the next launch.
+            if (windowState.placement == WindowPlacement.Floating) {
+                workspace?.let {
+                    runCatching {
+                        it.setWindowBounds(
+                            WindowBounds(
+                                x = windowState.position.x.value.roundToInt(),
+                                y = windowState.position.y.value.roundToInt(),
+                                width = windowState.size.width.value.roundToInt(),
+                                height = windowState.size.height.value.roundToInt()
+                            )
                         )
-                    )
+                    }
                 }
             }
             val background = DesktopMiniPlayerBridge.background.value
@@ -171,6 +178,25 @@ fun main() = application {
         icon = rememberVectorPainter(AppIcon),
         state = windowState
     ) {
+        // Fullscreen (F11 / transport button): the shared coordinator drives the real window
+        // placement and mirrors its state back, so the player button always shows the truth.
+        DisposableEffect(windowState) {
+            DesktopFullscreenBridge.onToggle = {
+                windowState.placement = if (windowState.placement == WindowPlacement.Fullscreen) {
+                    WindowPlacement.Floating
+                } else {
+                    WindowPlacement.Fullscreen
+                }
+            }
+            onDispose {
+                DesktopFullscreenBridge.onToggle = null
+                DesktopFullscreenBridge.isActive.value = false
+            }
+        }
+        LaunchedEffect(windowState.placement) {
+            DesktopFullscreenBridge.isActive.value =
+                windowState.placement == WindowPlacement.Fullscreen
+        }
         val isMinimized = windowState.isMinimized
         LaunchedEffect(isMinimized) {
             if (!isMinimized) DesktopMiniPlayerBridge.background.value?.returnToForeground()
@@ -187,7 +213,7 @@ fun main() = application {
         ) {
             AppShortcutHost {
                 App(
-                    startDestination = Destination.Home,
+                    startDestination = Destination.Trending,
                     onCloseRequest = ::exitApplication,
                     withKoin = {
                         // Share the same singleton controller with the floating mini-player window.
@@ -208,7 +234,7 @@ fun main() = application {
             position = savedMini?.let { WindowPosition(it.x.dp, it.y.dp) }
                 ?: WindowPosition(Alignment.BottomEnd),
             size = savedMini?.let { DpSize(it.width.dp, it.height.dp) }
-                ?: DpSize(if (miniCompact) 300.dp else 420.dp, if (miniCompact) 84.dp else 160.dp)
+                ?: DpSize(if (miniCompact) 300.dp else 420.dp, if (miniCompact) 84.dp else 400.dp)
         )
         // Persist the mini-player bounds on any close path (window X or the in-app Close button).
         DisposableEffect(Unit) {
@@ -244,7 +270,7 @@ fun main() = application {
                     miniState.size = if (miniCompact) {
                         DpSize(300.dp, 84.dp)
                     } else {
-                        DpSize(420.dp, 160.dp)
+                        DpSize(420.dp, 400.dp)
                     }
                 }
             )

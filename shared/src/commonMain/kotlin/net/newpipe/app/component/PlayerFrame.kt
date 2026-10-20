@@ -34,8 +34,13 @@ import net.newpipe.app.theme.spaceNormal
  * optional settings panel that lives *inside* the same frame (player and its settings stay
  * together).
  *
- * @param video Rendered above the controls (the engine's surface).
- * @param controls Bottom-anchored controls overlay.
+ * The overlay mirrors the official Android player ([R.layout.player]): a scrim at the top and
+ * bottom of the video (the `playerTopShadow` / `playbackControlsShadow` views) with the controls
+ * themselves filling the whole surface so they can pin metadata to the top, transport to the
+ * center and the seek bar to the bottom — the same three-zone layout NewPipe uses on phones.
+ *
+ * @param video Rendered below the controls overlay (the engine's surface).
+ * @param controls Full-surface overlay; arrange top/center/bottom yourself.
  * @param settings Shown below the surface when [settingsVisible] is true.
  * @param showControls Hide controls without stopping the engine (e.g. idle).
  */
@@ -66,13 +71,12 @@ fun PlayerFrame(
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
-                                0.0f to Color.Transparent,
-                                0.55f to Color.Transparent,
+                                0.0f to colors.overlayScrim,
+                                0.18f to Color.Transparent,
+                                0.72f to Color.Transparent,
                                 1.0f to colors.overlayScrim
                             )
                         )
-                        .padding(spaceNormal),
-                    contentAlignment = Alignment.BottomCenter
                 ) {
                     controls()
                 }

@@ -43,7 +43,8 @@ object AppShortcutScope {
         Key.DirectionLeft to PlayerAction.SEEK_BACKWARD,
         Key.DirectionRight to PlayerAction.SEEK_FORWARD,
         Key.F to PlayerAction.FOCUS_SEARCH,
-        Key.M to PlayerAction.TOGGLE_MINI_PLAYER
+        Key.M to PlayerAction.TOGGLE_MINI_PLAYER,
+        Key.F11 to PlayerAction.TOGGLE_FULLSCREEN
     )
 
     /** True for the four reserved transport media keys (volume keys are intentionally excluded). */

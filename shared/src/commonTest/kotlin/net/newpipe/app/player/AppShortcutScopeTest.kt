@@ -72,6 +72,12 @@ class AppShortcutScopeTest {
     }
 
     @Test
+    fun `F11 is the app-wide fullscreen binding`() {
+        assertEquals(PlayerAction.TOGGLE_FULLSCREEN, appAction(Key.F11))
+        assertNull(appAction(Key.F11, ctrl = true))
+    }
+
+    @Test
     fun `plain f and plain m are never claimed app-wide`() {
         assertNull(appAction(Key.F, ctrl = false))
         // Plain M stays a player-only MUTE and must not be hijacked as the mini-player toggle.

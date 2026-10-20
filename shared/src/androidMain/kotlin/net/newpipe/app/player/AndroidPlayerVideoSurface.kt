@@ -11,8 +11,13 @@ import androidx.compose.ui.Modifier
 
 /**
  * Android has no shared video sink yet; renders an empty surface so layout is stable.
+ * [surfacePriority] is unused here (single platform surface).
  */
 @Composable
-actual fun PlayerVideoSurface(engine: PlayerEngine, modifier: Modifier) {
+actual fun PlayerVideoSurface(
+    engine: PlayerEngine,
+    modifier: Modifier,
+    surfacePriority: Int
+) {
     Box(modifier)
 }

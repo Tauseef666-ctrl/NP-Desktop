@@ -44,6 +44,9 @@ class PlaybackController(
     val isEngineAvailable: Boolean get() = engine.isAvailable
     val state: StateFlow<PlaybackState> = engine.state
 
+    /** The platform engine behind this controller, for video-surface hosts (mini player). */
+    val playerEngine: PlayerEngine get() = engine
+
     private val resumeEnabled: Boolean
         get() = settings.getBoolean(
             PlayerPreferences.KEY_RESUME_PLAYBACK,

@@ -33,6 +33,11 @@ class PlayerShortcutsTest {
     }
 
     @Test
+    fun `default binding toggles fullscreen with F11`() {
+        assertEquals(PlayerAction.TOGGLE_FULLSCREEN, resolver.actionFor(Key.F11))
+    }
+
+    @Test
     fun `plain f is unbound and plain m stays mute`() {
         assertNull(resolver.actionFor(Key.F))
         assertEquals(PlayerAction.MUTE, resolver.actionFor(Key.M))

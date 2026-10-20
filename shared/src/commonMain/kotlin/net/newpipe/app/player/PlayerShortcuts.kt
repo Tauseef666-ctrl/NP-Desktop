@@ -22,7 +22,8 @@ enum class PlayerAction(val label: String, val description: String) {
     VOLUME_DOWN("Volume down", "Decrease volume by 10 percent"),
     MUTE("Mute / Unmute", "Toggle muting"),
     FOCUS_SEARCH("Focus search", "Move the keyboard cursor to the search field"),
-    TOGGLE_MINI_PLAYER("Mini player", "Open or close the floating mini player")
+    TOGGLE_MINI_PLAYER("Mini player", "Open or close the floating mini player"),
+    TOGGLE_FULLSCREEN("Fullscreen", "Toggle window fullscreen for video playback")
 }
 
 /**
@@ -65,7 +66,8 @@ object PlayerShortcuts {
         Shortcut(PlayerAction.MUTE, Key.M),
         Shortcut(PlayerAction.MUTE, Key.VolumeMute),
         Shortcut(PlayerAction.FOCUS_SEARCH, Key.F, withCtrl = true),
-        Shortcut(PlayerAction.TOGGLE_MINI_PLAYER, Key.M, withCtrl = true)
+        Shortcut(PlayerAction.TOGGLE_MINI_PLAYER, Key.M, withCtrl = true),
+        Shortcut(PlayerAction.TOGGLE_FULLSCREEN, Key.F11)
     )
 
     /** Media-keys that must never be re-bound because they are safety/accessibility affordances. */

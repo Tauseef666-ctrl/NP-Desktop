@@ -8,8 +8,11 @@ package net.newpipe.app
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,7 +40,9 @@ import androidx.compose.runtime.collectAsState
 import net.newpipe.app.component.AppIcons
 import net.newpipe.app.player.PlaybackController
 import net.newpipe.app.player.PlaybackStatus
+import net.newpipe.app.player.PlayerVideoSurface
 import net.newpipe.app.platform.DesktopMiniPlayerBridge
+import net.newpipe.app.platform.JVMPlayerEngine
 import net.newpipe.app.theme.AppTheme
 import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceLarge
@@ -54,8 +60,11 @@ private val MiniPlayerShape = RoundedCornerShape(10.dp)
  * (desktopApp `Main.kt`). [compact] collapses the surface to a single transport row (title +
  * play/pause + expand/close) for a minimal, unobtrusive footprint.
  *
- * Honest note: the VLCJ video surface is embedded in the main window and cannot be re-parented, so
- * this window is audio/control focused — video keeps rendering in the full player.
+ * Video ownership: libVLC draws into exactly one AWT component. The main player screen registers
+ * its surface with [JVMPlayerEngine.SURFACE_PRIORITY_MAIN] and the mini player with
+ * [JVMPlayerEngine.SURFACE_PRIORITY_MINI], so the main player keeps the frames whenever it is on
+ * screen and the mini player takes over only while it is not — the video never disappears when
+ * both windows exist, it simply lives in the one the user is looking at.
  */
 @Composable
 fun MiniPlayerWindow(
@@ -147,6 +156,21 @@ private fun MiniPlayerContent(
                 }
             }
             return@Column
+        }
+        if (playback.isEngineAvailable && state.mediaId != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .clip(MiniPlayerShape)
+                    .background(Color.Black)
+            ) {
+                PlayerVideoSurface(
+                    engine = playback.playerEngine,
+                    modifier = Modifier.fillMaxSize(),
+                    surfacePriority = JVMPlayerEngine.SURFACE_PRIORITY_MINI
+                )
+            }
         }
         if (state.error != null) {
             Text(

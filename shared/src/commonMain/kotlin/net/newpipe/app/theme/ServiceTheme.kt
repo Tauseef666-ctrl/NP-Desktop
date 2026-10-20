@@ -153,11 +153,11 @@ fun currentServiceTopAppBarColors(
     serviceScheme: ColorScheme = currentServiceScheme()
 ): TopAppBarColors {
     return TopAppBarDefaults.topAppBarColors(
-        containerColor = serviceScheme.primaryContainer,
-        scrolledContainerColor = serviceScheme.primaryContainer,
-        navigationIconContentColor = serviceScheme.onPrimaryContainer,
-        titleContentColor = serviceScheme.onPrimaryContainer,
-        subtitleContentColor = serviceScheme.onPrimaryContainer,
-        actionIconContentColor = serviceScheme.onPrimaryContainer
+        containerColor = serviceScheme.primary,
+        scrolledContainerColor = serviceScheme.primary,
+        navigationIconContentColor = serviceScheme.onPrimary,
+        titleContentColor = serviceScheme.onPrimary,
+        subtitleContentColor = serviceScheme.onPrimary,
+        actionIconContentColor = serviceScheme.onPrimary
     )
 }

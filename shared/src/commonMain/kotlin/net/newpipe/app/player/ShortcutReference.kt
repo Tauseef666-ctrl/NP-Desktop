@@ -36,6 +36,7 @@ fun Shortcut.keyLabel(): String = when (key) {
     Key.VolumeMute -> "Volume Mute"
     Key.M -> "M"
     Key.S -> "S"
+    Key.F11 -> "F11"
     else -> printableKeyLabel(key)
 }
 

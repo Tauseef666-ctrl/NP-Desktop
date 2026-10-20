@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -51,6 +53,7 @@ import net.newpipe.app.component.StatusChip
 import net.newpipe.app.component.StatusKind
 import net.newpipe.app.component.TopToolbar
 import net.newpipe.app.navigation.Navigator
+import net.newpipe.app.platform.FullscreenCoordinator
 import net.newpipe.app.platform.PopOutCoordinator
 import net.newpipe.app.player.PlaybackController
 import net.newpipe.app.player.PlaybackState
@@ -80,6 +83,8 @@ import net.newpipe.app.viewmodel.player.PlayerViewModel
 import net.newpipe.app.viewmodel.streaminfo.StreamMetadataState
 import net.newpipe.app.viewmodel.streaminfo.StreamMetadataViewModel
 import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.ic_fullscreen
+import newpipe.shared.generated.resources.ic_fullscreen_exit
 import newpipe.shared.generated.resources.ic_pause
 import newpipe.shared.generated.resources.ic_play_arrow
 import newpipe.shared.generated.resources.ic_skip_next
@@ -97,6 +102,7 @@ fun PlayerScreen(
     viewModel: PlayerViewModel = koinViewModel(),
     engine: PlayerEngine = koinInject(),
     popOut: PopOutCoordinator = koinInject(),
+    fullscreen: FullscreenCoordinator = koinInject(),
     controller: PlaybackController = koinInject(),
     streamMetadataViewModel: StreamMetadataViewModel = koinViewModel(),
     captionsViewModel: CaptionsViewModel = koinViewModel()
@@ -123,6 +129,7 @@ fun PlayerScreen(
         engine = engine,
         isEngineAvailable = viewModel.isEngineAvailable,
         popOut = popOut,
+        fullscreen = fullscreen,
         panelExpanded = panelExpanded,
         onTogglePanelExpanded = viewModel::togglePanelExpanded,
         onSetPanelExpanded = viewModel::setPanelExpanded,
@@ -172,6 +179,7 @@ fun PlayerScreenContent(
     engine: PlayerEngine? = null,
     isEngineAvailable: Boolean = true,
     popOut: PopOutCoordinator? = null,
+    fullscreen: FullscreenCoordinator? = null,
     shortcuts: ShortcutResolver = remember { ShortcutResolver() },
     panelExpanded: Boolean = false,
     onTogglePanelExpanded: () -> Unit = {},
@@ -248,6 +256,12 @@ fun PlayerScreenContent(
                             PlayerAction.VOLUME_UP -> onVolume((state.volume + 0.1f).coerceIn(0f, 1f))
                             PlayerAction.VOLUME_DOWN -> onVolume((state.volume - 0.1f).coerceIn(0f, 1f))
                             PlayerAction.MUTE -> onToggleMute()
+                            PlayerAction.TOGGLE_FULLSCREEN -> {
+                                if (fullscreen?.supported != true) {
+                                    return@onPlayerKeyEvent false
+                                }
+                                fullscreen.toggle()
+                            }
                             PlayerAction.FOCUS_SEARCH, PlayerAction.TOGGLE_MINI_PLAYER ->
                                 return@onPlayerKeyEvent false
                             null -> return@onPlayerKeyEvent false
@@ -257,8 +271,6 @@ fun PlayerScreenContent(
                 }
         ) {
             PlayerFrame(
-                title = queue.current?.title,
-                subtitle = "NewPipe+ playback engine",
                 video = {
                     val activeEngine = engine
                     if (activeEngine != null && isEngineAvailable && state.mediaId != null) {
@@ -268,14 +280,37 @@ fun PlayerScreenContent(
                     }
                 },
                 controls = {
+                    val supportedFullscreen = fullscreen?.takeIf { it.supported }
                     TransportControls(
                         state = state,
                         enabled = isEngineAvailable,
+                        title = queue.current?.title,
+                        subtitle = (metadataState as? StreamMetadataState.Success)
+                            ?.metadata?.uploaderName
+                            ?: "NewPipe+ playback engine",
+                        qualityLabel = state.quality.label,
+                        speedLabel = "${formatSpeed(state.playbackSpeed)}×",
                         onPlayPause = onPlayPause,
                         onStop = onStop,
                         onPrevious = onPrevious,
                         onNext = onNext,
-                        onSeek = onSeek
+                        onSeek = onSeek,
+                        onCycleSpeed = {
+                            val index = SpeedOptions.indexOfFirst { it == state.playbackSpeed }
+                                .coerceAtLeast(0)
+                            onSpeed(SpeedOptions[(index + 1) % SpeedOptions.size])
+                        },
+                        onCycleQuality = {
+                            val qualities = Quality.entries
+                            val index = qualities.indexOf(state.quality).coerceAtLeast(0)
+                            onQuality(qualities[(index + 1) % qualities.size])
+                        },
+                        isFullscreen = supportedFullscreen
+                            ?.isActive
+                            ?.collectAsStateWithLifecycle()
+                            ?.value
+                            ?: false,
+                        onToggleFullscreen = supportedFullscreen?.let { coord -> { coord.toggle() } }
                     )
                 }
             )
@@ -486,15 +521,30 @@ private fun PlayerSurface(state: PlaybackState, isEngineAvailable: Boolean) {
     }
 }
 
+/**
+ * Video-overlay transport mirroring the official Android player: metadata, quality and speed
+ * pinned to the top, previous/play/next centered, and the seek bar with the times pinned to the
+ * bottom next to the fullscreen button (the position NewPipe gives the rotation toggle). Every
+ * tint is forced white — the same `WhiteTintTheme` contract the Android overlay uses — so the
+ * controls stay readable in light theme too.
+ */
 @Composable
 private fun TransportControls(
     state: PlaybackState,
     enabled: Boolean,
+    title: String?,
+    subtitle: String?,
+    qualityLabel: String,
+    speedLabel: String,
     onPlayPause: () -> Unit,
     onStop: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
-    onSeek: (Long) -> Unit
+    onSeek: (Long) -> Unit,
+    onCycleSpeed: () -> Unit,
+    onCycleQuality: () -> Unit,
+    isFullscreen: Boolean = false,
+    onToggleFullscreen: (() -> Unit)? = null
 ) {
     val duration = state.durationMs.coerceAtLeast(0L)
     val canSeek = enabled && duration > 0L
@@ -504,10 +554,94 @@ private fun TransportControls(
     val shownPosition = if (scrubbing) scrubPosition else state.positionMs.toFloat()
     val rangeEnd = if (duration > 0L) duration.toFloat() else 1f
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxSize().padding(spaceNormal)) {
+        Row(verticalAlignment = Alignment.Top) {
+            IconButton(onClick = onStop, enabled = enabled) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_stop),
+                    contentDescription = "Stop",
+                    tint = Color.White
+                )
+            }
+            Column(modifier = Modifier.weight(1f).padding(top = spaceSmall)) {
+                if (title != null) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Text(
+                    text = subtitle.orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.85f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            TextButton(onClick = onCycleQuality, enabled = enabled) {
+                Text(
+                    text = qualityLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+            TextButton(onClick = onCycleSpeed, enabled = enabled) {
+                Text(
+                    text = speedLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+        Spacer(Modifier.weight(1f))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onPrevious, enabled = enabled) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_skip_previous),
+                    contentDescription = "Previous",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            Spacer(Modifier.width(spaceLarge))
+            IconButton(
+                onClick = onPlayPause,
+                enabled = enabled,
+                modifier = Modifier.size(64.dp)
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (state.isPlaying) Res.drawable.ic_pause else Res.drawable.ic_play_arrow
+                    ),
+                    contentDescription = if (state.isPlaying) "Pause" else "Play",
+                    tint = Color.White,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+            Spacer(Modifier.width(spaceLarge))
+            IconButton(onClick = onNext, enabled = enabled) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_skip_next),
+                    contentDescription = "Next",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+        Spacer(Modifier.weight(1f))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = formatDuration(state.positionMs / 1000L),
+                text = formatDuration(shownPosition.toLong() / 1000L),
                 style = MaterialTheme.typography.labelMedium,
                 color = Color.White
             )
@@ -523,6 +657,11 @@ private fun TransportControls(
                 },
                 valueRange = 0f..rangeEnd,
                 enabled = canSeek,
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.White,
+                    activeTrackColor = Color.White,
+                    inactiveTrackColor = Color.White.copy(alpha = 0.4f)
+                ),
                 modifier = Modifier.weight(1f).padding(horizontal = spaceNormal)
             )
             Text(
@@ -530,58 +669,21 @@ private fun TransportControls(
                 style = MaterialTheme.typography.labelMedium,
                 color = Color.White
             )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onPrevious, enabled = enabled) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_skip_previous),
-                    contentDescription = "Previous",
-                    tint = plusColors().textPrimary
-                )
+            if (onToggleFullscreen != null) {
+                IconButton(onClick = onToggleFullscreen) {
+                    Icon(
+                        painter = painterResource(
+                            if (isFullscreen) {
+                                Res.drawable.ic_fullscreen_exit
+                            } else {
+                                Res.drawable.ic_fullscreen
+                            }
+                        ),
+                        contentDescription = if (isFullscreen) "Exit fullscreen" else "Fullscreen",
+                        tint = Color.White
+                    )
+                }
             }
-            Spacer(Modifier.width(spaceNormal))
-            IconButton(
-                onClick = onPlayPause,
-                enabled = enabled,
-                modifier = Modifier.size(56.dp)
-            ) {
-                Icon(
-                    painter = painterResource(
-                        if (state.isPlaying) Res.drawable.ic_pause else Res.drawable.ic_play_arrow
-                    ),
-                    contentDescription = if (state.isPlaying) "Pause" else "Play",
-                    tint = plusColors().textPrimary,
-                    modifier = Modifier.size(40.dp)
-                )
-            }
-            Spacer(Modifier.width(spaceNormal))
-            IconButton(onClick = onStop, enabled = enabled) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_stop),
-                    contentDescription = "Stop",
-                    tint = plusColors().textPrimary
-                )
-            }
-            Spacer(Modifier.width(spaceNormal))
-            IconButton(onClick = onNext, enabled = enabled) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_skip_next),
-                    contentDescription = "Next",
-                    tint = plusColors().textPrimary
-                )
-            }
-        }
-        if (scrubbing) {
-            Text(
-                text = formatDuration(scrubPosition.toLong() / 1000L),
-                style = MaterialTheme.typography.labelSmall,
-                color = plusColors().accent,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
         }
     }
 }

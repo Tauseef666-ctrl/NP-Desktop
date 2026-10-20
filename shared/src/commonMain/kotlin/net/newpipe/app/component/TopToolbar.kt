@@ -60,13 +60,18 @@ fun TopToolbar(
         modifier = modifier
             .fillMaxWidth()
             .height(ToolbarHeight)
-            .background(colors.surface)
+            .background(colors.accent)
             .padding(horizontal = spaceNormal),
         verticalAlignment = Alignment.CenterVertically
     ) {
         val backIcon = navigationIcon ?: if (onBack != null) painterResource(Res.drawable.ic_arrow_back) else null
         if (backIcon != null && onBack != null) {
-            ToolbarIconButton(painter = backIcon, contentDescription = "Back", onClick = onBack)
+            ToolbarIconButton(
+                painter = backIcon,
+                contentDescription = "Back",
+                onClick = onBack,
+                iconTint = colors.onAccent
+            )
             Spacer(Modifier.width(spaceNormal))
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -74,7 +79,7 @@ fun TopToolbar(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.textPrimary,
+                color = colors.onAccent,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -82,7 +87,7 @@ fun TopToolbar(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colors.textSecondary,
+                    color = colors.onAccent.copy(alpha = 0.85f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -98,7 +103,8 @@ fun ToolbarIconButton(
     painter: Painter,
     contentDescription: String?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconTint: androidx.compose.ui.graphics.Color = plusColors().textSecondary
 ) {
     val colors = plusColors()
     Box(
@@ -111,7 +117,7 @@ fun ToolbarIconButton(
             Icon(
                 painter = painter,
                 contentDescription = contentDescription,
-                tint = colors.textSecondary,
+                tint = iconTint,
                 modifier = Modifier.size(20.dp)
             )
         }

@@ -103,7 +103,11 @@ class JVMPlayerEngine : PlayerEngine {
 
     private var factory: MediaPlayerFactory? = null
     private var player: EmbeddedMediaPlayer? = null
-    private var videoSurfaceComponent: java.awt.Component? = null
+
+    /** Registered video-surface hosts, oldest first; the owner is picked from these. */
+    private val videoSurfaceHosts = mutableListOf<SurfaceHost>()
+    private val surfaceListeners =
+        mutableMapOf<java.awt.Component, java.awt.event.HierarchyListener>()
 
     /** Position to seek to once playback starts (the resume position; null = play from start). */
     private var pendingSeekMs: Long? = null
@@ -169,7 +173,7 @@ class JVMPlayerEngine : PlayerEngine {
             newPlayer.events().addMediaPlayerEventListener(listener)
             factory = newFactory
             player = newPlayer
-            videoSurfaceComponent?.let { bindSurface(newPlayer, newFactory, it) }
+            bindRegisteredSurface()
             newPlayer
         } catch (t: Throwable) {
             _state.value = _state.value.copy(
@@ -181,29 +185,103 @@ class JVMPlayerEngine : PlayerEngine {
     }
 
     /**
-     * Bind an AWT component as the video surface. Safe to call before the player exists; the
-     * surface is attached when the player is created. Used by the desktop video-surface host.
+     * Register an AWT component as a video-surface host. Safe to call before the player exists;
+     * the surface is attached when the player is created. Used by the desktop video-surface hosts
+     * (main player screen and mini-player window).
+     *
+     * VLCJ's `videoSurface().set(...)` only *stores* the surface — `libvlc_media_player_set_hwnd`
+     * is applied from `onBeforePlay()`, which throws `IllegalStateException` while the component
+     * is not displayable. Hosts usually compose after playback already started, so the surface is
+     * attached here as soon as the component is displayable, and again from a hierarchy listener
+     * when it later joins a displayable window (the only reliable moment for an AWT `Canvas`).
+     *
+     * Ownership: several hosts may register. The displayable host with the lowest [priority]
+     * owns the video — the main player ([SURFACE_PRIORITY_MAIN]) wins whenever it is on screen,
+     * and the mini player ([SURFACE_PRIORITY_MINI]) takes over only while it is not. Within the
+     * same priority the most recently attached host wins, so re-opening a screen restores it.
      */
-    fun attachVideoSurface(component: java.awt.Component) {
-        videoSurfaceComponent = component
-        val currentPlayer = ensurePlayer() ?: return
-        val currentFactory = factory ?: return
-        bindSurface(currentPlayer, currentFactory, component)
+    fun attachVideoSurface(
+        component: java.awt.Component,
+        priority: Int = SURFACE_PRIORITY_MAIN
+    ) {
+        videoSurfaceHosts.removeAll { it.component === component }
+        videoSurfaceHosts.add(SurfaceHost(component, priority))
+        if (!surfaceListeners.containsKey(component)) {
+            val listener = java.awt.event.HierarchyListener { event ->
+                if (event.changeFlags and SURFACE_CHANGE_MASK != 0L && component.isDisplayable) {
+                    bindRegisteredSurface()
+                }
+            }
+            surfaceListeners[component] = listener
+            component.addHierarchyListener(listener)
+        }
+        ensurePlayer()
+        bindRegisteredSurface()
     }
 
-    fun detachVideoSurface() {
-        videoSurfaceComponent = null
+    /**
+     * Unregister [component] as a video-surface host (every host when [component] is null) and
+     * hand the video back to the next remaining host, if any.
+     */
+    fun detachVideoSurface(component: java.awt.Component? = null) {
+        val removed: List<java.awt.Component> = if (component == null) {
+            videoSurfaceHosts.map { it.component }
+        } else {
+            videoSurfaceHosts.removeAll { it.component === component }
+            listOf(component)
+        }
+        for (host in removed) {
+            surfaceListeners.remove(host)?.let { host.removeHierarchyListener(it) }
+        }
+        if (component == null) {
+            videoSurfaceHosts.clear()
+        }
+        bindRegisteredSurface()
+    }
+
+    private fun bindRegisteredSurface() {
+        val mediaPlayer = player ?: return
+        val currentFactory = factory ?: return
+        // Most recently registered first, so ties inside one priority go to the freshest host.
+        val host = videoSurfaceHosts
+            .asReversed()
+            .filter { it.component.isDisplayable }
+            .minByOrNull { it.priority }
+            ?.component
+        bindSurfaceTo(mediaPlayer, currentFactory, host)
+    }
+
+    private fun bindSurfaceTo(
+        mediaPlayer: EmbeddedMediaPlayer,
+        currentFactory: MediaPlayerFactory,
+        host: java.awt.Component?
+    ) {
+        if (host == null || !host.isDisplayable) {
+            try {
+                mediaPlayer.videoSurface().set(null)
+            } catch (_: Throwable) {
+                // Nothing to detach yet; playback is unaffected.
+            }
+            return
+        }
+        bindSurface(mediaPlayer, currentFactory, host, attach = true)
     }
 
     private fun bindSurface(
         mediaPlayer: EmbeddedMediaPlayer,
         factory: MediaPlayerFactory,
-        component: java.awt.Component
+        component: java.awt.Component,
+        attach: Boolean
     ) {
         try {
             mediaPlayer.videoSurface().set(factory.videoSurfaces().newVideoSurface(component))
-        } catch (_: Throwable) {
-            // A missing surface must not crash playback; audio still plays.
+            if (attach && component.isDisplayable) {
+                mediaPlayer.videoSurface().attachVideoSurface()
+            }
+        } catch (t: Throwable) {
+            // A missing surface must not crash playback; audio still plays. The hierarchy
+            // listener retries as soon as the component is displayable, and prepare() re-binds.
+            System.err.println("[NewPipe+] video surface not attached yet: ${t.message}")
         }
     }
 
@@ -218,6 +296,13 @@ class JVMPlayerEngine : PlayerEngine {
             error = null
         )
         try {
+            // VLCJ applies the stored surface from onBeforePlay() and throws when the host
+            // component is not displayable yet, which would fail the whole play call. Clear it
+            // so playback starts regardless; the hierarchy listener attaches the surface the
+            // moment the host window is displayable.
+            if (videoSurfaceHosts.none { it.component.isDisplayable }) {
+                mediaPlayer.videoSurface().set(null)
+            }
             mediaPlayer.media().play(item.url)
         } catch (t: Throwable) {
             _state.value = _state.value.copy(
@@ -264,15 +349,33 @@ class JVMPlayerEngine : PlayerEngine {
     }
 
     override fun release() {
+        detachVideoSurface(null)
         player?.release()
         factory?.release()
         player = null
         factory = null
     }
 
+    /** A registered video-surface host: the component libVLC may draw into, and its priority. */
+    private class SurfaceHost(
+        val component: java.awt.Component,
+        val priority: Int
+    )
+
     companion object {
         const val UNAVAILABLE_MESSAGE =
             "libVLC was not found. Install VLC or point VLC_HOME at it to enable desktop playback."
         private const val MAX_VLC_VOLUME = 100
+
+        /** The main player screen owns the video whenever it is on screen. */
+        const val SURFACE_PRIORITY_MAIN = 0
+
+        /** The mini player owns the video only while the main player screen is not shown. */
+        const val SURFACE_PRIORITY_MINI = 1
+
+        /** Hierarchy transitions that change whether a surface component can own an HWND. */
+        private val SURFACE_CHANGE_MASK =
+            (java.awt.event.HierarchyEvent.DISPLAYABILITY_CHANGED or
+                java.awt.event.HierarchyEvent.SHOWING_CHANGED).toLong()
     }
 }

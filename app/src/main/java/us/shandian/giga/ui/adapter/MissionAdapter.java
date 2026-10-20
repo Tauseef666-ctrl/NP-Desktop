@@ -387,6 +387,11 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
             intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
             intent.putExtra(DownloadPlayerActivity.EXTRA_URI, uri.toString());
             intent.putExtra(DownloadPlayerActivity.EXTRA_TITLE, mission.storage.getName());
+            // The original page URL lets the player screen offer "Add to playlist"; without it
+            // the playlist entry could not be resolved again later.
+            if (mission.source != null && !mission.source.isEmpty()) {
+                intent.putExtra(DownloadPlayerActivity.EXTRA_SOURCE, mission.source);
+            }
             mContext.startActivity(intent);
         } catch (final Exception e) {
             Log.e(TAG, "Could not start download player", e);
@@ -717,7 +722,10 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
             }
         }
 
-        if (id == R.id.menu_item_share) {
+        if (id == R.id.play) {
+            playDownload(h.item.mission);
+            return true;
+        } else if (id == R.id.menu_item_share) {
             shareFile(h.item.mission);
             return true;
         } else if (id == R.id.open_with) {
@@ -903,6 +911,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
         ProgressDrawable progress;
 
         PopupMenu popupMenu;
+        MenuItem play;
         MenuItem retry;
         MenuItem cancel;
         MenuItem start;
@@ -940,6 +949,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
             button.setOnClickListener(v -> showPopupMenu());
 
             Menu menu = popupMenu.getMenu();
+            play = menu.findItem(R.id.play);
             retry = menu.findItem(R.id.retry);
             cancel = menu.findItem(R.id.cancel);
             start = menu.findItem(R.id.start);
@@ -967,6 +977,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
         }
 
         private void showPopupMenu() {
+            play.setVisible(false);
             retry.setVisible(false);
             cancel.setVisible(false);
             start.setVisible(false);
@@ -1013,6 +1024,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
                     }
                 }
             } else {
+                play.setVisible(true);
                 open.setVisible(true);
                 openWith.setVisible(true);
                 delete.setVisible(true);

@@ -95,42 +95,9 @@ private fun railEntries(
     val selected = railSelectedDestination(currentDestination)
     return listOf(
         NavEntry(
-            label = "Home",
-            selected = selected == Destination.Home,
-            onClick = { onNavigate(Destination.Home) }
-        ),
-        NavEntry(
-            label = stringResource(Res.string.nav_search),
-            selected = selected == Destination.Search,
-            onClick = { onNavigate(Destination.Search) }
-        ),
-        NavEntry(
             label = stringResource(Res.string.nav_trending),
             selected = selected == Destination.Trending,
             onClick = { onNavigate(Destination.Trending) }
-        ),
-        NavEntry(
-            label = stringResource(Res.string.nav_history),
-            selected = selected == Destination.History,
-            onClick = { onNavigate(Destination.History) }
-        ),
-        NavEntry(
-            label = "Player",
-            selected = selected == Destination.Player,
-            onClick = { onNavigate(Destination.Player) },
-            icon = painterResource(Res.drawable.ic_headset)
-        ),
-        NavEntry(
-            label = "Library",
-            selected = selected == Destination.Library,
-            onClick = { onNavigate(Destination.Library) },
-            icon = painterResource(Res.drawable.ic_file_download)
-        ),
-        NavEntry(
-            label = stringResource(Res.string.playlists_screen_title),
-            selected = selected == Destination.Playlists,
-            onClick = { onNavigate(Destination.Playlists) },
-            icon = painterResource(Res.drawable.ic_headset)
         ),
         NavEntry(
             label = stringResource(Res.string.subscriptions_screen_title),
@@ -139,10 +106,32 @@ private fun railEntries(
             icon = painterResource(Res.drawable.ic_notifications)
         ),
         NavEntry(
+            label = stringResource(Res.string.playlists_screen_title),
+            selected = selected == Destination.Playlists,
+            onClick = { onNavigate(Destination.Playlists) },
+            icon = painterResource(Res.drawable.ic_headset)
+        ),
+        NavEntry(
+            label = stringResource(Res.string.nav_search),
+            selected = selected == Destination.Search,
+            onClick = { onNavigate(Destination.Search) }
+        ),
+        NavEntry(
+            label = "Library",
+            selected = selected == Destination.Library,
+            onClick = { onNavigate(Destination.Library) },
+            icon = painterResource(Res.drawable.ic_file_download)
+        ),
+        NavEntry(
             label = "Downloads",
             selected = selected == Destination.Downloads,
             onClick = { onNavigate(Destination.Downloads) },
             icon = painterResource(Res.drawable.ic_cloud_download)
+        ),
+        NavEntry(
+            label = stringResource(Res.string.nav_history),
+            selected = selected == Destination.History,
+            onClick = { onNavigate(Destination.History) }
         ),
         NavEntry(
             label = "Settings",
@@ -183,7 +172,7 @@ private fun RailHeader(mode: WorkspaceMode) {
     val expanded = !mode.isCompactSidebar
     Column(modifier = Modifier.padding(horizontal = spaceNormal, vertical = spaceNormal)) {
         Text(
-            text = if (expanded) "NewPipe+" else "N+",
+            text = if (expanded) "NewPipe" else "N",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = colors.textPrimary
