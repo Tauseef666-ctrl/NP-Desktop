@@ -24,6 +24,7 @@ package net.newpipe.app.provider
  * @param category Provider category, or null when unknown.
  * @param tags Provider tags (may be empty).
  * @param isLive True for a live stream.
+ * @param related Related/recommended videos from the watch page (may be empty).
  */
 data class StreamMetadata(
     val title: String,
@@ -39,5 +40,6 @@ data class StreamMetadata(
     val description: String? = null,
     val category: String? = null,
     val tags: List<String> = emptyList(),
-    val isLive: Boolean = false
+    val isLive: Boolean = false,
+    val related: List<ProviderContentItem> = emptyList()
 )

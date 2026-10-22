@@ -83,6 +83,13 @@ interface PlayerEngine {
     fun setMuted(muted: Boolean)
     fun setQuality(quality: Quality)
 
+    /**
+     * Enable or disable the video track of the current playback. Disabling keeps the audio playing
+     * and stops the video decoding — what the Android app calls background play. Engines that
+     * cannot switch tracks ignore the request.
+     */
+    fun setVideoEnabled(enabled: Boolean) {}
+
     /** Release all native resources. The engine must not be used afterwards. */
     fun release()
 }

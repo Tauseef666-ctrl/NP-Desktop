@@ -1,0 +1,83 @@
+Calculating task graph as configuration cache cannot be reused because an input to unknown location has changed.
+Type-safe project accessors is an incubating feature.
+> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :buildSrc:compileKotlin UP-TO-DATE
+> Task :buildSrc:compileJava NO-SOURCE
+> Task :buildSrc:compileGroovy NO-SOURCE
+> Task :buildSrc:pluginDescriptors UP-TO-DATE
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+> Task :shared:copyNonXmlValueResourcesForJvmMain NO-SOURCE
+> Task :desktopApp:convertXmlValueResourcesForMain NO-SOURCE
+> Task :shared:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :shared:kmpPartiallyResolvedDependenciesChecker
+> Task :desktopApp:downloadVlcBundle UP-TO-DATE
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :shared:convertXmlValueResourcesForJvmMain NO-SOURCE
+> Task :desktopApp:prepareAppResources NO-SOURCE
+> Task :desktopApp:generateComposeResClass SKIPPED
+> Task :desktopApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :shared:checkJvmMainComposeLibrariesCompatibility
+> Task :desktopApp:copyNonXmlValueResourcesForMain NO-SOURCE
+> Task :shared:generateComposeResClass UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForJvmMain NO-SOURCE
+> Task :desktopApp:prepareComposeResourcesTaskForMain NO-SOURCE
+> Task :shared:generateResourceAccessorsForJvmMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForMain SKIPPED
+> Task :desktopApp:assembleMainResources UP-TO-DATE
+> Task :desktopApp:generateActualResourceCollectorsForMain SKIPPED
+> Task :desktopApp:processResources UP-TO-DATE
+> Task :shared:buildConfigGenerator
+> Task :shared:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :shared:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :shared:assembleJvmMainResources UP-TO-DATE
+> Task :shared:jvmProcessResources UP-TO-DATE
+> Task :shared:generateActualResourceCollectorsForJvmMain UP-TO-DATE
+> Task :shared:processJvmMainResources SKIPPED
+> Task :shared:compileKotlinJvm
+w: Koin compiler plugin: Kotlin 2.4.10 is newer than the newest tested version (2.4.0) — proceeding with the 2.4.0 adapter. If compilation fails, check for a koin-compiler-plugin update. Supported versions: 2.3.20, 2.4.0.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/commonMain/kotlin/net/newpipe/app/component/PlusTooltip.kt:29:44 'fun rememberPlainTooltipPositionProvider(spacingBetweenTooltipAndAnchor: Dp = ...): PopupPositionProvider' is deprecated. Deprecated in favor of rememberTooltipPositionProvider API.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/commonMain/kotlin/net/newpipe/app/screen/player/PlayerScreen.kt:347:42 Unnecessary non-null assertion (!!) on a non-null receiver of type 'PlaybackError'.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/platform/JVMDownloadEngine.kt:122:27 'constructor(p0: String!): URL' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:188:28 'val url: String?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:191:28 'val url: String?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:195:66 'val url: String?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:247:47 Unnecessary safe call on a non-null receiver of type 'Description'.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:271:37 'val url: String?' is deprecated. Deprecated in Java.
+
+> Task :shared:compileJvmMainJava NO-SOURCE
+> Task :shared:jvmMainClasses
+> Task :shared:jvmJar
+> Task :desktopApp:compileKotlin UP-TO-DATE
+> Task :desktopApp:compileJava NO-SOURCE
+> Task :desktopApp:classes UP-TO-DATE
+> Task :desktopApp:jar UP-TO-DATE
+
+> Task :desktopApp:run
+[INFO] [Koin] Started 25 definitions in 6.195 ms
+[INFO] [Koin] Started 103 definitions in 2.148 ms
+[NewPipe+] trying bundled libVLC at C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21
+[NewPipe+] bundled libVLC discovered
+[NewPipe+] vlc factory args=[]
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] prepare: host=manifest.googlevideo.com audioOnly=false slaveAudio=false frameSinks=0
+[NewPipe+] frame sink acquired refs=1
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] compose surface: polling started engine=2122494437
+[NewPipe+] video probe: status=PLAYING tracks=2 dimension=java.awt.Dimension[width=256,height=144] frames=0
+[NewPipe+] first video frame: planes=1 size=256x162 chroma=RV32 pitches=1024 engine=2122494437
+[NewPipe+] frame sink released refs=0
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] prepare: host=rr3---sn-gwpa-3o0s.googlevideo.com audioOnly=false slaveAudio=true frameSinks=0
+[NewPipe+] frame sink acquired refs=1
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] compose surface: polling started engine=2122494437
+[NewPipe+] compose surface: first bitmap 1280x726
+[NewPipe+] video probe: status=OPENING tracks=0 dimension=null frames=11300
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] prepare: host=rr1---sn-gwpa-a3vl7.googlevideo.com audioOnly=true slaveAudio=false frameSinks=1
+[NewPipe+] libVLC playback error (state=ERROR)
+[NewPipe+] video probe: status=ENDED tracks=0 dimension=null frames=11300

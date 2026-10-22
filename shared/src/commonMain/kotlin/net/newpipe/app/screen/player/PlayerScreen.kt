@@ -7,6 +7,7 @@ package net.newpipe.app.screen.player
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,8 +18,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.text.font.FontWeight
@@ -75,6 +80,7 @@ import net.newpipe.app.theme.plusColors
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceNormal
 import net.newpipe.app.theme.spaceSmall
+import net.newpipe.app.theme.spaceXSmall
 import net.newpipe.app.util.formatCount
 import net.newpipe.app.util.formatDuration
 import net.newpipe.app.viewmodel.captions.CaptionsState
@@ -210,6 +216,7 @@ fun PlayerScreenContent(
     onQueueSkipUnavailable: suspend () -> Boolean = { false }
 ) {
     var settingsExpanded by remember { mutableStateOf(panelExpanded) }
+    var selectedTab by remember { mutableStateOf(0) }
     LaunchedEffect(panelExpanded) {
         if (settingsExpanded != panelExpanded) {
             settingsExpanded = panelExpanded
@@ -270,8 +277,10 @@ fun PlayerScreenContent(
                     }
                 }
         ) {
-            PlayerFrame(
-                video = {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                PlayerFrame(
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 860.dp),
+                    video = {
                     val activeEngine = engine
                     if (activeEngine != null && isEngineAvailable && state.mediaId != null) {
                         PlayerVideoSurface(activeEngine, Modifier.fillMaxSize())
@@ -313,31 +322,17 @@ fun PlayerScreenContent(
                         onToggleFullscreen = supportedFullscreen?.let { coord -> { coord.toggle() } }
                     )
                 }
-            )
+                )
+            }
 
             if (metadataState is StreamMetadataState.Success) {
-                StreamInfoSection(metadataState.metadata)
-            }
-
-            if (captionsState is CaptionsState.Success) {
-                CaptionsSection(captionsState.tracks)
-            }
-
-            if (!queue.isEmpty) {
-                PlayerQuickSettings(
-                    state = state,
-                    repeatMode = queue.repeatMode,
-                    settings = settings,
-                    isEngineAvailable = isEngineAvailable,
-                    expanded = settingsExpanded,
-                    onToggleExpanded = {
+                VideoDetailSection(
+                    metadata = metadataState.metadata,
+                    settingsExpanded = settingsExpanded,
+                    onToggleSettings = {
                         settingsExpanded = !settingsExpanded
                         onTogglePanelExpanded()
-                    },
-                    onRepeatMode = onRepeatMode,
-                    onAutoplayNext = onAutoplayNext,
-                    onSubtitles = onSubtitles,
-                    onAudioTrack = onAudioTrack
+                    }
                 )
             }
 
@@ -360,33 +355,53 @@ fun PlayerScreenContent(
                 )
 
                 else -> {
-                    SectionHeader(title = "Playback")
-                    PlaybackSettings(
+                    FilterChipRow(
+                        options = listOf(
+                            "Up next (${queue.items.size})",
+                            "Captions"
+                        ),
+                        selectedIndex = selectedTab,
+                        onSelect = { selectedTab = it }
+                    )
+                    Spacer(Modifier.height(spaceSmall))
+                    when (selectedTab) {
+                        0 -> PlayerQueuePanel(
+                            queue = queue,
+                            canRestore = queueCanRestore,
+                            onPlayNow = onQueuePlayNow,
+                            onMoveUp = onQueueMoveUp,
+                            onMoveDown = onQueueMoveDown,
+                            onRemove = onQueueRemove,
+                            onSavePlaylist = onQueueSavePlaylist,
+                            onRestorePlaylist = onQueueRestorePlaylist,
+                            onSkipUnavailable = onQueueSkipUnavailable,
+                            onToggleShuffle = onToggleShuffle,
+                            onRepeatMode = onRepeatMode
+                        )
+
+                        else -> CaptionsSection(
+                            tracks = (captionsState as? CaptionsState.Success)?.tracks.orEmpty()
+                        )
+                    }
+                    PlayerQuickSettings(
                         state = state,
+                        repeatMode = queue.repeatMode,
+                        settings = settings,
+                        isEngineAvailable = isEngineAvailable,
+                        expanded = settingsExpanded,
+                        onToggleExpanded = {
+                            settingsExpanded = !settingsExpanded
+                            onTogglePanelExpanded()
+                        },
+                        onRepeatMode = onRepeatMode,
+                        onAutoplayNext = onAutoplayNext,
+                        onSubtitles = onSubtitles,
+                        onAudioTrack = onAudioTrack,
                         onSpeed = onSpeed,
                         onVolume = onVolume,
                         onToggleMute = onToggleMute,
                         onQuality = onQuality
                     )
-                    PlayerQueuePanel(
-                        queue = queue,
-                        canRestore = queueCanRestore,
-                        onPlayNow = onQueuePlayNow,
-                        onMoveUp = onQueueMoveUp,
-                        onMoveDown = onQueueMoveDown,
-                        onRemove = onQueueRemove,
-                        onSavePlaylist = onQueueSavePlaylist,
-                        onRestorePlaylist = onQueueRestorePlaylist,
-                        onSkipUnavailable = onQueueSkipUnavailable
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(spaceLarge),
-                        horizontalArrangement = Arrangement.spacedBy(spaceSmall)
-                    ) {
-                        TextButton(onClick = onToggleShuffle) {
-                            Text(if (queue.isShuffled) "Shuffle: on" else "Shuffle: off")
-                        }
-                    }
                 }
             }
             Spacer(Modifier.height(spaceLarge))
@@ -394,68 +409,113 @@ fun PlayerScreenContent(
     }
 }
 
+/**
+ * Android-style video detail block below the player: title, uploader row, views/date, actions,
+ * then the collapsible description — the same order as `fragment_video_detail.xml`.
+ */
 @Composable
-private fun StreamInfoSection(metadata: StreamMetadata, modifier: Modifier = Modifier) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spaceLarge, vertical = spaceSmall)
-            .then(modifier)
-    ) {
-        SectionHeader(title = "About")
+private fun VideoDetailSection(
+    metadata: StreamMetadata,
+    settingsExpanded: Boolean,
+    onToggleSettings: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = plusColors()
+    var descriptionExpanded by remember { mutableStateOf(false) }
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = metadata.title,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.textPrimary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = spaceLarge, vertical = spaceSmall)
         )
-        val uploaderParts = buildList {
-            metadata.uploaderName?.let { add(if (metadata.uploaderVerified) "$it ✓" else it) }
-            metadata.subscriberCount?.let { add("${formatCount(it)} subscribers") }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = spaceLarge),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val initial = metadata.uploaderName?.firstOrNull()?.uppercase() ?: "?"
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(colors.accentMuted),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = initial,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.accent
+                )
+            }
+            Spacer(Modifier.width(spaceNormal))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = buildString {
+                        append(metadata.uploaderName ?: "Unknown uploader")
+                        if (metadata.uploaderVerified) append(" \u2713")
+                    },
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                metadata.subscriberCount?.let { subscribers ->
+                    Text(
+                        text = "${formatCount(subscribers)} subscribers",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textSecondary
+                    )
+                }
+            }
+            TextButton(onClick = onToggleSettings) {
+                Text(if (settingsExpanded) "Hide settings" else "Settings")
+            }
+        }
+        val facts = buildList {
+            metadata.viewCount?.let { add("${formatCount(it)} views") }
             metadata.uploadDate?.let { add(it) }
         }
-        if (uploaderParts.isNotEmpty()) {
-            Spacer(Modifier.height(spaceSmall))
+        if (facts.isNotEmpty()) {
             Text(
-                text = uploaderParts.joinToString(" · "),
-                style = MaterialTheme.typography.bodyMedium,
-                color = plusColors().textSecondary
-            )
-        }
-        val engagementParts = buildList {
-            metadata.viewCount?.let { add("${formatCount(it)} views") }
-            metadata.likeCount?.let { add("${formatCount(it)} likes") }
-        }
-        if (engagementParts.isNotEmpty()) {
-            Spacer(Modifier.height(spaceSmall))
-            Text(
-                text = engagementParts.joinToString(" · "),
-                style = MaterialTheme.typography.bodyMedium,
-                color = plusColors().textSecondary
-            )
-        }
-        metadata.category?.let { category ->
-            Spacer(Modifier.height(spaceSmall))
-            Text(
-                text = category,
-                style = MaterialTheme.typography.bodyMedium,
-                color = plusColors().textSecondary
-            )
-        }
-        if (metadata.tags.isNotEmpty()) {
-            Spacer(Modifier.height(spaceSmall))
-            Text(
-                text = metadata.tags.joinToString(" · "),
+                text = facts.joinToString(" \u00b7 "),
                 style = MaterialTheme.typography.bodySmall,
-                color = plusColors().textSecondary
+                color = colors.textSecondary,
+                modifier = Modifier.padding(horizontal = spaceLarge, vertical = spaceSmall)
             )
         }
-        metadata.description?.let { description ->
-            Spacer(Modifier.height(spaceSmall))
+        HorizontalDivider(
+            modifier = Modifier.padding(horizontal = spaceLarge, vertical = spaceSmall),
+            color = colors.divider
+        )
+        if (!metadata.description.isNullOrBlank()) {
             Text(
-                text = description,
+                text = metadata.description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = plusColors().textSecondary,
-                maxLines = 6,
-                overflow = TextOverflow.Ellipsis
+                color = colors.textSecondary,
+                maxLines = if (descriptionExpanded) Int.MAX_VALUE else 4,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = spaceLarge)
+            )
+            TextButton(onClick = { descriptionExpanded = !descriptionExpanded }) {
+                Text(if (descriptionExpanded) "Show less" else "Show more")
+            }
+        }
+        val tags = buildList {
+            metadata.category?.let { add(it) }
+            addAll(metadata.tags.take(4))
+        }
+        if (tags.isNotEmpty()) {
+            Text(
+                text = tags.joinToString(" \u00b7 "),
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.textMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = spaceLarge, vertical = spaceXSmall)
             )
         }
     }
@@ -469,7 +529,6 @@ private fun CaptionsSection(tracks: List<SubtitleTrack>, modifier: Modifier = Mo
             .padding(horizontal = spaceLarge, vertical = spaceSmall)
             .then(modifier)
     ) {
-        SectionHeader(title = "Captions")
         if (tracks.isEmpty()) {
             Text(
                 text = "No captions available for this stream.",
@@ -685,61 +744,6 @@ private fun TransportControls(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun PlaybackSettings(
-    state: PlaybackState,
-    onSpeed: (Float) -> Unit,
-    onVolume: (Float) -> Unit,
-    onToggleMute: () -> Unit,
-    onQuality: (Quality) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = spaceLarge)) {
-        Text(
-            text = "Speed",
-            style = MaterialTheme.typography.labelMedium,
-            color = plusColors().textSecondary
-        )
-        Spacer(Modifier.height(spaceSmall))
-        FilterChipRow(
-            options = SpeedOptions.map { "${formatSpeed(it)}×" },
-            selectedIndex = SpeedOptions.indexOfFirst { it == state.playbackSpeed }.coerceAtLeast(0),
-            onSelect = { onSpeed(SpeedOptions[it]) },
-            contentPadding = PaddingValues(0.dp)
-        )
-        Spacer(Modifier.height(spaceNormal))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "Volume",
-                style = MaterialTheme.typography.labelMedium,
-                color = plusColors().textSecondary
-            )
-            Slider(
-                value = state.volume.coerceIn(0f, 1f),
-                onValueChange = onVolume,
-                valueRange = 0f..1f,
-                modifier = Modifier.weight(1f).padding(horizontal = spaceNormal)
-            )
-            TextButton(onClick = onToggleMute) {
-                Text(if (state.isMuted) "Unmute" else "Mute")
-            }
-        }
-        Spacer(Modifier.height(spaceNormal))
-        Text(
-            text = "Quality",
-            style = MaterialTheme.typography.labelMedium,
-            color = plusColors().textSecondary
-        )
-        Spacer(Modifier.height(spaceSmall))
-        val qualities = Quality.entries
-        FilterChipRow(
-            options = qualities.map { it.label },
-            selectedIndex = qualities.indexOf(state.quality).coerceAtLeast(0),
-            onSelect = { onQuality(qualities[it]) },
-            contentPadding = PaddingValues(0.dp)
-        )
     }
 }
 

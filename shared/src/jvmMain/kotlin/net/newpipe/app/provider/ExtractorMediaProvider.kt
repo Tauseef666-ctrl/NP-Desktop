@@ -13,6 +13,8 @@ import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.Page
 import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.channel.tabs.ChannelTabs
+import org.schabi.newpipe.extractor.comments.CommentsInfo
+import org.schabi.newpipe.extractor.comments.CommentsInfoItem
 import org.schabi.newpipe.extractor.exceptions.ExtractionException
 import org.schabi.newpipe.extractor.exceptions.ParsingException
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException
@@ -178,12 +180,25 @@ class ExtractorMediaProvider : MediaProvider {
         val result = guarded {
             val info = StreamInfo.getInfo(ServiceList.YouTube, url)
             val isLive = isLiveStreamType(info.streamType)
+            System.err.println(
+                "[NewPipe+] streams: muxed=${info.videoStreams.size} " +
+                    "videoOnly=${info.videoOnlyStreams.size} audio=${info.audioStreams.size} " +
+                    "muxedIds=${info.videoStreams.map { it.id }} " +
+                    "videoIds=${info.videoOnlyStreams.map { "${it.id}/${it.height}" }} " +
+                    "audioIds=${info.audioStreams.map { it.id }} " +
+                    "mpd=${info.dashMpdUrl?.take(80)} hls=${info.hlsUrl?.take(60)}"
+            )
             pickResolvedMedia(
                 isLive = isLive,
                 hlsUrl = info.hlsUrl,
                 durationSeconds = info.duration,
                 progressiveVideo = info.videoStreams.mapNotNull { stream ->
-                    stream.url?.let { VideoCandidate(it, stream.height) }
+                    stream.url?.let { VideoCandidate(it, stream.height, stream.format?.suffix) }
+                },
+                dashVideo = info.videoOnlyStreams.mapNotNull { stream ->
+                    stream.url?.let {
+                        VideoCandidate(it, stream.height, stream.format?.suffix, videoOnly = true)
+                    }
                 },
                 audioStreams = info.audioStreams.mapNotNull { it.url }
             )
@@ -198,7 +213,7 @@ class ExtractorMediaProvider : MediaProvider {
 
     /**
      * Read the descriptive [StreamMetadata] of the stream page at [url] from the same extractor page
-     * that playback uses.
+     * that playback uses. Related/recommended videos ride along on that same page.
      */
     override suspend fun streamMetadata(url: String): ProviderResult<StreamMetadata> =
         guarded {
@@ -218,8 +233,33 @@ class ExtractorMediaProvider : MediaProvider {
                 description = info.description?.content(),
                 category = info.category,
                 tags = info.tags.orEmpty(),
-                isLive = isLive
+                isLive = isLive,
+                related = info.relatedItems.orEmpty().mapNotNull(::pureMapItem)
             )
+        }
+
+    /**
+     * Read the first page of top-level comments of the stream page at [url]. Comments are a
+     * separate extractor request in NewPipeExtractor, so this costs one extra network call;
+     * failures surface as a normal [ProviderResult.Failure] the UI shows honestly.
+     */
+    override suspend fun comments(url: String): ProviderResult<List<CommentItem>> =
+        guarded {
+            val info = CommentsInfo.getInfo(ServiceList.YouTube, url)
+            val extractor = info.commentsExtractor
+            extractor.fetchPage()
+            val page = extractor.initialPage
+            page.items.orEmpty().mapNotNull { item ->
+                val comment = item as CommentsInfoItem
+                CommentItem(
+                    text = comment.commentText?.content().orEmpty(),
+                    authorName = comment.uploaderName.orEmpty(),
+                    authorAvatarUrl = bestThumbnail(comment.uploaderAvatars),
+                    likeCount = if (comment.likeCount == 0) null else comment.likeCount.toLong(),
+                    replyCount = if (comment.replyCount < 0) null else comment.replyCount.toLong(),
+                    textualDate = comment.textualUploadDate?.takeIf { it.isNotBlank() }
+                )
+            }
         }
 
     /**
@@ -506,20 +546,32 @@ class ExtractorMediaProvider : MediaProvider {
         private fun widen(page: ListExtractor.InfoItemsPage<*>): ListExtractor.InfoItemsPage<InfoItem> =
             page as ListExtractor.InfoItemsPage<InfoItem>
 
-        /** A progressive video rendition candidate: its direct URL and nominal height. */
-        data class VideoCandidate(val url: String, val height: Int)
+        /**
+         * A video rendition candidate: its direct URL, nominal height and whether it carries no
+         * audio of its own (DASH video-only, which needs a separate audio supply to be heard).
+         */
+        data class VideoCandidate(
+            val url: String,
+            val height: Int,
+            val fileExtension: String? = null,
+            val videoOnly: Boolean = false
+        )
 
         /**
-         * Pure selection of a playable rendition. Live streams prefer their HLS manifest; otherwise the
-         * highest-height progressive (muxed audio+video) stream is used, falling back to the first audio-only
-         * stream when no progressive stream exists. Returns `null` when nothing playable is available.
+         * Pure selection of a playable rendition. Live streams prefer their HLS manifest; otherwise
+         * the highest-height muxed (audio+video) stream is used. YouTube now serves many videos only
+         * as separate DASH tracks, so when there is no muxed stream the best video-only stream is
+         * paired with the best audio stream: libVLC plays the audio as a slave input, which is what
+         * makes those videos both visible and audible. Only when no video exists at all does this
+         * fall back to plain audio. Returns `null` when nothing playable is available.
          */
         fun pickResolvedMedia(
             isLive: Boolean,
             hlsUrl: String?,
             durationSeconds: Long,
             progressiveVideo: List<VideoCandidate>,
-            audioStreams: List<String>
+            dashVideo: List<VideoCandidate> = emptyList(),
+            audioStreams: List<String> = emptyList()
         ): ResolvedMedia? {
             if (isLive) {
                 hlsUrl?.takeIf { it.isNotBlank() }?.let {
@@ -527,16 +579,44 @@ class ExtractorMediaProvider : MediaProvider {
                 }
             }
             val knownDuration = durationSeconds.takeIf { it > 0L }
-            val bestVideo = progressiveVideo.filter { it.url.isNotBlank() }.maxByOrNull { it.height }
-            if (bestVideo != null) {
+            val bestMuxed = progressiveVideo
+                .filter { it.url.isNotBlank() && !it.videoOnly }
+                .maxByOrNull { it.height }
+            if (bestMuxed != null) {
                 return ResolvedMedia(
-                    streamUrl = bestVideo.url,
+                    streamUrl = bestMuxed.url,
                     isLive = isLive,
                     audioOnly = false,
-                    durationSeconds = if (isLive) null else knownDuration
+                    durationSeconds = if (isLive) null else knownDuration,
+                    fileExtension = bestMuxed.fileExtension
                 )
             }
             val audio = audioStreams.firstOrNull { it.isNotBlank() }
+            // DASH-only videos (no muxed rendition) are also served as an HLS manifest whose
+            // variants carry picture and sound in one input. Playing that single input keeps both
+            // tracks on libVLC's one clock; the video-only + audio-slave pairing drifts (libVLC
+            // reported PCR jitter of seconds) and the sound ends up silent or badly out of sync.
+            hlsUrl?.takeIf { it.isNotBlank() }?.let {
+                return ResolvedMedia(
+                    streamUrl = it,
+                    isLive = isLive,
+                    audioOnly = false,
+                    durationSeconds = knownDuration
+                )
+            }
+            val bestVideoOnly = dashVideo
+                .filter { it.url.isNotBlank() }
+                .maxByOrNull { it.height }
+            if (bestVideoOnly != null) {
+                return ResolvedMedia(
+                    streamUrl = bestVideoOnly.url,
+                    isLive = isLive,
+                    audioOnly = false,
+                    durationSeconds = if (isLive) null else knownDuration,
+                    fileExtension = bestVideoOnly.fileExtension,
+                    audioUrl = audio
+                )
+            }
             if (audio != null) {
                 return ResolvedMedia(
                     streamUrl = audio,
@@ -566,7 +646,8 @@ class ExtractorMediaProvider : MediaProvider {
             description: String?,
             category: String?,
             tags: List<String>,
-            isLive: Boolean
+            isLive: Boolean,
+            related: List<ProviderContentItem> = emptyList()
         ): StreamMetadata = StreamMetadata(
             title = title,
             uploaderName = uploaderName?.takeIf { it.isNotBlank() },
@@ -581,7 +662,8 @@ class ExtractorMediaProvider : MediaProvider {
             description = description?.takeIf { it.isNotBlank() },
             category = category?.takeIf { it.isNotBlank() },
             tags = tags.filter { it.isNotBlank() },
-            isLive = isLive
+            isLive = isLive,
+            related = related
         )
 
         /** The raw subtitle fields of one extractor track, as read off a stream page. */

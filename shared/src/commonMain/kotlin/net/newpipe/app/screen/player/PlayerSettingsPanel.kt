@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -76,7 +77,11 @@ fun PlayerQuickSettings(
     onRepeatMode: (RepeatMode) -> Unit = {},
     onAutoplayNext: (Boolean) -> Unit = {},
     onSubtitles: (Boolean) -> Unit = {},
-    onAudioTrack: (String) -> Unit = {}
+    onAudioTrack: (String) -> Unit = {},
+    onSpeed: (Float) -> Unit = {},
+    onVolume: (Float) -> Unit = {},
+    onToggleMute: () -> Unit = {},
+    onQuality: (Quality) -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         SectionHeader(title = stringResource(Res.string.player_quick_settings))
@@ -113,10 +118,15 @@ fun PlayerQuickSettings(
                 settings = settings,
                 repeatMode = repeatMode,
                 isEngineAvailable = isEngineAvailable,
+                state = state,
                 onRepeatMode = onRepeatMode,
                 onAutoplayNext = onAutoplayNext,
                 onSubtitles = onSubtitles,
-                onAudioTrack = onAudioTrack
+                onAudioTrack = onAudioTrack,
+                onSpeed = onSpeed,
+                onVolume = onVolume,
+                onToggleMute = onToggleMute,
+                onQuality = onQuality
             )
         }
     }
@@ -206,19 +216,72 @@ private fun SettingIndicator(
     }
 }
 
-/** Expandable advanced controls: loop, autoplay next, subtitles and audio track. */
+/** Expandable advanced controls: speed, volume, quality, loop, autoplay, subtitles and audio track. */
 @Composable
 fun PlayerAdvancedSettings(
     settings: VideoSettings,
     repeatMode: RepeatMode,
     isEngineAvailable: Boolean,
     modifier: Modifier = Modifier,
+    state: PlaybackState = PlaybackState(),
     onRepeatMode: (RepeatMode) -> Unit = {},
     onAutoplayNext: (Boolean) -> Unit = {},
     onSubtitles: (Boolean) -> Unit = {},
-    onAudioTrack: (String) -> Unit = {}
+    onAudioTrack: (String) -> Unit = {},
+    onSpeed: (Float) -> Unit = {},
+    onVolume: (Float) -> Unit = {},
+    onToggleMute: () -> Unit = {},
+    onQuality: (Quality) -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = spaceLarge)) {
+        Text(
+            text = "Speed",
+            style = MaterialTheme.typography.labelMedium,
+            color = plusColors().textSecondary
+        )
+        Spacer(Modifier.height(spaceSmall))
+        SettingsChipRow(
+            options = SpeedOptions.map { "${formatSpeedLabel(it)}×" },
+            selectedIndex = SpeedOptions.indexOfFirst { it == state.playbackSpeed }
+                .coerceAtLeast(0),
+            enabled = true,
+            onSelect = { onSpeed(SpeedOptions[it]) }
+        )
+        Spacer(Modifier.height(spaceNormal))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Volume",
+                style = MaterialTheme.typography.labelMedium,
+                color = plusColors().textSecondary,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onToggleMute) {
+                Text(if (state.isMuted) "Unmute" else "Mute")
+            }
+        }
+        Slider(
+            value = state.volume,
+            onValueChange = onVolume,
+            valueRange = 0f..1f,
+            enabled = !state.isMuted
+        )
+        Spacer(Modifier.height(spaceNormal))
+        Text(
+            text = "Quality",
+            style = MaterialTheme.typography.labelMedium,
+            color = plusColors().textSecondary
+        )
+        Spacer(Modifier.height(spaceSmall))
+        SettingsChipRow(
+            options = Quality.entries.map { it.label },
+            selectedIndex = Quality.entries.indexOf(state.quality).coerceAtLeast(0),
+            enabled = true,
+            onSelect = { onQuality(Quality.entries[it]) }
+        )
+        Spacer(Modifier.height(spaceNormal))
         Text(
             text = stringResource(Res.string.player_loop),
             style = MaterialTheme.typography.labelMedium,
@@ -316,6 +379,9 @@ private fun boolLabel(value: Boolean): String = if (value) "On" else "Off"
 
 private fun formatSpeedLabel(speed: Float): String =
     if (speed % 1f == 0f) speed.toInt().toString() else speed.toString()
+
+/** Playback speeds offered by the advanced panel (and cycled by the overlay speed button). */
+private val SpeedOptions = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f)
 
 @PreviewWrapper(ThemePreviewProvider::class)
 @PreviewLightDark

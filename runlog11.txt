@@ -1,0 +1,248 @@
+Calculating task graph as configuration cache cannot be reused because an input to unknown location has changed.
+Type-safe project accessors is an incubating feature.
+> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :buildSrc:compileKotlin UP-TO-DATE
+> Task :buildSrc:compileJava NO-SOURCE
+> Task :buildSrc:compileGroovy NO-SOURCE
+> Task :buildSrc:pluginDescriptors UP-TO-DATE
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+> Task :desktopApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :shared:convertXmlValueResourcesForJvmMain NO-SOURCE
+> Task :desktopApp:prepareAppResources NO-SOURCE
+> Task :desktopApp:convertXmlValueResourcesForMain NO-SOURCE
+> Task :shared:kmpPartiallyResolvedDependenciesChecker
+> Task :shared:copyNonXmlValueResourcesForJvmMain NO-SOURCE
+> Task :shared:checkJvmMainComposeLibrariesCompatibility
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :desktopApp:copyNonXmlValueResourcesForMain NO-SOURCE
+> Task :shared:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :desktopApp:downloadVlcBundle UP-TO-DATE
+> Task :desktopApp:generateComposeResClass SKIPPED
+> Task :shared:generateComposeResClass UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForJvmMain NO-SOURCE
+> Task :desktopApp:prepareComposeResourcesTaskForMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForMain SKIPPED
+> Task :desktopApp:generateActualResourceCollectorsForMain SKIPPED
+> Task :shared:generateResourceAccessorsForJvmMain NO-SOURCE
+> Task :desktopApp:assembleMainResources UP-TO-DATE
+> Task :desktopApp:processResources UP-TO-DATE
+> Task :shared:buildConfigGenerator
+> Task :shared:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :shared:assembleJvmMainResources UP-TO-DATE
+> Task :shared:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :shared:generateActualResourceCollectorsForJvmMain UP-TO-DATE
+> Task :shared:jvmProcessResources UP-TO-DATE
+> Task :shared:processJvmMainResources SKIPPED
+> Task :shared:compileKotlinJvm UP-TO-DATE
+> Task :shared:compileJvmMainJava NO-SOURCE
+> Task :shared:jvmMainClasses UP-TO-DATE
+> Task :shared:jvmJar
+> Task :desktopApp:compileKotlin
+> Task :desktopApp:compileJava NO-SOURCE
+> Task :desktopApp:classes UP-TO-DATE
+> Task :desktopApp:jar UP-TO-DATE
+
+> Task :desktopApp:run
+[INFO] [Koin] Started 25 definitions in 4.545 ms
+[INFO] [Koin] Started 103 definitions in 1.121 ms
+[NewPipe+] trying bundled libVLC at C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21
+[NewPipe+] bundled libVLC discovered
+[NewPipe+] vlc factory args=[]
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] prepare: host=manifest.googlevideo.com audioOnly=false slaveAudio=false frameSinks=0
+[NewPipe+] video surface: callback sink bound
+Exception in thread "media-player-events" java.lang.IllegalArgumentException: Value too long: {
+    "items": [
+        {
+            "id": "https://www.youtube.com/watch?v=EDbWwVR7i9Q",
+            "title": "GB News Live: Watch GB News 24/7",
+            "url": "https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792672152/ei/OK3ZasCCB9Xo1_oPiNuqmAE/ip/152.56.142.169/id/EDbWwVR7i9Q.1/source/yt_live_broadcast/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/hfr/1/playlist_duration/30/manifest_duration/30/demuxed/1/maudio/1/ss/1/bui/AWzQHwpb9CvD82CdKp8E3yR58Oot4sIohynZpLXfL30w2bjtapzPAfthOK91xcIBXTBQQKuit5f7vX2i/spc/mpRQ_92S8242E_jkoqmjjyIX9KLJnoBYtvz4TbLcWKoFWMmPMHmFsmWaB7h_/vprv/1/go/1/rqh/5/reg/0/pacing/0/epbp/1/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565115/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cplaylist_duration%2Cmanifest_duration%2Cdemuxed%2Cmaudio%2Css%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Creg%2Citag%2Cplaylist_type/sig/AE0s2JYwRgIhAKQO7hlM8mbafrKNtRfRSVMOrdnYxTrB9R8b0FEaCPZuAiEAtoBYQo8WkByHjRwcpI_AHXUmomplEVsgL6W0HylsTi4%3D/file/index.m3u8?",
+            "playedAtEpochMs": 1792650559950
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=umLWFz4izTM",
+            "title": "Watch Sky News live",
+            "url": "https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792671189/ei/danZavGeBNqz9fwPv-Cw6AM/ip/152.56.142.169/id/umLWFz4izTM.3/source/yt_live_broadcast/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/hfr/1/playlist_duration/3600/manifest_duration/3600/demuxed/1/maudio/1/ss/1/bui/AWzQHwr5GUvi53TUtHA5v8sjutllYao16aeJhG11JA6-swaXN4rSL05-xSZeTYoo_c39MjckD1EzpbU6/spc/mpRQ__IXPF97LPLCaY4cHIR6zar2JZGT54tXu3xO-Cd4IJx52uk9bBRlHox1/vprv/1/go/1/rqh/5/reg/0/pacing/0/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116%2C52271469/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cplaylist_duration%2Cmanifest_duration%2Cdemuxed%2Cmaudio%2Css%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Creg%2Citag%2Cplaylist_type/sig/AE0s2JYwRgIhAJVidlBLhzlyHJOe9umsuDKpLd1_Z_eHyG2P7Cezp63nAiEAxvMQL_YFHXoOUOlcF5E1nfFShP9pZYueNJh_k_ALFgg%3D/file/index.m3u8?",
+            "playedAtEpochMs": 1792649596224
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=u85ejbcFfrQ",
+            "title": "Dussehra Special: CID Team Receives Time Bomb Threat at Dussehra Ground || CID | Latest Episode ||",
+            "url": "https://rr2---sn-gwpa-3o0s.googlevideo.com/videoplayback?expire=1792670636&ei=TKfZapLMDZul9fwPp7LlgAY&ip=152.56.142.169&id=o-AB8t_xWoiyJZY566QYgWy9PHSPAicdTauAmDab_kLquL&itag=137&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=1010&met=1792649036%2C&mh=yL&mm=18%2C29&mn=sn-gwpa-3o0s%2Csn-gwpa-qxae7&ms=aub%2Crdu&mv=m&mvi=2&pcm2cms=yes&pl=23&rms=aub%2Caub&initcwndbps=479750&bui=AWzQHwqWiXuN4OBxQUPKKr4ByYcfH42ckftn-POu--mM6YUoRRSKx8oQjH19puHN1AQmtx4VPgF5nABo&spc=mpRQ_9gIxD6xjn8TdrVR_XzKBL7LZ_W8sBLzX_D2ToSeRdVQBISQ3n47XTA1&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=1102907166&dur=2594.266&lmt=1792616031441641&mt=1792648397&fvip=1&epbp=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=5532234&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgV1LHSAPlbwMslLuyMlcKPb6WQnUmRyQA4A6Qke3GuVECIQDoqNz2aPOLRuhW9C8QCXCgWWsJHFQ32y6xI0yrEe_xng%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRAIgNkwhRqxFZcK83REMm07XQw8ul5fXbCBL_5ST0Yr8HRUCIBvjqSndBBMocw30k33n5wPayXG9KUSUJR-PbxzSkET-&cpn=1jUI2AnpupvybV0U",
+            "durationMs": 2594000,
+            "playedAtEpochMs": 1792649044730
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=4gHKLL5YkT0",
+            "title": "?????? ????? ??? CID ?? ?????? ?????, ??? ?? ????? ?? ???? ?????? | CID | Horror Story | New Episode",
+            "url": "https://rr6---sn-gwpa-3o0l.googlevideo.com/videoplayback?expire=1792621060&ei=pOXYavLuDo_c3LUPgqyQ6Q4&ip=152.56.142.77&id=o-AHmJ6EjPcT1wW8lxEwdEPZfdvtedyOAwqWg6DxcL6Oqp&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=682&met=1792599460%2C&mh=2e&mm=18%2C29&mn=sn-gwpa-3o0l%2Csn-gwpa-qxak&ms=aub%2Crdu&mv=m&mvi=6&pl=23&rms=aub%2Caub&pcm2=no&initcwndbps=381500&bui=AWzQHwqVyJG3CJhW04CPe6TYqvqqL5wKnGEfwn1Kqg94M1yLLdokoyN0e9n7RO-Att2u7Xu9FVHJpGJH&spc=mpRQ_yrGYUfKK2UtIcJTnhOsupNK3n-oa_DXqzDqxGfh9OEud3zxWg9oSvT4&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=15594794&dur=2557.259&lmt=1792098829081401&mt=1792598983&fvip=1&keepalive=yes&fexp=51565115%2C52184237&c=VISIONOS&txp=3308224&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cpcm2%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgHDnrKpp45cyJL9YgRyFzsn15WX3VZt2EcQfHMo1GyuMCIQCwrYf3OnMqVSETILbbVDlA_QgGboKZwVNxIMWEzK9D6A%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRAIgb0uc4pSrNAthqZR5--1cNOZ5HrY2mwmh0_qjB6dBboQCICOWfh0kV2JOZXVGhOtle_0B7uO9A8p_3UI_hFkK8zF5&cpn=T0nsU4srjRnLto_7",
+            "durationMs": 2557000,
+            "playedAtEpochMs": 1792599463625
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=C_kDKWbhO7o",
+            "title": "North Sentinel Island ?? ???? CID, ????? ?? ???? ?????? ????! | CID | C.I.D. | New Episode 2026",
+            "url": "https://rr2---sn-gwpa-a3vl7.googlevideo.com/videoplayback?expire=1792588589&ei=zWbYatyTIZva3LUP-9CSgA0&ip=152.58.155.245&id=o-AC_G2AOZL5NF3PUgOCSj_rPY1z4Wu-6qWmgqGwAxySXM&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=759&met=1792566989%2C&mh=Oo&mm=18%2C29&mn=sn-gwpa-a3vl7%2Csn-gwpa-qxak&ms=aub%2Crdu&mv=m&mvi=2&pl=24&rms=aub%2Caub&initcwndbps=640500&bui=AWzQHwq6rPlCBoTziJRFrDc_6_geyxuQFEXAfO6L_KUW68CkYorsT3-gEJu5ZfdqtMmK10KH4oH2E69r&spc=mpRQ_xKFLkBimcRkanZpouDVfE0kvx-jt3cmU7Tl9ON8wcjwlotsIlvvhjuU&vprv=1&svpuc=1&xtags=acont%3Ddubbed-auto%3Alang%3Den-US&mime=audio%2Fmp4&rqh=1&gir=yes&clen=15974234&dur=2619.535&lmt=1792303295260474&mt=1792566586&fvip=1&epbp=1&keepalive=yes&fexp=51565115&c=VISIONOS&txp=6318224&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cxtags%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRgIhAMZ_C32umRzgYhbqwMX8Tgn3wJFOTumC4sL4iXKtaXzWAiEAlPAT7Rf0YQSucLTVDyt-_Px39ZNa14X4NnPUMpp7pxs%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIgLYEwYD-0KA40LbQq2Lni5frqnzBTSw6Dqhu6c65nvQ8CIQCFTNzWBvHqJjlY323hNs9zqcCBkV4QpxP-VlmwF22erw%3D%3D&cpn=-NfUmQxNMCTKX4aD",
+            "durationMs": 2619000,
+            "playedAtEpochMs": 1792566997131
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=W-7gnGZ-TSg",
+            "title": "? LIVE! - FREE *SLENDERMAN* SKIN in FORTNITE! (TOP 100 TOURNAMENT)",
+            "url": "https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792586173/ei/XV3YaubAJYaQssUPqJnlmAc/ip/152.58.155.245/id/W-7gnGZ-TSg.1/source/yt_live_broadcast/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/hfr/1/playlist_duration/900/manifest_duration/900/demuxed/1/maudio/1/bui/AWzQHwqnF6MNiin4iWdHn-yrzuyJSdyYxTSufdOB9idD8m08x3Iw1hge-pNVTOyPfWXmbyefukl-HLlu/spc/mpRQ__SO2ZKlO_qOfZM-UzkT092ViEO_4EnjDLPUd5FbvtlFocLg6bzL1xh4/vprv/1/go/1/rqh/5/reg/0/pacing/0/epbp/1/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116%2C52184236/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cplaylist_duration%2Cmanifest_duration%2Cdemuxed%2Cmaudio%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Creg%2Citag%2Cplaylist_type/sig/AE0s2JYwRgIhANCAHCgAgYl2RCGvWzQZd_rQUIFbHqfu5KI7heEj7IOvAiEA-4hVtaORa2QISdOiTat4jmq7k_ndnTqXCwwgCqC3K4s%3D/file/index.m3u8?",
+            "playedAtEpochMs": 1792564608436
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=1mwmCIx4LqY",
+            "title": "CID New Episode | Crime Story 2026 | ??.??.??. | CID | New Episode 2026 | Crime Series 2026",
+            "url": "https://rr1---sn-gwpa-a3vl7.googlevideo.com/videoplayback?expire=1792432898&ei=ogbWar6JBYrc3LUP9oeTkAU&ip=152.56.144.134&id=o-ALFud3P2fYmHPjN6yNULEfeGSxrZ8JzIqTG4ptul4AjI&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=954&met=1792411298%2C&mh=Tp&mm=18%2C29&mn=sn-gwpa-a3vl7%2Csn-gwpa-qxae7&ms=aub%2Crdu&mv=m&mvi=1&pl=23&rms=aub%2Caub&gcr=in&initcwndbps=809375&bui=AWzQHwrU8BsQ4n6AMDw-26jkYmzlt8KThxEorAZMr-RDRzeF0SJdzboOPF9tSK1IwcZvVnxj4DPY3p12&spc=mpRQ_9yxXz4yuaR0mCxxATFTli83wEAZIrmYD6GMdhl5oDp5gG7U9DjdR0s7&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=13482143&dur=2210.864&lmt=1792409095789331&mt=1792410799&fvip=6&keepalive=yes&fexp=51565116%2C52227521%2C52271470&c=VISIONOS&txp=5532234&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cgcr%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRAIgfqggbuV3IItQNzf6Ge8E92uaN_LmLdyIGJUKL5VClBkCIHesFvxAl5IucI0lHBVfmv6TGxReTFTll9n-wjfJ4QF_&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIgIp-yl_n2-FrjG8FYqGP6o-SnUJ-nCoT8UbJO7K1B9qICIQCwAHHZfCvkF1O78EA8Kbz1vW1RXRoyJ02_iZL_RhBWoQ%3D%3D&cpn=-W_OPYkeAzO6WWLa",
+            "durationMs": 2211000,
+            "playedAtEpochMs": 1792411302504
+        }
+    ]
+}
+	at java.prefs/java.util.prefs.AbstractPreferences.put(AbstractPreferences.java:248)
+	at com.russhwolf.settings.PreferencesSettings.putString(PreferencesSettings.kt:83)
+	at net.newpipe.app.player.RecentlyPlayedStore.persist(RecentlyPlayedStore.kt:90)
+	at net.newpipe.app.player.RecentlyPlayedStore.record(RecentlyPlayedStore.kt:63)
+	at net.newpipe.app.player.RecentlyPlayedStore.record$default(RecentlyPlayedStore.kt:59)
+	at net.newpipe.app.viewmodel.player.PlayerViewModel$1$1.emit(PlayerViewModel.kt:78)
+	at net.newpipe.app.viewmodel.player.PlayerViewModel$1$1.emit(PlayerViewModel.kt:72)
+	at kotlinx.coroutines.flow.StateFlowImpl.collect(StateFlow.kt:401)
+	at kotlinx.coroutines.flow.StateFlowImpl$collect$1.invokeSuspend(StateFlow.kt)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTaskKt.resume(DispatchedTask.kt:233)
+	at kotlinx.coroutines.DispatchedTaskKt.resumeUnconfined(DispatchedTask.kt:175)
+	at kotlinx.coroutines.DispatchedTaskKt.dispatch(DispatchedTask.kt:147)
+	at kotlinx.coroutines.CancellableContinuationImpl.dispatchResume(CancellableContinuationImpl.kt:470)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$kotlinx_coroutines_core(CancellableContinuationImpl.kt:504)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$kotlinx_coroutines_core$default(CancellableContinuationImpl.kt:493)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeWith(CancellableContinuationImpl.kt:359)
+	at kotlinx.coroutines.flow.StateFlowSlot.makePending(StateFlow.kt:290)
+	at kotlinx.coroutines.flow.StateFlowImpl.updateState(StateFlow.kt:354)
+	at kotlinx.coroutines.flow.StateFlowImpl.setValue(StateFlow.kt:321)
+	at net.newpipe.app.platform.JVMPlayerEngine$listener$1.playing(JVMPlayerEngine.kt:172)
+	at uk.co.caprica.vlcj.player.base.events.MediaPlayerPlayingEvent.notify(MediaPlayerPlayingEvent.java:36)
+	at uk.co.caprica.vlcj.player.base.events.MediaPlayerPlayingEvent.notify(MediaPlayerPlayingEvent.java:28)
+	at uk.co.caprica.vlcj.support.eventmanager.NativeEventManager.raiseEvent(NativeEventManager.java:179)
+	at uk.co.caprica.vlcj.support.eventmanager.NativeEventManager$EventCallback.callback(NativeEventManager.java:206)
+	Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}@7a550238, Dispatchers.Unconfined]
+[NewPipe+] video probe: status=PAUSED tracks=2 dimension=java.awt.Dimension[width=256,height=144]
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] prepare: host=manifest.googlevideo.com audioOnly=false slaveAudio=false frameSinks=0
+[NewPipe+] video surface: callback sink bound
+Exception in thread "media-player-events" java.lang.IllegalArgumentException: Value too long: {
+    "items": [
+        {
+            "id": "https://www.youtube.com/watch?v=H9W1YxeeM-g",
+            "title": "GREATEST FIGHTS FROM UFC 333 Fighters ?",
+            "url": "https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792672206/ei/ba3Zavq4PPGCpN8P2OmH0Qk/ip/152.56.142.169/id/H9W1YxeeM-g.1/source/yt_live_broadcast/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/tx/51929566/txs/51929566%2C51929567%2C51929568/hfr/1/playlist_duration/30/manifest_duration/30/demuxed/1/maudio/1/bui/AWzQHwpU-HYmHLeAzbC8qUI5D17GXe9AFhe4V0Y4fw0Zg5yYbz1JDFFF-jvtZ7rJbAIDR8CObU_cVXRU/spc/mpRQ_5wDCL8H6ygk-Ls_0pBKTBeilsGoZ5D87bUBSHK5Q7EyXY5ogMuxaCRV/vprv/1/go/1/rqh/5/reg/0/pacing/0/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565115/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Ctx%2Ctxs%2Chfr%2Cplaylist_duration%2Cmanifest_duration%2Cdemuxed%2Cmaudio%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Creg%2Citag%2Cplaylist_type/sig/AE0s2JYwRQIhAJ4w1V_-KKdojtdida1PANgvMMX0hRa05wYxWtwddhRKAiB0rY28E6BssPcvGjCwLxofpeReNdth2wVpZsoGQcj06Q%3D%3D/file/index.m3u8?",
+            "playedAtEpochMs": 1792650611984
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=EDbWwVR7i9Q",
+            "title": "GB News Live: Watch GB News 24/7",
+            "url": "https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792672152/ei/OK3ZasCCB9Xo1_oPiNuqmAE/ip/152.56.142.169/id/EDbWwVR7i9Q.1/source/yt_live_broadcast/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/hfr/1/playlist_duration/30/manifest_duration/30/demuxed/1/maudio/1/ss/1/bui/AWzQHwpb9CvD82CdKp8E3yR58Oot4sIohynZpLXfL30w2bjtapzPAfthOK91xcIBXTBQQKuit5f7vX2i/spc/mpRQ_92S8242E_jkoqmjjyIX9KLJnoBYtvz4TbLcWKoFWMmPMHmFsmWaB7h_/vprv/1/go/1/rqh/5/reg/0/pacing/0/epbp/1/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565115/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cplaylist_duration%2Cmanifest_duration%2Cdemuxed%2Cmaudio%2Css%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Creg%2Citag%2Cplaylist_type/sig/AE0s2JYwRgIhAKQO7hlM8mbafrKNtRfRSVMOrdnYxTrB9R8b0FEaCPZuAiEAtoBYQo8WkByHjRwcpI_AHXUmomplEVsgL6W0HylsTi4%3D/file/index.m3u8?",
+            "playedAtEpochMs": 1792650559950
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=umLWFz4izTM",
+            "title": "Watch Sky News live",
+            "url": "https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792671189/ei/danZavGeBNqz9fwPv-Cw6AM/ip/152.56.142.169/id/umLWFz4izTM.3/source/yt_live_broadcast/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/hfr/1/playlist_duration/3600/manifest_duration/3600/demuxed/1/maudio/1/ss/1/bui/AWzQHwr5GUvi53TUtHA5v8sjutllYao16aeJhG11JA6-swaXN4rSL05-xSZeTYoo_c39MjckD1EzpbU6/spc/mpRQ__IXPF97LPLCaY4cHIR6zar2JZGT54tXu3xO-Cd4IJx52uk9bBRlHox1/vprv/1/go/1/rqh/5/reg/0/pacing/0/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116%2C52271469/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cplaylist_duration%2Cmanifest_duration%2Cdemuxed%2Cmaudio%2Css%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Creg%2Citag%2Cplaylist_type/sig/AE0s2JYwRgIhAJVidlBLhzlyHJOe9umsuDKpLd1_Z_eHyG2P7Cezp63nAiEAxvMQL_YFHXoOUOlcF5E1nfFShP9pZYueNJh_k_ALFgg%3D/file/index.m3u8?",
+            "playedAtEpochMs": 1792649596224
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=u85ejbcFfrQ",
+            "title": "Dussehra Special: CID Team Receives Time Bomb Threat at Dussehra Ground || CID | Latest Episode ||",
+            "url": "https://rr2---sn-gwpa-3o0s.googlevideo.com/videoplayback?expire=1792670636&ei=TKfZapLMDZul9fwPp7LlgAY&ip=152.56.142.169&id=o-AB8t_xWoiyJZY566QYgWy9PHSPAicdTauAmDab_kLquL&itag=137&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=1010&met=1792649036%2C&mh=yL&mm=18%2C29&mn=sn-gwpa-3o0s%2Csn-gwpa-qxae7&ms=aub%2Crdu&mv=m&mvi=2&pcm2cms=yes&pl=23&rms=aub%2Caub&initcwndbps=479750&bui=AWzQHwqWiXuN4OBxQUPKKr4ByYcfH42ckftn-POu--mM6YUoRRSKx8oQjH19puHN1AQmtx4VPgF5nABo&spc=mpRQ_9gIxD6xjn8TdrVR_XzKBL7LZ_W8sBLzX_D2ToSeRdVQBISQ3n47XTA1&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=1102907166&dur=2594.266&lmt=1792616031441641&mt=1792648397&fvip=1&epbp=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=5532234&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgV1LHSAPlbwMslLuyMlcKPb6WQnUmRyQA4A6Qke3GuVECIQDoqNz2aPOLRuhW9C8QCXCgWWsJHFQ32y6xI0yrEe_xng%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRAIgNkwhRqxFZcK83REMm07XQw8ul5fXbCBL_5ST0Yr8HRUCIBvjqSndBBMocw30k33n5wPayXG9KUSUJR-PbxzSkET-&cpn=1jUI2AnpupvybV0U",
+            "durationMs": 2594000,
+            "playedAtEpochMs": 1792649044730
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=4gHKLL5YkT0",
+            "title": "?????? ????? ??? CID ?? ?????? ?????, ??? ?? ????? ?? ???? ?????? | CID | Horror Story | New Episode",
+            "url": "https://rr6---sn-gwpa-3o0l.googlevideo.com/videoplayback?expire=1792621060&ei=pOXYavLuDo_c3LUPgqyQ6Q4&ip=152.56.142.77&id=o-AHmJ6EjPcT1wW8lxEwdEPZfdvtedyOAwqWg6DxcL6Oqp&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=682&met=1792599460%2C&mh=2e&mm=18%2C29&mn=sn-gwpa-3o0l%2Csn-gwpa-qxak&ms=aub%2Crdu&mv=m&mvi=6&pl=23&rms=aub%2Caub&pcm2=no&initcwndbps=381500&bui=AWzQHwqVyJG3CJhW04CPe6TYqvqqL5wKnGEfwn1Kqg94M1yLLdokoyN0e9n7RO-Att2u7Xu9FVHJpGJH&spc=mpRQ_yrGYUfKK2UtIcJTnhOsupNK3n-oa_DXqzDqxGfh9OEud3zxWg9oSvT4&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=15594794&dur=2557.259&lmt=1792098829081401&mt=1792598983&fvip=1&keepalive=yes&fexp=51565115%2C52184237&c=VISIONOS&txp=3308224&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cpcm2%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgHDnrKpp45cyJL9YgRyFzsn15WX3VZt2EcQfHMo1GyuMCIQCwrYf3OnMqVSETILbbVDlA_QgGboKZwVNxIMWEzK9D6A%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRAIgb0uc4pSrNAthqZR5--1cNOZ5HrY2mwmh0_qjB6dBboQCICOWfh0kV2JOZXVGhOtle_0B7uO9A8p_3UI_hFkK8zF5&cpn=T0nsU4srjRnLto_7",
+            "durationMs": 2557000,
+            "playedAtEpochMs": 1792599463625
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=C_kDKWbhO7o",
+            "title": "North Sentinel Island ?? ???? CID, ????? ?? ???? ?????? ????! | CID | C.I.D. | New Episode 2026",
+            "url": "https://rr2---sn-gwpa-a3vl7.googlevideo.com/videoplayback?expire=1792588589&ei=zWbYatyTIZva3LUP-9CSgA0&ip=152.58.155.245&id=o-AC_G2AOZL5NF3PUgOCSj_rPY1z4Wu-6qWmgqGwAxySXM&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=759&met=1792566989%2C&mh=Oo&mm=18%2C29&mn=sn-gwpa-a3vl7%2Csn-gwpa-qxak&ms=aub%2Crdu&mv=m&mvi=2&pl=24&rms=aub%2Caub&initcwndbps=640500&bui=AWzQHwq6rPlCBoTziJRFrDc_6_geyxuQFEXAfO6L_KUW68CkYorsT3-gEJu5ZfdqtMmK10KH4oH2E69r&spc=mpRQ_xKFLkBimcRkanZpouDVfE0kvx-jt3cmU7Tl9ON8wcjwlotsIlvvhjuU&vprv=1&svpuc=1&xtags=acont%3Ddubbed-auto%3Alang%3Den-US&mime=audio%2Fmp4&rqh=1&gir=yes&clen=15974234&dur=2619.535&lmt=1792303295260474&mt=1792566586&fvip=1&epbp=1&keepalive=yes&fexp=51565115&c=VISIONOS&txp=6318224&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cxtags%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRgIhAMZ_C32umRzgYhbqwMX8Tgn3wJFOTumC4sL4iXKtaXzWAiEAlPAT7Rf0YQSucLTVDyt-_Px39ZNa14X4NnPUMpp7pxs%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIgLYEwYD-0KA40LbQq2Lni5frqnzBTSw6Dqhu6c65nvQ8CIQCFTNzWBvHqJjlY323hNs9zqcCBkV4QpxP-VlmwF22erw%3D%3D&cpn=-NfUmQxNMCTKX4aD",
+            "durationMs": 2619000,
+            "playedAtEpochMs": 1792566997131
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=W-7gnGZ-TSg",
+            "title": "? LIVE! - FREE *SLENDERMAN* SKIN in FORTNITE! (TOP 100 TOURNAMENT)",
+            "url": "https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792586173/ei/XV3YaubAJYaQssUPqJnlmAc/ip/152.58.155.245/id/W-7gnGZ-TSg.1/source/yt_live_broadcast/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/hfr/1/playlist_duration/900/manifest_duration/900/demuxed/1/maudio/1/bui/AWzQHwqnF6MNiin4iWdHn-yrzuyJSdyYxTSufdOB9idD8m08x3Iw1hge-pNVTOyPfWXmbyefukl-HLlu/spc/mpRQ__SO2ZKlO_qOfZM-UzkT092ViEO_4EnjDLPUd5FbvtlFocLg6bzL1xh4/vprv/1/go/1/rqh/5/reg/0/pacing/0/epbp/1/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116%2C52184236/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cplaylist_duration%2Cmanifest_duration%2Cdemuxed%2Cmaudio%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Creg%2Citag%2Cplaylist_type/sig/AE0s2JYwRgIhANCAHCgAgYl2RCGvWzQZd_rQUIFbHqfu5KI7heEj7IOvAiEA-4hVtaORa2QISdOiTat4jmq7k_ndnTqXCwwgCqC3K4s%3D/file/index.m3u8?",
+            "playedAtEpochMs": 1792564608436
+        },
+        {
+            "id": "https://www.youtube.com/watch?v=1mwmCIx4LqY",
+            "title": "CID New Episode | Crime Story 2026 | ??.??.??. | CID | New Episode 2026 | Crime Series 2026",
+            "url": "https://rr1---sn-gwpa-a3vl7.googlevideo.com/videoplayback?expire=1792432898&ei=ogbWar6JBYrc3LUP9oeTkAU&ip=152.56.144.134&id=o-ALFud3P2fYmHPjN6yNULEfeGSxrZ8JzIqTG4ptul4AjI&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=954&met=1792411298%2C&mh=Tp&mm=18%2C29&mn=sn-gwpa-a3vl7%2Csn-gwpa-qxae7&ms=aub%2Crdu&mv=m&mvi=1&pl=23&rms=aub%2Caub&gcr=in&initcwndbps=809375&bui=AWzQHwrU8BsQ4n6AMDw-26jkYmzlt8KThxEorAZMr-RDRzeF0SJdzboOPF9tSK1IwcZvVnxj4DPY3p12&spc=mpRQ_9yxXz4yuaR0mCxxATFTli83wEAZIrmYD6GMdhl5oDp5gG7U9DjdR0s7&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=13482143&dur=2210.864&lmt=1792409095789331&mt=1792410799&fvip=6&keepalive=yes&fexp=51565116%2C52227521%2C52271470&c=VISIONOS&txp=5532234&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cgcr%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRAIgfqggbuV3IItQNzf6Ge8E92uaN_LmLdyIGJUKL5VClBkCIHesFvxAl5IucI0lHBVfmv6TGxReTFTll9n-wjfJ4QF_&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIgIp-yl_n2-FrjG8FYqGP6o-SnUJ-nCoT8UbJO7K1B9qICIQCwAHHZfCvkF1O78EA8Kbz1vW1RXRoyJ02_iZL_RhBWoQ%3D%3D&cpn=-W_OPYkeAzO6WWLa",
+            "durationMs": 2211000,
+            "playedAtEpochMs": 1792411302504
+        }
+    ]
+}
+	at java.prefs/java.util.prefs.AbstractPreferences.put(AbstractPreferences.java:248)
+	at com.russhwolf.settings.PreferencesSettings.putString(PreferencesSettings.kt:83)
+	at net.newpipe.app.player.RecentlyPlayedStore.persist(RecentlyPlayedStore.kt:90)
+	at net.newpipe.app.player.RecentlyPlayedStore.record(RecentlyPlayedStore.kt:63)
+	at net.newpipe.app.player.RecentlyPlayedStore.record$default(RecentlyPlayedStore.kt:59)
+	at net.newpipe.app.viewmodel.player.PlayerViewModel$1$1.emit(PlayerViewModel.kt:78)
+	at net.newpipe.app.viewmodel.player.PlayerViewModel$1$1.emit(PlayerViewModel.kt:72)
+	at kotlinx.coroutines.flow.StateFlowImpl.collect(StateFlow.kt:401)
+	at kotlinx.coroutines.flow.StateFlowImpl$collect$1.invokeSuspend(StateFlow.kt)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTaskKt.resume(DispatchedTask.kt:233)
+	at kotlinx.coroutines.DispatchedTaskKt.resumeUnconfined(DispatchedTask.kt:175)
+	at kotlinx.coroutines.DispatchedTaskKt.dispatch(DispatchedTask.kt:147)
+	at kotlinx.coroutines.CancellableContinuationImpl.dispatchResume(CancellableContinuationImpl.kt:470)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$kotlinx_coroutines_core(CancellableContinuationImpl.kt:504)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$kotlinx_coroutines_core$default(CancellableContinuationImpl.kt:493)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeWith(CancellableContinuationImpl.kt:359)
+	at kotlinx.coroutines.flow.StateFlowSlot.makePending(StateFlow.kt:290)
+	at kotlinx.coroutines.flow.StateFlowImpl.updateState(StateFlow.kt:354)
+	at kotlinx.coroutines.flow.StateFlowImpl.setValue(StateFlow.kt:321)
+	at net.newpipe.app.platform.JVMPlayerEngine$listener$1.playing(JVMPlayerEngine.kt:172)
+	at uk.co.caprica.vlcj.player.base.events.MediaPlayerPlayingEvent.notify(MediaPlayerPlayingEvent.java:36)
+	at uk.co.caprica.vlcj.player.base.events.MediaPlayerPlayingEvent.notify(MediaPlayerPlayingEvent.java:28)
+	at uk.co.caprica.vlcj.support.eventmanager.NativeEventManager.raiseEvent(NativeEventManager.java:179)
+	at uk.co.caprica.vlcj.support.eventmanager.NativeEventManager$EventCallback.callback(NativeEventManager.java:206)
+	Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}@7da40df3, Dispatchers.Unconfined]
+JNA: callback object has been garbage collected
+JNA: callback object has been garbage collected
+[NewPipe+] video probe: status=PLAYING tracks=2 dimension=java.awt.Dimension[width=256,height=144]
+
+> Task :desktopApp:run FAILED
+
+[Incubating] Problems report is available at: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':desktopApp:run' (registered by plugin 'org.jetbrains.compose').
+> Process 'command 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot\bin\java.exe'' finished with non-zero exit value -1073741819 (NTSTATUS 0xC0000005)
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 1m 43s
+23 actionable tasks: 6 executed, 17 up-to-date
+Configuration cache entry stored.

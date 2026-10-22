@@ -12,6 +12,8 @@ import kotlinx.serialization.Serializable
  *
  * @param id Stable identity used for resume positions and de-duplication.
  * @param url The resolved stream URL the engine plays.
+ * @param fileExtension Container suffix of the stream (e.g. "mp4"), when the provider knew it.
+ * @param audioUrl Separate audio track for a video-only stream (DASH), played as a libVLC slave.
  */
 @Serializable
 data class MediaItem(
@@ -22,6 +24,8 @@ data class MediaItem(
     val isLive: Boolean = false,
     val audioOnly: Boolean = false,
     val thumbnailUrl: String? = null,
+    val fileExtension: String? = null,
+    val audioUrl: String? = null,
     /**
      * Where to start playback, set by the resume logic (F9). `0` means start from the beginning.
      * The engine seeks here once content is loaded.

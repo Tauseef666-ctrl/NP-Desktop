@@ -1,0 +1,94 @@
+Calculating task graph as configuration cache cannot be reused because an input to unknown location has changed.
+Type-safe project accessors is an incubating feature.
+> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :buildSrc:compileKotlin UP-TO-DATE
+> Task :buildSrc:compileJava NO-SOURCE
+> Task :buildSrc:compileGroovy NO-SOURCE
+> Task :buildSrc:pluginDescriptors UP-TO-DATE
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+> Task :desktopApp:generateComposeResClass SKIPPED
+> Task :desktopApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :desktopApp:prepareAppResources NO-SOURCE
+> Task :shared:kmpPartiallyResolvedDependenciesChecker
+> Task :desktopApp:downloadVlcBundle UP-TO-DATE
+> Task :shared:generateComposeResClass UP-TO-DATE
+> Task :shared:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :shared:checkJvmMainComposeLibrariesCompatibility
+> Task :shared:convertXmlValueResourcesForJvmMain NO-SOURCE
+> Task :desktopApp:convertXmlValueResourcesForMain NO-SOURCE
+> Task :desktopApp:copyNonXmlValueResourcesForMain NO-SOURCE
+> Task :shared:copyNonXmlValueResourcesForJvmMain NO-SOURCE
+> Task :desktopApp:prepareComposeResourcesTaskForMain NO-SOURCE
+> Task :shared:prepareComposeResourcesTaskForJvmMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForMain SKIPPED
+> Task :desktopApp:generateActualResourceCollectorsForMain SKIPPED
+> Task :shared:generateResourceAccessorsForJvmMain NO-SOURCE
+> Task :desktopApp:assembleMainResources UP-TO-DATE
+> Task :desktopApp:processResources UP-TO-DATE
+> Task :shared:buildConfigGenerator
+> Task :shared:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :shared:assembleJvmMainResources UP-TO-DATE
+> Task :shared:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :shared:jvmProcessResources UP-TO-DATE
+> Task :shared:generateActualResourceCollectorsForJvmMain UP-TO-DATE
+> Task :shared:processJvmMainResources SKIPPED
+> Task :shared:compileKotlinJvm
+w: Koin compiler plugin: Kotlin 2.4.10 is newer than the newest tested version (2.4.0) — proceeding with the 2.4.0 adapter. If compilation fails, check for a koin-compiler-plugin update. Supported versions: 2.3.20, 2.4.0.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/commonMain/kotlin/net/newpipe/app/component/PlusTooltip.kt:29:44 'fun rememberPlainTooltipPositionProvider(spacingBetweenTooltipAndAnchor: Dp = ...): PopupPositionProvider' is deprecated. Deprecated in favor of rememberTooltipPositionProvider API.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/commonMain/kotlin/net/newpipe/app/screen/player/PlayerScreen.kt:347:42 Unnecessary non-null assertion (!!) on a non-null receiver of type 'PlaybackError'.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/platform/JVMDownloadEngine.kt:122:27 'constructor(p0: String!): URL' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:188:28 'val url: String?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:191:28 'val url: String?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:195:66 'val url: String?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:247:47 Unnecessary safe call on a non-null receiver of type 'Description'.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:271:37 'val url: String?' is deprecated. Deprecated in Java.
+
+> Task :shared:compileJvmMainJava NO-SOURCE
+> Task :shared:jvmMainClasses
+> Task :shared:jvmJar
+> Task :desktopApp:compileKotlin UP-TO-DATE
+> Task :desktopApp:compileJava NO-SOURCE
+> Task :desktopApp:classes UP-TO-DATE
+> Task :desktopApp:jar UP-TO-DATE
+
+> Task :desktopApp:run
+[INFO] [Koin] Started 25 definitions in 3.016 ms
+[INFO] [Koin] Started 103 definitions in 1.313 ms
+[NewPipe+] trying bundled libVLC at C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21
+[NewPipe+] bundled libVLC discovered
+[NewPipe+] vlc factory args=[]
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] prepare: host=rr4---sn-gwpa-3o0l.googlevideo.com audioOnly=false slaveAudio=true frameSinks=0
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] video probe: status=PLAYING tracks=2 dimension=java.awt.Dimension[width=1920,height=1080] frames=0
+
+> Task :desktopApp:run FAILED
+
+[Incubating] Problems report is available at: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':desktopApp:run' (registered by plugin 'org.jetbrains.compose').
+> Process 'command 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot\bin\java.exe'' finished with non-zero exit value -1 (NTSTATUS 0xFFFFFFFF)
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 2m 29s
+23 actionable tasks: 6 executed, 17 up-to-date
+Configuration cache entry stored.

@@ -1,0 +1,51 @@
+Picked up JAVA_TOOL_OPTIONS: -Dskiko.renderApi=SOFTWARE
+Reusing configuration cache.
+> Task :desktopApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :desktopApp:generateComposeResClass SKIPPED
+> Task :desktopApp:prepareAppResources NO-SOURCE
+> Task :desktopApp:convertXmlValueResourcesForMain NO-SOURCE
+> Task :shared:convertXmlValueResourcesForJvmMain NO-SOURCE
+> Task :desktopApp:copyNonXmlValueResourcesForMain NO-SOURCE
+> Task :shared:copyNonXmlValueResourcesForJvmMain NO-SOURCE
+> Task :shared:kmpPartiallyResolvedDependenciesChecker
+> Task :shared:generateComposeResClass UP-TO-DATE
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :shared:prepareComposeResourcesTaskForJvmMain NO-SOURCE
+> Task :shared:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :desktopApp:downloadVlcBundle UP-TO-DATE
+> Task :desktopApp:prepareComposeResourcesTaskForMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForMain SKIPPED
+> Task :shared:checkJvmMainComposeLibrariesCompatibility
+> Task :desktopApp:generateActualResourceCollectorsForMain SKIPPED
+> Task :shared:generateResourceAccessorsForJvmMain NO-SOURCE
+> Task :desktopApp:assembleMainResources UP-TO-DATE
+> Task :shared:buildConfigGenerator
+> Task :desktopApp:processResources UP-TO-DATE
+> Task :shared:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :shared:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :shared:assembleJvmMainResources UP-TO-DATE
+> Task :shared:generateActualResourceCollectorsForJvmMain UP-TO-DATE
+> Task :shared:jvmProcessResources UP-TO-DATE
+> Task :shared:processJvmMainResources SKIPPED
+> Task :shared:compileKotlinJvm UP-TO-DATE
+> Task :shared:compileJvmMainJava NO-SOURCE
+> Task :shared:jvmMainClasses UP-TO-DATE
+> Task :shared:jvmJar
+> Task :desktopApp:compileKotlin
+> Task :desktopApp:compileJava NO-SOURCE
+> Task :desktopApp:classes UP-TO-DATE
+> Task :desktopApp:jar UP-TO-DATE
+
+> Task :desktopApp:run
+Picked up JAVA_TOOL_OPTIONS: -Dskiko.renderApi=SOFTWARE
+[INFO] [Koin] Started 25 definitions in 4.248 ms
+[INFO] [Koin] Started 103 definitions in 1.897 ms
+[NewPipe+] trying bundled libVLC at C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21
+[NewPipe+] bundled libVLC discovered
+[NewPipe+] prepare: host=rr7---sn-gwpa-3o0l.googlevideo.com surfaceHosts=0 displayable=0 lateRestart=true
+[NewPipe+] surface: attached=Canvas attach=true lateRestart=true status=PAUSED
+[NewPipe+] surface: restarting media for late surface at 0ms resumePlaying=false
+[NewPipe+] prepare: host=rr1---sn-gwpa-3o0e.googlevideo.com surfaceHosts=1 displayable=1 lateRestart=false
+^C

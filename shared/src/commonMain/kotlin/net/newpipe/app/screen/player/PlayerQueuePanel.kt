@@ -7,11 +7,15 @@ package net.newpipe.app.screen.player
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -42,8 +47,10 @@ import net.newpipe.app.component.PlusTooltip
 import net.newpipe.app.component.SectionHeader
 import net.newpipe.app.component.StatusChip
 import net.newpipe.app.component.StatusKind
+import net.newpipe.app.image.rememberThumbnailPainter
 import net.newpipe.app.player.MediaItem
 import net.newpipe.app.player.PlayerQueueState
+import net.newpipe.app.player.RepeatMode
 import net.newpipe.app.player.isAvailable
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.theme.plusColors
@@ -93,7 +100,9 @@ fun PlayerQueuePanel(
     onRemove: (Int) -> Unit = {},
     onSavePlaylist: suspend () -> Boolean = { false },
     onRestorePlaylist: suspend () -> Boolean = { false },
-    onSkipUnavailable: suspend () -> Boolean = { false }
+    onSkipUnavailable: suspend () -> Boolean = { false },
+    onToggleShuffle: () -> Unit = {},
+    onRepeatMode: (RepeatMode) -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     var status by remember { mutableStateOf<String?>(null) }
@@ -107,7 +116,27 @@ fun PlayerQueuePanel(
     val hasUnavailable = queue.items.any { !it.isAvailable() }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        SectionHeader(title = "$title (${queue.items.size})")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spaceLarge, vertical = spaceSmall),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spaceSmall)
+        ) {
+            Text(
+                text = "Up next (${queue.items.size})",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = plusColors().textPrimary,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = { onRepeatMode(nextRepeatMode(queue.repeatMode)) }) {
+                Text("Repeat: ${repeatModeLabel(queue.repeatMode)}")
+            }
+            TextButton(onClick = onToggleShuffle) {
+                Text(if (queue.isShuffled) "Shuffle: on" else "Shuffle: off")
+            }
+        }
         if (queue.isEmpty) {
             EmptyState(
                 title = stringResource(Res.string.player_queue_empty_title),
@@ -187,13 +216,32 @@ private fun QueueItemRow(
             color = if (isCurrent) colors.accent else colors.textMuted,
             modifier = Modifier.width(28.dp)
         )
+        val thumbnail = rememberThumbnailPainter(item.thumbnailUrl)
+        Box(
+            modifier = Modifier
+                .width(120.dp)
+                .height(68.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(colors.surfaceElevated),
+            contentAlignment = Alignment.Center
+        ) {
+            if (thumbnail != null) {
+                Image(
+                    painter = thumbnail,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+        Spacer(Modifier.width(spaceSmall))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = item.title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal,
                 color = if (isCurrent) colors.textPrimary else colors.textSecondary,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
             val subtitle = itemSubtitle(item)
@@ -258,6 +306,18 @@ private fun itemSubtitle(item: MediaItem): String = when {
     item.durationMs > 0L -> formatDuration(item.durationMs / 1000L)
     item.url.isNotBlank() -> item.url
     else -> ""
+}
+
+private fun nextRepeatMode(mode: RepeatMode): RepeatMode = when (mode) {
+    RepeatMode.OFF -> RepeatMode.ALL
+    RepeatMode.ALL -> RepeatMode.ONE
+    RepeatMode.ONE -> RepeatMode.OFF
+}
+
+private fun repeatModeLabel(mode: RepeatMode): String = when (mode) {
+    RepeatMode.OFF -> "Off"
+    RepeatMode.ALL -> "All"
+    RepeatMode.ONE -> "One"
 }
 
 @PreviewWrapper(ThemePreviewProvider::class)

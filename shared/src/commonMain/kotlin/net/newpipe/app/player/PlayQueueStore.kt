@@ -35,7 +35,12 @@ class PlayQueueStore(
     private val key = "npp_persisted_queue"
 
     fun save(snapshot: PlayQueueSnapshot) {
-        settings.putString(key, json.encodeToString(snapshot))
+        try {
+            settings.putString(key, json.encodeToString(snapshot))
+        } catch (_: IllegalArgumentException) {
+            // java.util.prefs caps a value at ~8KB; an oversized queue just does not persist.
+            // Never let persistence break playback.
+        }
     }
 
     /** Returns the saved queue, or null when none/blank/corrupt (corrupt data is dropped). */

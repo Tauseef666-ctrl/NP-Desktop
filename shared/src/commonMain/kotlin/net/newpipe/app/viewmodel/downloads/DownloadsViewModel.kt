@@ -106,13 +106,17 @@ class DownloadsViewModel(
      *
      * When [subtitleUrl] is non-blank, a real companion mission downloads the subtitle document
      * beside the main file (see [subtitleDestinationPath]); [subtitleLanguageTag] names that file.
+     *
+     * [fileName] overrides the name derived from the URL, so a download started from a video can be
+     * named after the video instead of the raw stream path.
      */
     fun addFromUrl(
         url: String,
         folder: String,
         format: DownloadFormat,
         subtitleUrl: String? = null,
-        subtitleLanguageTag: String? = null
+        subtitleLanguageTag: String? = null,
+        fileName: String? = null
     ): Boolean {
         val clean = url.trim()
         if (clean.isEmpty() || folder.isBlank()) return false
@@ -121,14 +125,14 @@ class DownloadsViewModel(
             return false
         }
         _lastAddRejectedDuplicate.value = false
-        val fileName = fileNameFor(clean).ifBlank { "download" }
-        val destinationPath = destinationIn(folder, fileName)
+        val name = safeFileName(fileName).ifBlank { fileNameFor(clean).ifBlank { "download" } }
+        val destinationPath = destinationIn(folder, name)
         if (destinationPath.isBlank()) return false
         val request = DownloadRequest(
             id = "dl-" + clean.hashCode().toUInt().toString(16) + "-" + destinationPath.hashCode().toUInt().toString(16),
             url = clean,
             destinationPath = destinationPath,
-            title = fileName,
+            title = name,
             format = formatLabel(format),
             subtitleUrl = subtitleUrl?.trim()?.ifBlank { null },
             subtitleLanguageTag = subtitleLanguageTag?.trim()?.ifBlank { null }
@@ -136,6 +140,19 @@ class DownloadsViewModel(
         engine.enqueue(request).let { engine.start(it.id) }
         subtitleCompanionRequest(request)?.let { engine.enqueue(it).let { sub -> engine.start(sub.id) } }
         return true
+    }
+
+    /**
+     * A filesystem-safe file name built from [raw]: path separators and characters Windows rejects
+     * are replaced by spaces, runs of whitespace collapse, and the result is capped. A blank or
+     * unusable [raw] yields an empty string, so callers can fall back to their own naming.
+     */
+    private fun safeFileName(raw: String?): String {
+        val cleaned = raw.orEmpty()
+            .replace(Regex("[\\\\/:*?\"<>|]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+        return cleaned.take(MAX_FILE_NAME_LENGTH).trim()
     }
 
     /**
@@ -166,5 +183,10 @@ class DownloadsViewModel(
         val rank = HashMap<String, Int>(order.size)
         order.forEachIndexed { index, id -> rank[id] = index }
         return list.sortedBy { rank[it.id] ?: Int.MAX_VALUE }
+    }
+
+    private companion object {
+        /** Longest file name a download may use; longer titles are cut. */
+        const val MAX_FILE_NAME_LENGTH = 120
     }
 }

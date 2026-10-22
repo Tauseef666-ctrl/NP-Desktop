@@ -6,6 +6,7 @@
 package net.newpipe.app.screen.search
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +23,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -40,6 +43,7 @@ import net.newpipe.app.component.SectionHeader
 import net.newpipe.app.component.TopToolbar
 import net.newpipe.app.component.VideoCard
 import net.newpipe.app.component.providerErrorMessage
+import net.newpipe.app.component.responsiveVideoColumns
 import net.newpipe.app.composable.PreferenceRow
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
@@ -58,6 +62,7 @@ import net.newpipe.app.util.formatItemDetails
 import net.newpipe.app.viewmodel.search.SearchResultsState
 import net.newpipe.app.viewmodel.search.SearchViewModel
 import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.ic_search
 import newpipe.shared.generated.resources.provider_retry
 import newpipe.shared.generated.resources.search_history_clear
 import newpipe.shared.generated.resources.search_history_empty
@@ -69,11 +74,14 @@ import newpipe.shared.generated.resources.search_results_title
 import newpipe.shared.generated.resources.search_screen_placeholder
 import newpipe.shared.generated.resources.search_screen_title
 import newpipe.shared.generated.resources.search_suggestions_title
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import kotlinx.coroutines.flow.filter
 
-private const val ResultColumns = 2
+/** How close to the list end the user must scroll before the next results page is requested. */
+private const val AUTO_LOAD_MORE_DISTANCE_PX = 600
 
 /**
  * Search destination. The input is live; recent searches and suggestions come from the persisted
@@ -150,6 +158,17 @@ fun SearchScreenContent(
     onItemClick: (ProviderContentItem) -> Unit = {},
     onLoadMore: () -> Unit = {}
 ) {
+    val scrollState = rememberScrollState()
+    val resultsState by rememberUpdatedState(results)
+    val loadMoreAction by rememberUpdatedState(onLoadMore)
+    LaunchedEffect(scrollState) {
+        snapshotFlow {
+            val success = resultsState as? SearchResultsState.Success
+            val canLoad = success?.nextPageToken != null && success.loadingMore.not()
+            scrollState.maxValue > 0 && canLoad &&
+                scrollState.value >= scrollState.maxValue - AUTO_LOAD_MORE_DISTANCE_PX
+        }.filter { it }.collect { loadMoreAction() }
+    }
     PlusScaffold(
         toolbar = {
             TopToolbar(
@@ -161,7 +180,7 @@ fun SearchScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(vertical = spaceNormal)
         ) {
             SearchBarField(
@@ -169,6 +188,7 @@ fun SearchScreenContent(
                 onValueChange = onQueryChange,
                 modifier = Modifier.padding(horizontal = spaceLarge),
                 placeholder = stringResource(Res.string.search_screen_placeholder),
+                leadingIcon = painterResource(Res.drawable.ic_search),
                 onSubmit = { onSubmitQuery(query) }
             )
             if (query.isNotBlank()) {
@@ -194,7 +214,10 @@ fun SearchScreenContent(
                         history.forEach { entry ->
                             PreferenceRow(
                                 title = entry,
-                                onClick = { onQueryChange(entry) }
+                                onClick = {
+                                    onQueryChange(entry)
+                                    onSubmitQuery(entry)
+                                }
                             )
                         }
                     }
@@ -205,7 +228,10 @@ fun SearchScreenContent(
                     suggestions.forEach { suggestion ->
                         PreferenceRow(
                             title = suggestion,
-                            onClick = { onQueryChange(suggestion) }
+                            onClick = {
+                                onQueryChange(suggestion)
+                                onSubmitQuery(suggestion)
+                            }
                         )
                     }
                 }
@@ -271,39 +297,43 @@ private fun SearchResultsGrid(
     onItemClick: (ProviderContentItem) -> Unit,
     onLoadMore: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        items.chunked(ResultColumns).forEach { row ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spaceNormal, vertical = spaceNormal),
-                horizontalArrangement = Arrangement.spacedBy(spaceNormal)
-            ) {
-                row.forEach { item ->
-                    VideoCard(
-                        title = item.title,
-                        thumbnailUrl = item.thumbnailUrl,
-                        subtitle = item.uploader,
-                        details = formatItemDetails(item.viewCount, item.textualUploadDate),
-                        durationText = item.durationSeconds
-                            ?.takeIf { item.kind != ProviderContentKind.LIVE }
-                            ?.let { formatDuration(it) },
-                        isLive = item.kind == ProviderContentKind.LIVE,
-                        modifier = Modifier.weight(1f),
-                        onClick = { onItemClick(item) }
-                    )
-                }
-                repeat(ResultColumns - row.size) {
-                    Spacer(Modifier.weight(1f))
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val columns = responsiveVideoColumns(maxWidth)
+        Column(modifier = Modifier.fillMaxWidth()) {
+            items.chunked(columns).forEach { row ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spaceNormal, vertical = spaceNormal),
+                    horizontalArrangement = Arrangement.spacedBy(spaceNormal)
+                ) {
+                    row.forEach { item ->
+                        VideoCard(
+                            title = item.title,
+                            thumbnailUrl = item.thumbnailUrl,
+                            subtitle = item.uploader,
+                            details = formatItemDetails(item.viewCount, item.textualUploadDate),
+                            durationText = item.durationSeconds
+                                ?.takeIf { item.kind != ProviderContentKind.LIVE }
+                                ?.let { formatDuration(it) },
+                            isLive = item.kind == ProviderContentKind.LIVE,
+                            modifier = Modifier.weight(1f),
+                            fillWidth = true,
+                            onClick = { onItemClick(item) }
+                        )
+                    }
+                    repeat(columns - row.size) {
+                        Spacer(Modifier.weight(1f))
+                    }
                 }
             }
-        }
-        if (nextPageToken != null) {
-            ProviderLoadMore(
-                loadingMore = loadingMore,
-                onLoadMore = onLoadMore,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            if (nextPageToken != null) {
+                ProviderLoadMore(
+                    loadingMore = loadingMore,
+                    onLoadMore = onLoadMore,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
         }
     }
 }

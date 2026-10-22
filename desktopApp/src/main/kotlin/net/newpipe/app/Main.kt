@@ -44,7 +44,11 @@ import net.newpipe.app.platform.WindowBounds
 import net.newpipe.app.platform.WorkspaceMode
 import net.newpipe.app.platform.WorkspacePreferences
 import net.newpipe.app.player.BackgroundPlaybackController
+import net.newpipe.app.player.MediaItem
 import net.newpipe.app.player.PlaybackController
+import net.newpipe.app.provider.MediaPlayback
+import net.newpipe.app.provider.ProviderContentItem
+import net.newpipe.app.provider.ProviderContentKind
 import net.newpipe.app.player.PlayerAction
 import net.newpipe.app.player.PlayerShortcuts
 import net.newpipe.app.player.ShortcutResolver
@@ -221,6 +225,30 @@ fun main() = application {
                         LaunchedEffect(playback) { DesktopMiniPlayerBridge.controller.value = playback }
                         val background: BackgroundPlaybackController = koinInject()
                         LaunchedEffect(background) { DesktopMiniPlayerBridge.background.value = background }
+                        val debugUrl = System.getenv("NEWPIPE_PLAY_URL")
+                        if (!debugUrl.isNullOrBlank()) {
+                            val mediaPlayback: MediaPlayback = koinInject()
+                            LaunchedEffect(debugUrl) {
+                                val item = ProviderContentItem(
+                                    id = debugUrl,
+                                    title = "debug",
+                                    url = debugUrl,
+                                    kind = ProviderContentKind.VIDEO
+                                )
+                                System.err.println(
+                                    "[NewPipe+] debug playback: ${mediaPlayback.play(item)}"
+                                )
+                            }
+                        }
+                        val rawUrl = System.getenv("NEWPIPE_PLAY_RAW_URL")
+                        if (!rawUrl.isNullOrBlank()) {
+                            LaunchedEffect(rawUrl) {
+                                System.err.println("[NewPipe+] debug raw playback: $rawUrl")
+                                playback.playItem(
+                                    MediaItem(id = "debug-raw", title = "debug", url = rawUrl)
+                                )
+                            }
+                        }
                     }
                 )
             }

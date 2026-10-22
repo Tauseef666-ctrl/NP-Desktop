@@ -1,0 +1,32 @@
+Reusing configuration cache.
+> Task :shared:convertXmlValueResourcesForJvmMain NO-SOURCE
+> Task :shared:kmpPartiallyResolvedDependenciesChecker
+> Task :shared:checkJvmMainComposeLibrariesCompatibility
+> Task :shared:generateComposeResClass UP-TO-DATE
+> Task :shared:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :shared:buildConfigGenerator UP-TO-DATE
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :shared:copyNonXmlValueResourcesForJvmMain NO-SOURCE
+> Task :shared:prepareComposeResourcesTaskForJvmMain NO-SOURCE
+> Task :shared:generateResourceAccessorsForJvmMain NO-SOURCE
+> Task :shared:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :shared:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :shared:generateActualResourceCollectorsForJvmMain UP-TO-DATE
+> Task :shared:compileKotlinJvm
+w: Koin compiler plugin: Kotlin 2.4.10 is newer than the newest tested version (2.4.0) — proceeding with the 2.4.0 adapter. If compilation fails, check for a koin-compiler-plugin update. Supported versions: 2.3.20, 2.4.0.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/commonMain/kotlin/net/newpipe/app/component/PlusTooltip.kt:29:44 'fun rememberPlainTooltipPositionProvider(spacingBetweenTooltipAndAnchor: Dp = ...): PopupPositionProvider' is deprecated. Deprecated in favor of rememberTooltipPositionProvider API.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/commonMain/kotlin/net/newpipe/app/screen/player/PlayerScreen.kt:347:42 Unnecessary non-null assertion (!!) on a non-null receiver of type 'PlaybackError'.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/platform/JVMDownloadEngine.kt:122:27 'constructor(p0: String!): URL' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:188:28 'val url: String?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:191:28 'val url: String?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:195:66 'val url: String?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:247:47 Unnecessary safe call on a non-null receiver of type 'Description'.
+w: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/shared/src/jvmMain/kotlin/net/newpipe/app/provider/ExtractorMediaProvider.kt:271:37 'val url: String?' is deprecated. Deprecated in Java.
+
+[Incubating] Problems report is available at: file:///C:/Users/Tauseef%20khan/git/web/NewPipe-1/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 1m 2s
+11 actionable tasks: 3 executed, 8 up-to-date
+Configuration cache entry reused.

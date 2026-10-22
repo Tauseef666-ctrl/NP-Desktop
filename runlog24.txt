@@ -1,0 +1,62 @@
+Reusing configuration cache.
+> Task :desktopApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :desktopApp:generateComposeResClass SKIPPED
+> Task :shared:kmpPartiallyResolvedDependenciesChecker
+> Task :shared:checkJvmMainComposeLibrariesCompatibility
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :shared:convertXmlValueResourcesForJvmMain NO-SOURCE
+> Task :shared:copyNonXmlValueResourcesForJvmMain NO-SOURCE
+> Task :desktopApp:convertXmlValueResourcesForMain NO-SOURCE
+> Task :shared:generateComposeResClass UP-TO-DATE
+> Task :desktopApp:copyNonXmlValueResourcesForMain NO-SOURCE
+> Task :shared:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :desktopApp:prepareAppResources NO-SOURCE
+> Task :shared:prepareComposeResourcesTaskForJvmMain NO-SOURCE
+> Task :desktopApp:prepareComposeResourcesTaskForMain NO-SOURCE
+> Task :shared:generateResourceAccessorsForJvmMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForMain SKIPPED
+> Task :desktopApp:generateActualResourceCollectorsForMain SKIPPED
+> Task :shared:buildConfigGenerator UP-TO-DATE
+> Task :desktopApp:downloadVlcBundle UP-TO-DATE
+> Task :desktopApp:assembleMainResources UP-TO-DATE
+> Task :desktopApp:processResources UP-TO-DATE
+> Task :shared:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :shared:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :shared:generateActualResourceCollectorsForJvmMain UP-TO-DATE
+> Task :shared:assembleJvmMainResources UP-TO-DATE
+> Task :shared:jvmProcessResources UP-TO-DATE
+> Task :shared:processJvmMainResources SKIPPED
+> Task :shared:compileKotlinJvm UP-TO-DATE
+> Task :shared:compileJvmMainJava NO-SOURCE
+> Task :shared:jvmMainClasses UP-TO-DATE
+> Task :shared:jvmJar UP-TO-DATE
+> Task :desktopApp:compileKotlin UP-TO-DATE
+> Task :desktopApp:compileJava NO-SOURCE
+> Task :desktopApp:classes UP-TO-DATE
+> Task :desktopApp:jar UP-TO-DATE
+
+> Task :desktopApp:run
+[INFO] [Koin] Started 25 definitions in 4.802 ms
+[INFO] [Koin] Started 103 definitions in 2.346 ms
+[NewPipe+] trying bundled libVLC at C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21
+[NewPipe+] bundled libVLC discovered
+[NewPipe+] streams: muxed=0 videoOnly=6 audio=2 muxedIds=[] videoIds=[137/1080, 136/720, 135/480, 134/360, 133/240, 160/144] audioIds=[139, 140]
+[NewPipe+] vlc factory args=[]
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] prepare: host=manifest.googlevideo.com audioOnly=false slaveAudio=false frameSinks=0
+[NewPipe+] frame sink acquired refs=1
+[NewPipe+] video surface: callback sink bound
+[NewPipe+] compose surface: polling started engine=1430150248
+[NewPipe+] video probe: status=PLAYING tracks=2 dimension=java.awt.Dimension[width=256,height=144] frames=0
+[NewPipe+] first video frame: planes=1 size=256x162 chroma=RV32 pitches=1024 engine=1430150248
+[NewPipe+] compose surface: drawn=1 256x162
+[NewPipe+] compose surface: drawn=120 1280x726
+[NewPipe+] compose surface: drawn=240 1280x726
+[NewPipe+] compose surface: drawn=360 1280x726
+[NewPipe+] compose surface: drawn=480 1280x726
+[NewPipe+] compose surface: drawn=600 1280x726
+[NewPipe+] compose surface: drawn=720 1280x726
+
+> Task :desktopApp:run FAILED

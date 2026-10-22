@@ -6,6 +6,7 @@
 package net.newpipe.app.screen.trending
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +40,7 @@ import net.newpipe.app.component.TopToolbar
 import net.newpipe.app.component.VideoCard
 import net.newpipe.app.component.VideoListRow
 import net.newpipe.app.component.providerErrorMessage
+import net.newpipe.app.component.responsiveVideoColumns
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preview.ThemePreviewProvider
@@ -63,8 +65,6 @@ import newpipe.shared.generated.resources.trending_screen_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-
-private const val ResultColumns = 3
 
 /**
  * Trending destination. The ranked page is loaded from the provider on open; none of it is invented,
@@ -202,39 +202,43 @@ private fun TrendingGrid(
     onItemClick: (ProviderContentItem) -> Unit,
     onLoadMore: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        items.chunked(ResultColumns).forEach { row ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spaceNormal, vertical = spaceNormal),
-                horizontalArrangement = Arrangement.spacedBy(spaceNormal)
-            ) {
-                row.forEach { item ->
-                    VideoCard(
-                        title = item.title,
-                        thumbnailUrl = item.thumbnailUrl,
-                        subtitle = item.uploader,
-                        details = formatItemDetails(item.viewCount, item.textualUploadDate),
-                        durationText = item.durationSeconds
-                            ?.takeIf { item.kind != ProviderContentKind.LIVE }
-                            ?.let { formatDuration(it) },
-                        isLive = item.kind == ProviderContentKind.LIVE,
-                        modifier = Modifier.weight(1f),
-                        onClick = { onItemClick(item) }
-                    )
-                }
-                repeat(ResultColumns - row.size) {
-                    Spacer(Modifier.weight(1f))
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val columns = responsiveVideoColumns(maxWidth)
+        Column(modifier = Modifier.fillMaxWidth()) {
+            items.chunked(columns).forEach { row ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spaceNormal, vertical = spaceNormal),
+                    horizontalArrangement = Arrangement.spacedBy(spaceNormal)
+                ) {
+                    row.forEach { item ->
+                        VideoCard(
+                            title = item.title,
+                            thumbnailUrl = item.thumbnailUrl,
+                            subtitle = item.uploader,
+                            details = formatItemDetails(item.viewCount, item.textualUploadDate),
+                            durationText = item.durationSeconds
+                                ?.takeIf { item.kind != ProviderContentKind.LIVE }
+                                ?.let { formatDuration(it) },
+                            isLive = item.kind == ProviderContentKind.LIVE,
+                            modifier = Modifier.weight(1f),
+                            fillWidth = true,
+                            onClick = { onItemClick(item) }
+                        )
+                    }
+                    repeat(columns - row.size) {
+                        Spacer(Modifier.weight(1f))
+                    }
                 }
             }
-        }
-        if (nextPageToken != null) {
-            ProviderLoadMore(
-                loadingMore = loadingMore,
-                onLoadMore = onLoadMore,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            if (nextPageToken != null) {
+                ProviderLoadMore(
+                    loadingMore = loadingMore,
+                    onLoadMore = onLoadMore,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
         }
     }
 }

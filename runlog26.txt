@@ -1,0 +1,664 @@
+Reusing configuration cache.
+> Task :desktopApp:generateComposeResClass SKIPPED
+> Task :desktopApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :desktopApp:convertXmlValueResourcesForMain NO-SOURCE
+> Task :shared:kmpPartiallyResolvedDependenciesChecker
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :desktopApp:downloadVlcBundle UP-TO-DATE
+> Task :shared:convertXmlValueResourcesForJvmMain NO-SOURCE
+> Task :desktopApp:copyNonXmlValueResourcesForMain NO-SOURCE
+> Task :shared:buildConfigGenerator UP-TO-DATE
+> Task :shared:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :desktopApp:prepareAppResources NO-SOURCE
+> Task :shared:copyNonXmlValueResourcesForJvmMain NO-SOURCE
+> Task :shared:generateComposeResClass UP-TO-DATE
+> Task :desktopApp:prepareComposeResourcesTaskForMain NO-SOURCE
+> Task :shared:checkJvmMainComposeLibrariesCompatibility
+> Task :desktopApp:generateResourceAccessorsForMain SKIPPED
+> Task :shared:prepareComposeResourcesTaskForJvmMain NO-SOURCE
+> Task :desktopApp:generateActualResourceCollectorsForMain SKIPPED
+> Task :shared:generateResourceAccessorsForJvmMain NO-SOURCE
+> Task :desktopApp:assembleMainResources UP-TO-DATE
+> Task :desktopApp:processResources UP-TO-DATE
+> Task :shared:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :shared:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :shared:assembleJvmMainResources UP-TO-DATE
+> Task :shared:generateActualResourceCollectorsForJvmMain UP-TO-DATE
+> Task :shared:jvmProcessResources UP-TO-DATE
+> Task :shared:processJvmMainResources SKIPPED
+> Task :shared:compileKotlinJvm UP-TO-DATE
+> Task :shared:compileJvmMainJava NO-SOURCE
+> Task :shared:jvmMainClasses UP-TO-DATE
+> Task :shared:jvmJar UP-TO-DATE
+> Task :desktopApp:compileKotlin
+> Task :desktopApp:compileJava NO-SOURCE
+> Task :desktopApp:classes UP-TO-DATE
+> Task :desktopApp:jar
+
+> Task :desktopApp:run
+[INFO] [Koin] Started 25 definitions in 3.019 ms
+[INFO] [Koin] Started 103 definitions in 1.203 ms
+[NewPipe+] trying bundled libVLC at C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21
+[NewPipe+] bundled libVLC discovered
+[NewPipe+] streams: muxed=0 videoOnly=5 audio=5 muxedIds=[] videoIds=[133/240, 134/240, 242/240, 160/144, 278/144] audioIds=[139, 140, 249, 250, 251]
+[NewPipe+] vlc factory args=[--verbose=2]
+[000001e1c1719ff0] main libvlc debug: VLC media player - 3.0.21 Vetinari
+[000001e1c1719ff0] main libvlc debug: Copyright © 1996-2024 the VideoLAN team
+[000001e1c1719ff0] main libvlc debug: revision 3.0.21-1-0-g9c4768291e
+[000001e1c1719ff0] main libvlc debug: configured with /builds/videolan/vlc/extras/package/win32/../../../configure  '--enable-update-check' '--enable-lua' '--enable-faad' '--enable-flac' '--enable-theora' '--enable-avcodec' '--enable-merge-ffmpeg' '--enable-dca' '--enable-mpc' '--enable-libass' '--enable-schroedinger' '--enable-realrtsp' '--enable-live555' '--enable-shout' '--enable-goom' '--enable-sse' '--enable-mmx' '--enable-libcddb' '--enable-zvbi' '--disable-telx' '--enable-nls' '--host=x86_64-w64-mingw32' '--with-contrib=../contrib/x86_64-w64-mingw32' '--with-breakpad=https://win.crashes.videolan.org' '--enable-qt' '--enable-skins2' '--enable-dvdread' '--enable-caca' 'host_alias=x86_64-w64-mingw32' 'CFLAGS= -D_WIN32_WINNT=0x0502 -DWINVER=0x502 -D__MSVCRT_VERSION__=0x700 ' 'CXXFLAGS= -D_WIN32_WINNT=0x0502 -DWINVER=0x502 -D__MSVCRT_VERSION__=0x700 ' 'PKG_CONFIG=pkg-config' 'PKG_CONFIG_LIBDIR=/usr/x86_64-w64-mingw32/lib/pkgconfig:/usr/lib/x86_64-w64-mingw32/pkgconfig'
+[000001e1c1719ff0] main libvlc debug: searching plug-in modules
+[000001e1c1719ff0] main libvlc debug: loading plugins cache file C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins\plugins.dat
+[000001e1c1719ff0] main libvlc warning: cannot read C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins\plugins.dat: No such file or directory
+[000001e1c1719ff0] main libvlc debug: recursively browsing `C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins'
+[000001e1c1719ff0] main libvlc debug: loading plugins cache file C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins\plugins.dat
+[000001e1c1719ff0] main libvlc warning: cannot read C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins\plugins.dat: No such file or directory
+[000001e1c1719ff0] main libvlc debug: recursively browsing `C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins'
+[000001e1c1719ff0] main libvlc debug: plug-ins loaded: 995 modules
+[000001e1c17187b0] main logger debug: looking for logger module matching "any": 4 candidates
+[000001e1c17187b0] main logger debug: using logger module "console"
+[000001e1c1719ff0] main libvlc debug: translation test: code is "C"
+[000001e151e538e0] main keystore debug: looking for keystore module matching "memory": 6 candidates
+[000001e151e538e0] main keystore debug: using keystore module "memory"
+[000001e1c1719ff0] main libvlc debug: CPU has capabilities MMX MMXEXT SSE SSE2 SSE3 SSSE3 SSE4.1 SSE4.2 FPU 
+[000001e1bada2080] main generic debug: creating audio output
+[000001e151d9c8d0] main audio output debug: looking for audio output module matching "any": 12 candidates
+[000001e151d9c8d0] mmdevice audio output debug: using default device
+[000001e151d9c8d0] mmdevice audio output debug: display name changed: VLC media player (LibVLC 3.0.21)
+[000001e151d9c8d0] mmdevice audio output debug: version 2 session control unavailable
+[000001e151d9c8d0] mmdevice audio output debug: volume from -65.250000 dB to +0.000000 dB with 0.031250 dB increments
+[000001e151d9c8d0] main audio output debug: using audio output module "mmdevice"
+[000001e1bada2080] main generic debug: keeping audio output
+[000001e1bada2990] main generic debug: creating audio output
+[000001e1baec7df0] main audio output debug: looking for audio output module matching "any": 12 candidates
+[000001e1baec7df0] mmdevice audio output debug: using default device
+[000001e1baec7df0] mmdevice audio output debug: version 2 session control unavailable
+[000001e1baec7df0] mmdevice audio output debug: volume from -65.250000 dB to +0.000000 dB with 0.031250 dB increments
+[000001e1baec7df0] main audio output debug: using audio output module "mmdevice"
+[000001e1bada2990] main generic debug: keeping audio output
+[000001e1baec7df0] main audio output debug: removing module "mm[NewPipe+] video surface: callback sink bound
+[NewPipe+] prepare: host=rr2---sn-gwpa-a3ve7.googlevideo.com audioOnly=false slaveAudio=true frameSinks=0
+[NewPipe+] debug playback: Success(value=kotlin.Unit)
+device"
+[000001e151d9c8d0] main audio output debug: removing module "mmdevice"
+[000001e1c1696b30] main input debug: Creating an input for 'videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=133&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ==&cps=813&met=1792659848,&mh=VD&mm=18,29&mn=sn-gwpa-a3ve7,sn-cvh76ney&ms=aub,rdu&mv=m&mvi=2&pl=23&rms=aub,aub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=video/mp4&rqh=1&gir=yes&clen=433081&dur=18.933&lmt=1767107069601671&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire,ei,ip,id,itag,source,requiressl,xpc,bui,spc,vprv,svpuc,mime,rqh,gir,clen,dur,lmt&sig=AE0s2JYwRQIgR8EyD2zt2I27v4ovSJPXCs4YtG-k9m9W5tmac4ueYjwCIQDDFU9Mvu8DugPU7cF5_CRZ8OUAu5BQS4yE3bXvP71FEQ==&lsparams=cps,met,mh,mm,mn,ms,mv,mvi,pl,rms,initcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg==&cpn=Lx6YDQyhsZ3-I8bc'
+[000001e1c1696b30] main input debug: using timeshift granularity of 50 MiB
+[000001e1c1696b30] main input debug: using timeshift path: C:\Users\TAUSEE~1\AppData\Local\Temp
+[000001e1c1696b30] main input debug: `https://rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=133&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=433081&dur=18.933&lmt=1767107069601671&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgR8EyD2zt2I27v4ovSJPXCs4YtG-k9m9W5tmac4ueYjwCIQDDFU9Mvu8DugPU7cF5_CRZ8OUAu5BQS4yE3bXvP71FEQ%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc' gives access `https' demux `any' path `rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=133&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=433081&dur=18.933&lmt=1767107069601671&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgR8EyD2zt2I27v4ovSJPXCs4YtG-k9m9W5tmac4ueYjwCIQDDFU9Mvu8DugPU7cF5_CRZ8OUAu5BQS4yE3bXvP71FEQ%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc'
+[000001e1c17189f0] main input source debug: creating demux: access='https' demux='any' location='rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=133&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=433081&dur=18.933&lmt=1767107069601671&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgR8EyD2zt2I27v4ovSJPXCs4YtG-k9m9W5tmac4ueYjwCIQDDFU9Mvu8DugPU7cF5_CRZ8OUAu5BQS4yE3bXvP71FEQ%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc' file='\\rr2---sn-gwpa-a3ve7.googlevideo.com\videoplayback'
+[000001e1c171a7d0] main demux debug: looking for access_demux module matching "https": 30 candidates
+[000001e1c171a7d0] main demux debug: no access_demux modules matched
+[000001e1baec78b0] main stream debug: creating access: https://rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=133&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=433081&dur=18.933&lmt=1767107069601671&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgR8EyD2zt2I27v4ovSJPXCs4YtG-k9m9W5tmac4ueYjwCIQDDFU9Mvu8DugPU7cF5_CRZ8OUAu5BQS4yE3bXvP71FEQ%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc
+[000001e1baec78b0] main stream debug:  (path: \\rr2---sn-gwpa-a3ve7.googlevideo.com\videoplayback)
+[000001e1baec78b0] main stream debug: looking for access module matching "https": 54 candidates
+[000001e1c191e520] main tls client debug: looking for tls client module matching "any": 2 candidates
+[000001e1c191e520] gnutls tls client debug: using GnuTLS version 3.6.16
+[000001e1c191e520] gnutls tls client debug: loaded 47 trusted CAs from system
+[000001e1c191e520] main tls client debug: using tls client module "gnutls"
+[000001e1c191e520] main tls client debug: resolving rr2---sn-gwpa-a3ve7.googlevideo.com ...
+[000001e1c191e520] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1c191e520] gnutls tls client debug: TLS handshake: Success.
+[000001e1baec78b0] http stream debug: outgoing request:
+GET /videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=133&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=433081&dur=18.933&lmt=1767107069601671&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgR8EyD2zt2I27v4ovSJPXCs4YtG-k9m9W5tmac4ueYjwCIQDDFU9Mvu8DugPU7cF5_CRZ8OUAu5BQS4yE3bXvP71FEQ%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc HTTP/1.1
+Host: rr2---sn-gwpa-a3ve7.googlevideo.com
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Range: bytes=0-
+
+
+[000001e1baec78b0] http stream debug: incoming response:
+HTTP/1.1 206 Partial Content
+Last-Modified: Tue, 30 Dec 2025 15:04:29 GMT
+Content-Type: video/mp4
+Date: Thu, 22 Oct 2026 09:04:13 GMT
+Expires: Thu, 22 Oct 2026 09:04:13 GMT
+Cache-Control: private, max-age=21295
+Content-Range: bytes 0-433080/433081
+Accept-Ranges: bytes
+Content-Length: 433081
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[000001e1baec78b0] main stream debug: using access module "access"
+[000001e1baec7730] main stream debug: looking for stream_filter module matching "prefetch,cache_block": 48 candidates
+[000001e1baec7730] prefetch stream debug: using 433081 bytes buffer, 433081 bytes read
+[000001e1baec7730] main stream debug: using stream_filter module "prefetch"
+[000001e1baec7a30] main stream debug: looking for stream_filter module matching "any": 48 candidates
+[000001e1baec7a30] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\playlist
+[000001e1baec7a30] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_streams.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_xml.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\appletrailers.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\bbc_co_uk.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\cue.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\dailymotion.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\jamendo.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\koreus.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\liveleak.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\newgrounds.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\rockbox_fm_presets.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\soundcloud.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\twitch.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vimeo.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vocaroo.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\youtube.luac
+[000001e1baec7a30] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\playlist
+[000001e1baec7a30] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_streams.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_xml.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\appletrailers.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\bbc_co_uk.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\cue.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\dailymotion.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\jamendo.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\koreus.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\liveleak.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\newgrounds.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\rockbox_fm_presets.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\soundcloud.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\twitch.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vimeo.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vocaroo.luac
+[000001e1baec7a30] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\youtube.luac
+[000001e1baec7a30] main stream debug: no stream_filter modules matched
+[000001e1326fc500] main stream_directory debug: looking for stream_directory module matching "any": 2 candidates
+[000001e1326fc500] main stream_directory debug: no stream_directory modules matched
+[000001e1c17189f0] main input source debug: attachment of directory-extractor failed for https://rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=133&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=433081&dur=18.933&lmt=1767107069601671&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgR8EyD2zt2I27v4ovSJPXCs4YtG-k9m9W5tmac4ueYjwCIQDDFU9Mvu8DugPU7cF5_CRZ8OUAu5BQS4yE3bXvP71FEQ%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc
+[000001e1baec7a30] main stream debug: looking for stream_filter module matching "record": 48 candidates
+[000001e1baec7a30] main stream debug: using stream_filter module "record"
+[000001e1c17189f0] main input source debug: creating demux: access='https' demux='any' location='rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=133&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=433081&dur=18.933&lmt=1767107069601671&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgR8EyD2zt2I27v4ovSJPXCs4YtG-k9m9W5tmac4ueYjwCIQDDFU9Mvu8DugPU7cF5_CRZ8OUAu5BQS4yE3bXvP71FEQ%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc' file='\\rr2---sn-gwpa-a3ve7.googlevideo.com\videoplayback'
+[000001e1c171a290] main demux debug: looking for demux module matching "any": 110 candidates
+[000001e1baec7a30] mp4 stream debug: dumping root Box "root"
+[000001e1baec7a30] mp4 stream debug: |   + ftyp size 28 offset 0
+[000001e1baec7a30] mp4 stream debug: |   + moov size 711 offset 28
+[000001e1baec7a30] mp4 stream debug: |   |   + mvhd size 108 offset 36
+[000001e1baec7a30] mp4 stream debug: |   |   + mvex size 40 offset 144
+[000001e1baec7a30] mp4 stream debug: |   |   |   + trex size 32 offset 152
+[000001e1baec7a30] mp4 stream debug: |   |   + trak size 555 offset 184
+[000001e1baec7a30] mp4 stream debug: |   |   |   + tkhd size 92 offset 192
+[000001e1baec7a30] mp4 stream debug: |   |   |   + edts size 36 offset 284
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   + elst size 28 offset 292
+[000001e1baec7a30] mp4 stream debug: |   |   |   + mdia size 419 offset 320
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   + mdhd size 32 offset 328
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   + hdlr size 71 offset 360
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   + minf size 308 offset 431
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   + dinf size 36 offset 439
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   |   + dref size 28 offset 447
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   |   |   + url  size 12 offset 463
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   + stbl size 244 offset 475
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   |   + stsd size 152 offset 483
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   |   |   + avc1 size 136 offset 499
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   |   |   |   + avcC size 50 offset 585
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   |   + stts size 16 offset 635
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   |   + stsc size 16 offset 651
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   |   + stco size 16 offset 667
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   |   + stsz size 20 offset 683
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   |   + stss size 16 offset 703
+[000001e1baec7a30] mp4 stream debug: |   |   |   |   |   + vmhd size 20 offset 719
+[000001e1baec7a30] mp4 stream debug: |   + sidx size 68 offset 739
+[000001e1c171a290] mp4 demux debug: DASH Stream
+[000001e1c171a290] mp4 demux debug: found 1 tracks
+[000001e1c171a290] mp4 demux warning: elst box found
+[000001e1c171a290] mp4 demux debug:    - [0] duration=18933ms media time=66ms) rate=1.0
+[000001e1c171a290] mp4 demux warning: no chunk defined
+[000001e1c171a290] mp4 demux debug: track[Id 0x1] read 0 chunk
+[000001e1c171a290] mp4 demux warning: STTS table of 0 entries
+[000001e1c171a290] mp4 demux debug: track[Id 0x1] read 0 samples length:0s
+[000001e1c1696b30] main input debug: selecting program id=0
+[000001e1c171a290] mp4 demux debug: adding track[Id 0x1] video (enable) language undef
+[000001e1c171a290] mp4 demux debug: Set Fragmented demux mode
+[000001e1c171a290] main demux debug: using demux module "mp4"
+[000001e1c1696b30] main input debug: Can't deduce slave type of "https://rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc" with file extension.
+[000001e1c1696b30] main input debug: loading audio-es slave: https://rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc (forced: 1)
+[000001e1c1696b30] main input debug: `https://rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc' gives access `https' demux `any' path `rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc'
+[000001e1c3d68b80] main input source debug: creating demux: access='https' demux='any' location='rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc' file='\\rr2---sn-gwpa-a3ve7.googlevideo.com\videoplayback'
+[000001e1c171a530] main demux debug: looking for access_demux module matching "https": 30 candidates
+[000001e1c171a530] main demux debug: no access_demux modules matched
+[000001e1baec6e30] main stream debug: creating access: https://rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc
+[000001e1baec6e30] main stream debug:  (path: \\rr2---sn-gwpa-a3ve7.googlevideo.com\videoplayback)
+[000001e1baec6e30] main stream debug: looking for access module matching "https": 54 candidates
+[000001e1c191e700] main tls client debug: looking for tls client module matching "any": 2 candidates
+[000001e1c191e700] gnutls tls client debug: using GnuTLS version 3.6.16
+[000001e1c191e700] gnutls tls client debug: loaded 47 trusted CAs from system
+[000001e1c191e700] main tls client debug: using tls client module "gnutls"
+[000001e1c191e700] main tls client debug: resolving rr2---sn-gwpa-a3ve7.googlevideo.com ...
+[000001e1c191e700] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1baec7730] prefetch stream debug: end of stream
+[000001e1c191e700] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1c191e700] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1c191e700] gnutls tls client debug: TLS handshake: Success.
+[000001e1baec6e30] http stream debug: outgoing request:
+GET /videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc HTTP/1.1
+Host: rr2---sn-gwpa-a3ve7.googlevideo.com
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Range: bytes=0-
+
+
+[000001e1baec6e30] http stream debug: incoming response:
+HTTP/1.1 302 Found
+Last-Modified: Wed, 02 May 2007 10:26:10 GMT
+Date: Thu, 22 Oct 2026 09:04:15 GMT
+Expires: Thu, 22 Oct 2026 09:04:15 GMT
+Cache-Control: private, max-age=900
+Location: https://rr1---sn-cvh76ney.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&rms=aub%2Caub&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&cpn=Lx6YDQyhsZ3-I8bc&redirect_counter=1&cm2rm=sn-gwpa-a3ve77l&rrc=191&req_id=84e259b23df636e2&cms_redirect=yes&cmsv=e&met=1792659855,&mh=VD&mm=29&mn=sn-cvh76ney&ms=rdu&mt=1792659487&mv=m&mvi=1&pl=23&lsparams=cps,met,mh,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRAIgNVOAFhPeENgXeWww0YtADaG8W-A6YFsRVEWZ-7jYrXYCIAD0UU1UCeyY9GhgLllVHOMIssUzKEzdBb8LRgz2uuf8
+Content-Length: 0
+Connection: close
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Content-Type: text/html
+Server: gvs 1.0
+
+
+[000001e1baec6e30] http stream debug: connection failed
+[000001e1baec6e30] main stream debug: no access modules matched
+[000001e1baec6e30] main stream debug: redirecting to: https://rr1---sn-cvh76ney.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&rms=aub%2Caub&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&cpn=Lx6YDQyhsZ3-I8bc&redirect_counter=1&cm2rm=sn-gwpa-a3ve77l&rrc=191&req_id=84e259b23df636e2&cms_redirect=yes&cmsv=e&met=1792659855,&mh=VD&mm=29&mn=sn-cvh76ney&ms=rdu&mt=1792659487&mv=m&mvi=1&pl=23&lsparams=cps,met,mh,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRAIgNVOAFhPeENgXeWww0YtADaG8W-A6YFsRVEWZ-7jYrXYCIAD0UU1UCeyY9GhgLllVHOMIssUzKEzdBb8LRgz2uuf8
+[000001e1baec6e30] main stream debug: creating access: https://rr1---sn-cvh76ney.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&rms=aub%2Caub&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&cpn=Lx6YDQyhsZ3-I8bc&redirect_counter=1&cm2rm=sn-gwpa-a3ve77l&rrc=191&req_id=84e259b23df636e2&cms_redirect=yes&cmsv=e&met=1792659855,&mh=VD&mm=29&mn=sn-cvh76ney&ms=rdu&mt=1792659487&mv=m&mvi=1&pl=23&lsparams=cps,met,mh,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRAIgNVOAFhPeENgXeWww0YtADaG8W-A6YFsRVEWZ-7jYrXYCIAD0UU1UCeyY9GhgLllVHOMIssUzKEzdBb8LRgz2uuf8
+[000001e1baec6e30] main stream debug:  (path: \\rr1---sn-cvh76ney.googlevideo.com\videoplayback)
+[000001e1baec6e30] main stream debug: looking for access module matching "https": 54 candidates
+[000001e1c191e340] main tls client debug: looking for tls client module matching "any": 2 candidates
+[000001e1c191e340] gnutls tls client debug: using GnuTLS version 3.6.16
+[000001e1c191e340] gnutls tls client debug: loaded 47 trusted CAs from system
+[000001e1c191e340] main tls client debug: using tls client module "gnutls"
+[000001e1c191e340] main tls client debug: resolving rr1---sn-cvh76ney.googlevideo.com ...
+[000001e1c191e340] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1c191e340] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1c191e340] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1c191e340] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1c191e340] gnutls tls client debug: TLS handshake: Success.
+[000001e1baec6e30] http stream debug: outgoing request:
+GET /videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&rms=aub%2Caub&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&cpn=Lx6YDQyhsZ3-I8bc&redirect_counter=1&cm2rm=sn-gwpa-a3ve77l&rrc=191&req_id=84e259b23df636e2&cms_redirect=yes&cmsv=e&met=1792659855,&mh=VD&mm=29&mn=sn-cvh76ney&ms=rdu&mt=1792659487&mv=m&mvi=1&pl=23&lsparams=cps,met,mh,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRAIgNVOAFhPeENgXeWww0YtADaG8W-A6YFsRVEWZ-7jYrXYCIAD0UU1UCeyY9GhgLllVHOMIssUzKEzdBb8LRgz2uuf8 HTTP/1.1
+Host: rr1---sn-cvh76ney.googlevideo.com
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Range: bytes=0-
+
+
+[000001e1baec6e30] http stream debug: incoming response:
+HTTP/1.1 302 Found
+Last-Modified: Wed, 02 May 2007 10:26:10 GMT
+Date: Thu, 22 Oct 2026 09:04:15 GMT
+Expires: Thu, 22 Oct 2026 09:04:15 GMT
+Cache-Control: private, max-age=900
+Location: https://rr5---sn-cvh7kney.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&rms=aub%2Caub&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&cpn=Lx6YDQyhsZ3-I8bc&cm2rm=sn-gwpa-a3ve77l&rrc=191,104&req_id=84e259b23df636e2&redirect_counter=2&rm=sn-cvhsd7e&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1792659855,&mh=VD&mip=2409:40e3:505c:9fe4:f429:a05a:82e4:1541&mm=29&mn=sn-cvh7kney&ms=rdu&mt=1792659487&mv=m&mvi=5&pl=36&lsparams=cps,ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRQIhALoEmxqQJmg1gxaz6_Ms9MYZ6y-hTxj7WLqVdrbWioCBAiABuHgEaRWcfXBX6xmyLZfX2TlsW7K8RoFfspj6PppvPg%3D%3D
+Content-Length: 0
+Connection: close
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Content-Type: text/html
+Server: gvs 1.0
+
+
+[000001e1baec6e30] http stream debug: connection failed
+[000001e1baec6e30] main stream debug: no access modules matched
+[000001e1baec6e30] main stream debug: redirecting to: https://rr5---sn-cvh7kney.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&rms=aub%2Caub&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&cpn=Lx6YDQyhsZ3-I8bc&cm2rm=sn-gwpa-a3ve77l&rrc=191,104&req_id=84e259b23df636e2&redirect_counter=2&rm=sn-cvhsd7e&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1792659855,&mh=VD&mip=2409:40e3:505c:9fe4:f429:a05a:82e4:1541&mm=29&mn=sn-cvh7kney&ms=rdu&mt=1792659487&mv=m&mvi=5&pl=36&lsparams=cps,ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRQIhALoEmxqQJmg1gxaz6_Ms9MYZ6y-hTxj7WLqVdrbWioCBAiABuHgEaRWcfXBX6xmyLZfX2TlsW7K8RoFfspj6PppvPg%3D%3D
+[000001e1baec6e30] main stream debug: creating access: https://rr5---sn-cvh7kney.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&rms=aub%2Caub&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&cpn=Lx6YDQyhsZ3-I8bc&cm2rm=sn-gwpa-a3ve77l&rrc=191,104&req_id=84e259b23df636e2&redirect_counter=2&rm=sn-cvhsd7e&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1792659855,&mh=VD&mip=2409:40e3:505c:9fe4:f429:a05a:82e4:1541&mm=29&mn=sn-cvh7kney&ms=rdu&mt=1792659487&mv=m&mvi=5&pl=36&lsparams=cps,ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRQIhALoEmxqQJmg1gxaz6_Ms9MYZ6y-hTxj7WLqVdrbWioCBAiABuHgEaRWcfXBX6xmyLZfX2TlsW7K8RoFfspj6PppvPg%3D%3D
+[000001e1baec6e30] main stream debug:  (path: \\rr5---sn-cvh7kney.googlevideo.com\videoplayback)
+[000001e1baec6e30] main stream debug: looking for access module matching "https": 54 candidates
+[000001e1c191e7f0] main tls client debug: looking for tls client module matching "any": 2 candidates
+[000001e1c191e7f0] gnutls tls client debug: using GnuTLS version 3.6.16
+[000001e1c191e7f0] gnutls tls client debug: loaded 47 trusted CAs from system
+[000001e1c191e7f0] main tls client debug: using tls client module "gnutls"
+[000001e1c191e7f0] main tls client debug: resolving rr5---sn-cvh7kney.googlevideo.com ...
+[000001e1c191e7f0] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1c191e7f0] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1c191e7f0] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[000001e1c191e7f0] gnutls tls client debug: TLS handshake: Success.
+[000001e1baec6e30] http stream debug: outgoing request:
+GET /videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&rms=aub%2Caub&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&cpn=Lx6YDQyhsZ3-I8bc&cm2rm=sn-gwpa-a3ve77l&rrc=191,104&req_id=84e259b23df636e2&redirect_counter=2&rm=sn-cvhsd7e&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1792659855,&mh=VD&mip=2409:40e3:505c:9fe4:f429:a05a:82e4:1541&mm=29&mn=sn-cvh7kney&ms=rdu&mt=1792659487&mv=m&mvi=5&pl=36&lsparams=cps,ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRQIhALoEmxqQJmg1gxaz6_Ms9MYZ6y-hTxj7WLqVdrbWioCBAiABuHgEaRWcfXBX6xmyLZfX2TlsW7K8RoFfspj6PppvPg%3D%3D HTTP/1.1
+Host: rr5---sn-cvh7kney.googlevideo.com
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Range: bytes=0-
+
+
+[000001e1baec6e30] http stream debug: incoming response:
+HTTP/1.1 206 Partial Content
+Last-Modified: Tue, 30 Dec 2025 15:03:12 GMT
+Content-Type: audio/mp4
+Date: Thu, 22 Oct 2026 09:04:16 GMT
+Expires: Thu, 22 Oct 2026 09:04:16 GMT
+Cache-Control: private, max-age=21292
+Content-Range: bytes 0-117525/117526
+Accept-Ranges: bytes
+Content-Length: 117526
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[000001e1baec6e30] main stream debug: using access module "access"
+[000001e1baec6fb0] main stream debug: looking for stream_filter module matching "prefetch,cache_block": 48 candidates
+[000001e1baec6fb0] prefetch stream debug: using 117526 bytes buffer, 117526 bytes read
+[000001e1baec6fb0] main stream debug: using stream_filter module "prefetch"
+[000001e1c3f2d7e0] main stream debug: looking for stream_filter module matching "any": 48 candidates
+[000001e1c3f2d7e0] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\playlist
+[000001e1c3f2d7e0] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_streams.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_xml.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\appletrailers.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\bbc_co_uk.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\cue.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\dailymotion.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\jamendo.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\koreus.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\liveleak.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\newgrounds.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\rockbox_fm_presets.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\soundcloud.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\twitch.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vimeo.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vocaroo.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\youtube.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\playlist
+[000001e1c3f2d7e0] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_streams.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_xml.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\appletrailers.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\bbc_co_uk.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\cue.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\dailymotion.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\jamendo.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\koreus.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\liveleak.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\newgrounds.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\rockbox_fm_presets.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\soundcloud.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\twitch.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vimeo.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vocaroo.luac
+[000001e1c3f2d7e0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\youtube.luac
+[000001e1c3f2d7e0] main stream debug: no stream_filter modules matched
+[000001e1326fc500] main stream_directory debug: looking for stream_directory module matching "any": 2 candidates
+[000001e1326fc500] main stream_directory debug: no stream_directory modules matched
+[000001e1c3d68b80] main input source debug: attachment of directory-extractor failed for https://rr5---sn-cvh7kney.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&rms=aub%2Caub&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&cpn=Lx6YDQyhsZ3-I8bc&cm2rm=sn-gwpa-a3ve77l&rrc=191,104&req_id=84e259b23df636e2&redirect_counter=2&rm=sn-cvhsd7e&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1792659855,&mh=VD&mip=2409:40e3:505c:9fe4:f429:a05a:82e4:1541&mm=29&mn=sn-cvh7kney&ms=rdu&mt=1792659487&mv=m&mvi=5&pl=36&lsparams=cps,ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRQIhALoEmxqQJmg1gxaz6_Ms9MYZ6y-hTxj7WLqVdrbWioCBAiABuHgEaRWcfXBX6xmyLZfX2TlsW7K8RoFfspj6PppvPg%3D%3D
+[000001e1c40b9a40] main stream debug: looking for stream_filter module matching "record": 48 candidates
+[000001e1c40b9a40] main stream debug: using stream_filter module "record"
+[000001e1c3d68b80] main input source debug: creating demux: access='https' demux='any' location='rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=117526&dur=19.133&lmt=1767106992626631&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgG1QEISF8D1i_bjktSMG-DbUUbOPXZVkKgYGAxT1_KQQCIQD5Se_wGkWE4TfG2cbzi8I_cKvEH0ArxyAlmrWr-q7ppA%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc' file='\\rr2---sn-gwpa-a3ve7.googlevideo.com\videoplayback'
+[000001e1c171a530] main demux debug: looking for demux module matching "any": 110 candidates
+[000001e1c40b9a40] mp4 stream debug: dumping root Box "root"
+[000001e1c40b9a40] mp4 stream debug: |   + ftyp size 24 offset 0
+[000001e1c40b9a40] mp4 stream debug: |   + moov size 708 offset 24
+[000001e1c40b9a40] mp4 stream debug: |   |   + mvhd size 108 offset 32
+[000001e1c40b9a40] mp4 stream debug: |   |   + mvex size 40 offset 140
+[000001e1c40b9a40] mp4 stream debug: |   |   |   + trex size 32 offset 148
+[000001e1c40b9a40] mp4 stream debug: |   |   + trak size 461 offset 180
+[000001e1c40b9a40] mp4 stream debug: |   |   |   + tkhd size 92 offset 188
+[000001e1c40b9a40] mp4 stream debug: |   |   |   + mdia size 361 offset 280
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   + mdhd size 32 offset 288
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   + hdlr size 71 offset 320
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   + minf size 250 offset 391
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   + dinf size 36 offset 399
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   |   + dref size 28 offset 407
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   |   |   + url  size 12 offset 423
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   + stbl size 190 offset 435
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   |   + stsd size 114 offset 443
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   |   |   + mp4a size 98 offset 459
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   |   |   |   + esds size 62 offset 495
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   |   + stts size 16 offset 557
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   |   + stsc size 16 offset 573
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   |   + stco size 16 offset 589
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   |   + stsz size 20 offset 605
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   + smhd size 16 offset 625
+[000001e1c40b9a40] mp4 stream debug: |   |   + udta size 91 offset 641
+[000001e1c40b9a40] mp4 stream debug: |   |   |   + meta size 83 offset 649
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   + hdlr size 33 offset 661
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   + ilst size 38 offset 694
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   + ctoo size 30 offset 702
+[000001e1c40b9a40] mp4 stream debug: |   |   |   |   |   |   + data size 22 offset 710
+[000001e1c40b9a40] mp4 stream debug: |   + sidx size 56 offset 732
+[000001e1c171a530] mp4 demux debug: DASH Stream
+[000001e1c171a530] mp4 demux debug: found 1 tracks
+[000001e1c171a530] mp4 demux warning: no chunk defined
+[000001e1c171a530] mp4 demux debug: track[Id 0x1] read 0 chunk
+[000001e1c171a530] mp4 demux warning: STTS table of 0 entries
+[000001e1c171a530] mp4 demux debug: track[Id 0x1] read 0 samples length:0s
+[000001e1c171a530] mp4 demux debug: adding track[Id 0x1] audio (enable) language undef
+[000001e1c171a530] mp4 demux debug: Set Fragmented demux mode
+[000001e1c171a530] main demux debug: using demux module "mp4"
+[000001e1c1740ff0] main decoder debug: looking for video decoder module matching "any": 40 candidates
+[000001e1c1740ff0] avcodec decoder debug: using ffmpeg Lavc58.134.100
+[000001e1c1740ff0] avcodec decoder debug: CPU flags: 0x000fd3db
+[000001e1c1740ff0] avcodec decoder debug: allowing 6 thread(s) for decoding
+[000001e1c1740ff0] avcodec decoder debug: codec (h264) started
+[000001e1c1740ff0] avcodec decoder debug: using frame thread mode with 6 threads
+[000001e1c1740ff0] main decoder debug: using video decoder module "avcodec"
+[000001e1c3f11e50] main decoder debug: looking for audio decoder module matching "any": 46 candidates
+[000001e1c3f11e50] main decoder debug: using audio decoder module "faad"
+[000001e1c191e160] main demux meta debug: looking for meta reader module matching "any": 4 candidates
+[000001e1c191e160] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\meta\reader
+[000001e1c191e160] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader
+[000001e1c191e160] lua demux meta debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader\filename.luac
+[000001e1c191e160] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\meta\reader
+[000001e1c191e160] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader
+[000001e1c191e160] lua demux meta debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader\filename.luac
+[000001e1c191e160] main demux meta debug: no meta reader modules matched
+[000001e1c191e430] main demux meta debug: looking for meta reader module matching "any": 4 candidates
+[000001e1c191e430] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\meta\reader
+[000001e1c191e430] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader
+[000001e1c191e430] lua demux meta debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader\filename.luac
+[000001e1c191e430] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\meta\reader
+[000001e1c191e430] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader
+[000001e1c191e430] lua demux meta debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader\filename.luac
+[000001e1c191e430] main demux meta debug: no meta reader modules matched
+[000001e1c1696b30] main input debug: `https://rr2---sn-gwpa-a3ve7.googlevideo.com/videoplayback?expire=1792681448&ei=iNHZaqO-J6TLjuMP1rWx4QY&ip=152.56.142.169&id=o-AI2ClOEQ7qvt2kshhMK0SnieNUeCezM53cf2Q8sySMU6&itag=133&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=813&met=1792659848%2C&mh=VD&mm=18%2C29&mn=sn-gwpa-a3ve7%2Csn-cvh76ney&ms=aub%2Crdu&mv=m&mvi=2&pl=23&rms=aub%2Caub&initcwndbps=487250&bui=AWzQHwqMw00bAMreeUe6YnioYjY3fCLLqQWmJmaojTBjz0PU_ZWOW5_HAFXkIiSzIuZR81K1SWkGXIMN&spc=mpRQ_4Ed4cezZmoTm6CcV-DVeSeE4AAHhvzr-DhLuvW4XBmvv6ODJ3N2oZ_s&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=433081&dur=18.933&lmt=1767107069601671&mt=1792659462&fvip=1&keepalive=yes&fexp=51565116&c=VISIONOS&txp=4530534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AE0s2JYwRQIgR8EyD2zt2I27v4ovSJPXCs4YtG-k9m9W5tmac4ueYjwCIQDDFU9Mvu8DugPU7cF5_CRZ8OUAu5BQS4yE3bXvP71FEQ%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIhAO-12pO86usDLAgtGJRbj3f3PtleEJ454gUCDwgYs5RcAiA4Zsk6mGobFJ06wgTyD5C3YmW5kFaaDz7jBboChICGhg%3D%3D&cpn=Lx6YDQyhsZ3-I8bc' successfully opened
+[000001e1c171a290] mp4 demux debug: track 1 enabled!
+[000001e1c171a290] mp4 demux: Fragment sequence discontinuity detected 1 != 0
+[000001e1c1696b30] main input debug: Buffering 0%
+[000001e1c1696b30] main input debug: Buffering 25%
+[000001e1c171a530] mp4 demux debug: track 1 enabled!
+[000001e1c171a530] mp4 demux: Fragment sequence discontinuity detected 1 != 0
+[000001e1c1696b30] main input debug: Buffering 0%
+[000001e1c1740ff0] avcodec decoder debug: available hardware decoder output format 53 (dxva2_vld)
+[000001e1c1740ff0] avcodec decoder debug: available hardware decoder output format 118 (d3d11va_vld)
+[000001e1c1740ff0] avcodec decoder debug: available hardware decoder output format 174 (d3d11)
+[000001e1c1740ff0] avcodec decoder debug: available software decoder output format 0 (yuv420p)
+[000001e1c1740ff0] avcodec decoder debug: trying format d3d11va_vld
+[000001e1c3f11e50] faad decoder warning: decoded zero sample
+[000001e1c4258310] main spu text debug: looking for text renderer module matching "any": 6 candidates
+[000001e1c3f11e50] faad decoder debug: AAC SBR (channels: 2, samplerate: 44100)
+[000001e1bada2080] main generic debug: creating audio output
+[000001e1c4259c90] main audio output debug: looking for audio output module matching "any": 12 candidates
+[000001e1c1696b30] main input debug: Buffering 25%
+[000001e1c1696b30] main input debug: Buffering 50%
+[000001e1c4259c90] mmdevice audio output debug: using default device
+[000001e1c1696b30] main input debug: Buffering 75%
+[000001e1c1696b30] main input debug: Buffering 100%
+[000001e1c4259c90] mmdevice audio output debug: version 2 session control unavailable
+[000001e1c1696b30] main input debug: Stream buffering done (1250 ms in 34 ms)
+[000001e1c4259c90] mmdevice audio output debug: volume from -65.250000 dB to +0.000000 dB with 0.031250 dB increments
+[000001e1c4259c90] main audio output debug: using audio output module "mmdevice"
+[000001e1c424d260] main generic debug: looking for aout stream module matching "any": 4 candidates
+[000001e1c4258310] freetype spu text debug: Using DWrite backend
+[000001e1c4258310] freetype spu text debug: DWrite_GetFamily(): family name: Arial
+[000001e1c4258310] freetype spu text debug: DWrite_ParseFamily(): using font at index 0 with weight 400 for bold: 0, italic: 0
+[000001e1c4258310] freetype spu text debug: DWrite_ParseFamily(): using font at index 1 with weight 700 for bold: 1, italic: 0
+[000001e1c4258310] freetype spu text debug: DWrite_ParseFamily(): using font at index 2 with weight 400 for bold: 0, italic: 1
+[000001e1c4258310] freetype spu text debug: DWrite_ParseFamily(): using font at index 3 with weight 700 for bold: 1, italic: 1
+[000001e1c4258310] main spu text debug: using text renderer module "freetype"
+[000001e1c4220010] main scale debug: looking for video converter module matching "any": 48 candidates
+[000001e1c4220010] swscale scale debug: 32x32 (32x32) chroma: YUVA -> 16x16 (16x16) chroma: RGBA with scaling using Bicubic (good quality)
+[000001e1c4220010] main scale debug: using video converter module "swscale"
+[000001e1c429f8f0] main scale debug: looking for video converter module matching "any": 48 candidates
+[000001e1c429f8f0] yuvp scale debug: YUVP to YUVA converter
+[000001e1c429f8f0] main scale debug: using video converter module "yuvp"
+[000001e1c3e9a9c0] main video output debug: Deinterlacing available
+[000001e1c3e9a9c0] main video output debug: deinterlace -1, mode auto, is_needed 0
+[000001e1c1719a90] main window debug: looking for vout window module matching "none": 6 candidates
+[000001e1c1719a90] main window debug: no vout window modules matched
+[000001e1c3e9a9c0] main video output debug: Opening vout display wrapper
+[000001e1c3d66f90] main vout display debug: looking for vout display module matching "vmem": 24 candidates
+[000001e1c3d66f90] main vout display debug: VoutDisplayEvent 'resize' 320x240
+[000001e1c3d66f90] main vout display debug: using vout display module "vmem"
+[000001e1c3d66f90] main vout display debug: A filter to adapt decoder DX11 to display RV32 is needed
+[000001e1c42702a0] main filter debug: looking for video converter module matching "any": 48 candidates
+[000001e1c42702a0] chain filter debug: Trying to use chroma I420 as middle man
+[000001e1c4270870] main filter debug: looking for video converter module matching "any": 48 candidates
+[000001e1c4270870] main filter debug: using video converter module "d3d11_filters"
+[000001e1c42702a0] main filter debug: Filter 'd3d11_filters' (000001e1c4270870) appended to chain
+[000001e1c4270be0] main filter debug: looking for video converter module matching "any": 48 candidates
+[000001e1c4270be0] swscale filter debug: 320x240 (320x240) chroma: I420 -> 320x240 (320x240) chroma: RV32 with scaling using Bicubic (good quality)
+[000001e1c4270be0] main filter debug: using video converter module "swscale"
+[000001e1c42702a0] main filter debug: Filter 'Swscale' (000001e1c4270be0) appended to chain
+[000001e1c42702a0] main filter debug: using video converter module "chain"
+[000001e1c3d66f90] main vout display debug: Filter 'chain' (000001e1c42702a0) appended to chain
+[000001e1c3e9a9c0] main video output debug: original format sz 320x240, of (0,0), vsz 320x240, 4cc DX11, sar 1:1, msk r0x0 g0x0 b0x0
+[000001e1c3d66f90] main vout display debug: VoutDisplayEvent 'window state' 0
+[000001e1c3d66f90] main vout display debug: VoutDisplayEvent 'window state' 0
+[000001e1c4258310] main spu text debug: removing module "freetype"
+[000001e1c3d66f90] main vout display error: Failed to set on top
+[000001e1c3d66f90] main vout display debug: VoutDisplayEvent 'resize' 320x240
+[000001e1c42a0630] main spu text debug: looking for text renderer module matching "any": 6 candidates
+[000001e1c42a0630] freetype spu text debug: Using DWrite backend
+[000001e1c42a0630] freetype spu text debug: DWrite_GetFamily(): family name: Arial
+[000001e1c42a0630] freetype spu text debug: DWrite_ParseFamily(): using font at index 0 with weight 400 for bold: 0, italic: 0
+[000001e1c42a0630] freetype spu text debug: DWrite_ParseFamily(): using font at index 1 with weight 700 for bold: 1, italic: 0
+[000001e1c42a0630] freetype spu text debug: DWrite_ParseFamily(): using font at index 2 with weight 400 for bold: 0, italic: 1
+[000001e1c42a0630] freetype spu text debug: DWrite_ParseFamily(): using font at index 3 with weight 700 for bold: 1, italic: 1
+[000001e1c42a0630] main spu text debug: using text renderer module "freetype"
+[000001e1c191e8e0] main generic debug: looking for hw decoder module matching "none": 4 candidates
+[000001e1c191e8e0] main generic debug: no hw decoder modules matched
+[000001e1c1740ff0] avcodec decoder debug: trying format dxva2_vld
+[000001e1c42702a0] main filter debug: removing module "chain"
+[000001e1c4270870] main filter debug: removing module "d3d11_filters"
+[000001e1c42702a0] main filter debug: Filter 000001e1c4270870 removed from chain
+[000001e1c4270be0] main filter debug: removing module "swscale"
+[000001e1c42702a0] main filter debug: Filter 000001e1c4270be0 removed from chain
+[000001e1c3d66f90] main vout display debug: Filter 000001e1c42702a0 removed from chain
+[000001e1c3d66f90] main vout display debug: removing module "vmem"
+[000001e1c3e9a9c0] main video output debug: deinterlace -1, mode auto, is_needed 0
+[000001e1c3e9a9c0] main video output debug: Opening vout display wrapper
+[000001e1c3d67a10] main vout display debug: looking for vout display module matching "vmem": 24 candidates
+[000001e1c3d67a10] main vout display debug: VoutDisplayEvent 'resize' 320x240
+[000001e1c3d67a10] main vout display debug: using vout display module "vmem"
+[000001e1c3d67a10] main vout display debug: A filter to adapt decoder DXA9 to display RV32 is needed
+[000001e1c42c7530] main filter debug: looking for video converter module matching "any": 48 candidates
+[000001e1c42c7530] chain filter debug: Trying to use chroma I420 as middle man
+[000001e1c42c7b00] main filter debug: looking for video converter module matching "any": 48 candidates
+[000001e1c42c7b00] d3d9_filters filter debug: Using Direct3D9 Extended API!
+[000001e1c42c7b00] main filter debug: using video converter module "d3d9_filters"
+[000001e1c42c7530] main filter debug: Filter 'd3d9_filters' (000001e1c42c7b00) appended to chain
+[000001e1c4273d10] main filter debug: looking for video converter module matching "any": 48 candid[NewPipe+] first video frame: planes=1 size=320x258 chroma=RV32 pitches=1280 engine=133017211
+[NewPipe+] video probe: status=PLAYING tracks=2 dimension=java.awt.Dimension[width=320,height=240] frames=8
+ates
+[000001e1c4273d10] swscale filter debug: 320x240 (320x240) chroma: I420 -> 320x240 (320x240) chroma: RV32 with scaling using Bicubic (good quality)
+[000001e1c4273d10] main filter debug: using video converter module "swscale"
+[000001e1c42c7530] main filter debug: Filter 'Swscale' (000001e1c4273d10) appended to chain
+[000001e1c42c7530] main filter debug: using video converter module "chain"
+[000001e1c3d67a10] main vout display debug: Filter 'chain' (000001e1c42c7530) appended to chain
+[000001e1c3e9a9c0] main video output debug: original format sz 320x240, of (0,0), vsz 320x240, 4cc DXA9, sar 1:1, msk r0x0 g0x0 b0x0
+[000001e1bada2080] main generic debug: reusing provided vout
+[000001e1c3d67a10] main vout display debug: VoutDisplayEvent 'window state' 0
+[000001e1c3d67a10] main vout display debug: VoutDisplayEvent 'window state' 0
+[000001e1c191df80] main generic debug: looking for hw decoder module matching "none": 4 candidates
+[000001e1c191df80] main generic debug: no hw decoder modules matched
+[h264 @ 000001e1c3f89200] Reinit context to 320x240, pix_fmt: yuv420p
+[000001e1c42c7530] main filter debug: removing module "chain"
+[000001e1c42c7b00] main filter debug: removing module "d3d9_filters"
+[000001e1c42c7530] main filter debug: Filter 000001e1c42c7b00 removed from chain
+[000001e1c4273d10] main filter debug: removing module "swscale"
+[000001e1c42c7530] main filter debug: Filter 000001e1c4273d10 removed from chain
+[000001e1c3d67a10] main vout display debug: Filter 000001e1c42c7530 removed from chain
+[000001e1c3d67a10] main vout display debug: removing module "vmem"
+[000001e1c3e9a9c0] main video output debug: deinterlace -1, mode auto, is_needed 0
+[000001e1c3e9a9c0] main video output debug: Opening vout display wrapper
+[000001e1c3d674d0] main vout display debug: looking for vout display module matching "vmem": 24 candidates
+[000001e1c3d674d0] main vout display debug: VoutDisplayEvent 'resize' 320x258
+[000001e1c3d674d0] main vout display debug: using vout display module "vmem"
+[000001e1c3d674d0] main vout display debug: A filter to adapt decoder I420 to display RV32 is needed
+[000001e1c4273d10] main filter debug: looking for video converter module matching "any": 48 candidates
+[000001e1c4273d10] swscale filter debug: 320x240 (320x258) chroma: I420 -> 320x258 (320x258) chroma: RV32 with scaling using Bicubic (good quality)
+[000001e1c4273d10] main filter debug: using video converter module "swscale"
+[000001e1c3d674d0] main vout display debug: Filter 'Swscale' (000001e1c4273d10) appended to chain
+[000001e1c3e9a9c0] main video output debug: original format sz 320x258, of (0,0), vsz 320x240, 4cc I420, sar 1:1, msk r0x0 g0x0 b0x0
+[000001e1c3d674d0] main vout display debug: VoutDisplayEvent 'window state' 0
+[000001e1bada2080] main generic debug: reusing provided vout
+[000001e1c3d674d0] main vout display debug: VoutDisplayEvent 'window state' 0
+[000001e1baec6fb0] prefetch stream debug: end of stream
+[000001e1c1740ff0] main decoder debug: Received first picture
+[000001e1c3d674d0] main vout display error: Failed to set on top
+[000001e1c3d674d0] main vout display debug: VoutDisplayEvent 'resize' 320x240
+[000001e1c424d260] wasapi generic debug: modified format
+[000001e1c424d260] wasapi generic debug: buffer size    : 96000 frames
+[000001e1c424d260] wasapi generic debug: maximum latency: 000 ns
+[000001e1c424d260] wasapi generic debug: default period : 10666700 ns
+[000001e1c424d260] wasapi generic debug: minimum period : 3000000 ns
+[000001e1c424d260] main generic debug: using aout stream module "wasapi"
+[000001e1c4259c90] main audio output debug: output 'f32l' 48000 Hz Stereo frame=1 samples/8 bytes
+[000001e1c424c490] main volume debug: looking for audio volume module matching "any": 4 candidates
+[000001e1c424c490] main volume debug: using audio volume module "float_mixer"
+[000001e1c4259c90] main audio output debug: input 'f32l' 44100 Hz Stereo frame=1 samples/8 bytes
+[000001e1c42a0980] main audio filter debug: looking for audio filter module matching "scaletempo": 32 candidates
+[000001e1c42a0980] scaletempo audio filter debug: format: 44100 rate, 2 nch, 4 bps, fl32
+[000001e1c42a0980] scaletempo audio filter debug: params: 30 stride, 0.200 overlap, 14 search
+[000001e1c42a0980] scaletempo audio filter debug: 1.000 scale, 1323.000 stride_in, 1323 stride_out, 1059 standing, 264 overlap, 617 search, 2204 queue, fl32 mode
+[000001e1c42a0980] main audio filter debug: using audio filter module "scaletempo"
+[000001e1c4259c90] main audio output debug: conversion: 'f32l'->'f32l' 44100 Hz->44100 Hz Stereo->Stereo
+[000001e1c4259c90] main audio output debug: conversion pipeline complete
+[000001e1c4259c90] main audio output debug: conversion: 'f32l'->'f32l' 44100 Hz->44100 Hz Stereo->Stereo
+[000001e1c4259c90] main audio output debug: conversion pipeline complete
+[000001e1c429ff90] main audio resampler debug: looking for audio resampler module matching "any": 6 candidates
+[000001e1c429ff90] main audio resampler debug: using audio resampler module "samplerate"
+[000001e1c1696b30] main input debug: Decoder wait done in 765 ms
+[000001e1c4259c90] main audio output debug: inserting 2565 zeroes
+[000001e1c4259c90] mmdevice audio output debug: state changed: 1
+[000001e1c3d674d0] main vout display debug: auto hiding mouse cursor
+[000001e1c1696b30] main input debug: slave 0 EOF
+[000001e1c1696b30] main input error: ES_OUT_SET_(GROUP_)PCR  is called too late (pts_delay increased to 1000 ms)
+[000001e1c1696b30] main input debug: ES_OUT_RESET_PCR called
+[000001e1c1696b30] main input debug: Buffering 0%
+[000001e1c4259c90] mmdevice audio output debug: state changed: 0
+[000001e1c424d260] wasapi generic debug: reset
+[000001e1c1696b30] main input debug: Buffering 25%
+[000001e1c1696b30] main input debug: Buffering 50%
+[000001e1c1740ff0] avcodec decoder debug: available hardware decoder output format 53 (dxva2_vld)
+[000001e1c1740ff0] avcodec decoder debug: available hardware decoder output format 118 (d3d11va_vld)
+[000001e1c1740ff0] avcodec decoder debug: available hardware decoder output format 174 (d3d11)
+[000001e1c1740ff0] avcodec decoder debug: available software decoder output format 0 (yuv420p)
+[000001e1c1740ff0] avcodec decoder debug: reusing decoder output format 0
+[h264 @ 000001e1c3f89200] Reinit context to 320x240, pix_fmt: yuv420p
+[000001e1c1740ff0] main decoder debug: Received first picture
+[000001e1c1696b30] main input debug: Stream buffering done (8433 ms in 5 ms)
+[000001e1c3f11e50] main decoder error: buffer deadlock prevented
+[000001e1c1696b30] main input debug: Decoder wait done in 0 ms
+[000001e1c1696b30] main input debug: EOF reached
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1696b30] main input debug: waiting decoder fifos to empty
+[000001e1c1740ff0] main decoder debug: killing decoder fourcc `h264'
+[000001e1c1740ff0] main decoder debug: removing module "avcodec"
+[000001e1bada2080] main generic debug: saving a free vout
+[000001e1bada2080] main generic debug: reusing provided vout
+[000001e1c3f11e50] main decoder debug: killing decoder fourcc `mp4a'
+[000001e1c3f11e50] main decoder debug: removing module "faad"
+[000001e1c424d260] wasapi generic debug: reset
+[000001e1c429ff90] main audio resampler debug: removing module "samplerate"
+[000001e1c42a0980] main audio filter debug: removing module "scaletempo"
+[000001e1c424c490] main volume debug: removing module "float_mixer"
+[000001e1bada2080] main generic debug: keeping audio output
+[000001e1c171a530] main demux debug: removing module "mp4"
+[000001e1c171a530] mp4 demux debug: freeing all memory
+> Task :desktopApp:run FAILED

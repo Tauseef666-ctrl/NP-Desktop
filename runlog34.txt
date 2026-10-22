@@ -1,0 +1,1468 @@
+Reusing configuration cache.
+> Task :desktopApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :desktopApp:generateComposeResClass SKIPPED
+> Task :desktopApp:prepareAppResources NO-SOURCE
+> Task :shared:convertXmlValueResourcesForJvmMain NO-SOURCE
+> Task :desktopApp:convertXmlValueResourcesForMain NO-SOURCE
+> Task :shared:copyNonXmlValueResourcesForJvmMain NO-SOURCE
+> Task :desktopApp:copyNonXmlValueResourcesForMain NO-SOURCE
+> Task :shared:kmpPartiallyResolvedDependenciesChecker
+> Task :desktopApp:downloadVlcBundle UP-TO-DATE
+> Task :shared:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :shared:buildConfigGenerator UP-TO-DATE
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :shared:checkJvmMainComposeLibrariesCompatibility
+> Task :shared:generateComposeResClass UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForJvmMain NO-SOURCE
+> Task :desktopApp:prepareComposeResourcesTaskForMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForMain SKIPPED
+> Task :desktopApp:generateActualResourceCollectorsForMain SKIPPED
+> Task :shared:generateResourceAccessorsForJvmMain NO-SOURCE
+> Task :desktopApp:assembleMainResources UP-TO-DATE
+> Task :desktopApp:processResources UP-TO-DATE
+> Task :shared:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :shared:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :shared:assembleJvmMainResources UP-TO-DATE
+> Task :shared:jvmProcessResources UP-TO-DATE
+> Task :shared:processJvmMainResources SKIPPED
+> Task :shared:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :shared:generateActualResourceCollectorsForJvmMain UP-TO-DATE
+> Task :shared:compileKotlinJvm UP-TO-DATE
+> Task :shared:compileJvmMainJava NO-SOURCE
+> Task :shared:jvmMainClasses UP-TO-DATE
+> Task :shared:jvmJar UP-TO-DATE
+> Task :desktopApp:compileKotlin UP-TO-DATE
+> Task :desktopApp:compileJava NO-SOURCE
+> Task :desktopApp:classes UP-TO-DATE
+> Task :desktopApp:jar UP-TO-DATE
+
+> Task :desktopApp:run
+[INFO] [Koin] Started 25 definitions in 6.109 ms
+[INFO] [Koin] Started 103 definitions in 1.641 ms
+[NewPipe+] trying bundled libVLC at C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21
+[NewPipe+] bundled libVLC discovered
+[NewPipe+] streams: muxed=0 videoOnly=18 audio=5 muxedIds=[] videoIds=[315/2160, 401/2160, 308/1440, 400/1440, 299/1080, 303/1080, 399/1080, 298/720, 302/720, 398/720, 135/480, 244/480, 134/360, 243/360, 133/240, 242/240, 160/144, 278/144] audioIds=[139, 140, 249, 250, 251] mpd= hls=https://manifest.googlevideo.com/api/manifest/hls_variant/ex
+[NewPipe+] vlc factory args=[--verbose=2]
+[00000206372fcd10] main libvlc debug: VLC media player - 3.0.21 Vetinari
+[00000206372fcd10] main libvlc debug: Copyright © 1996-2024 the VideoLAN team
+[00000206372fcd10] main libvlc debug: revision 3.0.21-1-0-g9c4768291e
+[00000206372fcd10] main libvlc debug: configured with /builds/videolan/vlc/extras/package/win32/../../../configure  '--enable-update-check' '--enable-lua' '--enable-faad' '--enable-flac' '--enable-theora' '--enable-avcodec' '--enable-merge-ffmpeg' '--enable-dca' '--enable-mpc' '--enable-libass' '--enable-schroedinger' '--enable-realrtsp' '--enable-live555' '--enable-shout' '--enable-goom' '--enable-sse' '--enable-mmx' '--enable-libcddb' '--enable-zvbi' '--disable-telx' '--enable-nls' '--host=x86_64-w64-mingw32' '--with-contrib=../contrib/x86_64-w64-mingw32' '--with-breakpad=https://win.crashes.videolan.org' '--enable-qt' '--enable-skins2' '--enable-dvdread' '--enable-caca' 'host_alias=x86_64-w64-mingw32' 'CFLAGS= -D_WIN32_WINNT=0x0502 -DWINVER=0x502 -D__MSVCRT_VERSION__=0x700 ' 'CXXFLAGS= -D_WIN32_WINNT=0x0502 -DWINVER=0x502 -D__MSVCRT_VERSION__=0x700 ' 'PKG_CONFIG=pkg-config' 'PKG_CONFIG_LIBDIR=/usr/x86_64-w64-mingw32/lib/pkgconfig:/usr/lib/x86_64-w64-mingw32/pkgconfig'
+[00000206372fcd10] main libvlc debug: searching plug-in modules
+[00000206372fcd10] main libvlc debug: loading plugins cache file C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins\plugins.dat
+[00000206372fcd10] main libvlc warning: cannot read C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins\plugins.dat: No such file or directory
+[00000206372fcd10] main libvlc debug: recursively browsing `C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins'
+[00000206372fcd10] main libvlc debug: loading plugins cache file C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins\plugins.dat
+[00000206372fcd10] main libvlc warning: cannot read C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins\plugins.dat: No such file or directory
+[00000206372fcd10] main libvlc debug: recursively browsing `C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\plugins'
+[00000206372fcd10] main libvlc debug: plug-ins loaded: 995 modules
+[00000206bfb1e1f0] main logger debug: looking for logger module matching "any": 4 candidates
+[00000206bfb1e1f0] main logger debug: using logger module "console"
+[00000206372fcd10] main libvlc debug: translation test: code is "C"
+[00000206c6109ab0] main keystore debug: looking for keystore module matching "memory": 6 candidates
+[00000206c6109ab0] main keystore debug: using keystore module "memory"
+[00000206372fcd10] main libvlc debug: CPU has capabilities MMX MMXEXT SSE SSE2 SSE3 SSSE3 SSE4.1 SSE4.2 FPU 
+[00000206c60e1e40] main generic debug: creating audio output
+[00000206bfac83a0] main audio output debug: looking for audio output module matching "any": 12 candidates
+[00000206bfac83a0] mmdevice audio output debug: using default device
+[00000206bfac83a0] mmdevice audio output debug: display name changed: VLC media player (LibVLC 3.0.21)
+[00000206bfac83a0] mmdevice audio output debug: version 2 session control unavailable
+[00000206bfac83a0] mmdevice audio output debug: volume from -65.250000 dB to +0.000000 dB with 0.031250 dB increments
+[00000206bfac83a0] main audio output debug: using audio output module "mmdevice"
+[00000206c60e1e40] main generic debug: keeping audio output
+[00000206c60e18d0] main generic debug: creating audio output
+[000002069db3c8d0] main audio output debug: looking for audio output module matching "any": 12 candidates
+[000002069db3c8d0] mmdevice audio output debug: using default device
+[000002069db3c8d0] mmdevice audio output debug: version 2 session control unavailable
+[000002069db3c8d0] mmdevice audio output debug: volume from -65.250000 dB to +0.000000 dB with 0.031250 dB increments
+[000002069db3c8d0] main audio output debug: using audio output module "mmdevice"
+[00000206c60e18d0] main generic debug: keeping audio output
+[000002069db3c8d0] main audio output debug: removing module "mm[NewPipe+] video surface: callback sink bound
+[NewPipe+] prepare: host=manifest.googlevideo.com audioOnly=false slaveAudio=false frameSinks=0
+device"
+[00000206bfac83a0] main audio output debug: removing module "mmdevice"
+[00000206c62091d0] main input debug: Creating an input for 'index.m3u8?'
+[00000206c62091d0] main input debug: using timeshift granularity of 50 MiB
+[00000206c62091d0] main input debug: using timeshift path: C:\Users\TAUSEE~1\AppData\Local\Temp
+[00000206c62091d0] main input debug: `https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/source/youtube/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/playback_host/rr2---sn-gwpa-a3vr.googlevideo.com/cps/429/met/1792662541%2C/mh/aP/mm/31%2C29/mn/sn-gwpa-a3vr%2Csn-gwpa-qxae7/ms/au%2Crdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au%2Cau/hfr/1/demuxed/1/tts_caps/1/maudio/1/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/go/1/rqh/5/epbp/1/mt/1792662135/fvip/3/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cdemuxed%2Ctts_caps%2Cmaudio%2Cpcm2%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Citag%2Cplaylist_type/sig/AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g%3D%3D/lsparams/playback_host%2Ccps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps/lsig/APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13lxh2uCCHZ/file/index.m3u8?' gives access `https' demux `any' path `manifest.googlevideo.com/api/manifest/hls_variant/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/source/youtube/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/playback_host/rr2---sn-gwpa-a3vr.googlevideo.com/cps/429/met/1792662541%2C/mh/aP/mm/31%2C29/mn/sn-gwpa-a3vr%2Csn-gwpa-qxae7/ms/au%2Crdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au%2Cau/hfr/1/demuxed/1/tts_caps/1/maudio/1/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/go/1/rqh/5/epbp/1/mt/1792662135/fvip/3/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cdemuxed%2Ctts_caps%2Cmaudio%2Cpcm2%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Citag%2Cplaylist_type/sig/AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g%3D%3D/lsparams/playback_host%2Ccps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps/lsig/APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13lxh2uCCHZ/file/index.m3u8?'
+[00000206bfb1ed30] main input source debug: creating demux: access='https' demux='any' location='manifest.googlevideo.com/api/manifest/hls_variant/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/source/youtube/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/playback_host/rr2---sn-gwpa-a3vr.googlevideo.com/cps/429/met/1792662541%2C/mh/aP/mm/31%2C29/mn/sn-gwpa-a3vr%2Csn-gwpa-qxae7/ms/au%2Crdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au%2Cau/hfr/1/demuxed/1/tts_caps/1/maudio/1/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/go/1/rqh/5/epbp/1/mt/1792662135/fvip/3/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cdemuxed%2Ctts_caps%2Cmaudio%2Cpcm2%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Citag%2Cplaylist_type/sig/AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g%3D%3D/lsparams/playback_host%2Ccps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps/lsig/APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13l[NewPipe+] debug playback: Success(value=kotlin.Unit)
+xh2uCCHZ/file/index.m3u8?' file='\\manifest.googlevideo.com\api\manifest\hls_variant\expire\1792684141\ei\DdzZasKqM6CY77APltm2yA4\ip\152.56.142.169\id\6aacfe284f9ba4a4\source\youtube\requiressl\yes\xpc\EgVo2aDSNQ==\playback_host\rr2---sn-gwpa-a3vr.googlevideo.com\cps\429\met\1792662541,\mh\aP\mm\31,29\mn\sn-gwpa-a3vr,sn-gwpa-qxae7\ms\au,rdu\mv\m\mvi\2\pcm2cms\yes\pl\23\rms\au,au\hfr\1\demuxed\1\tts_caps\1\maudio\1\pcm2\no\initcwndbps\582375\bui\AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL\spc\mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us\vprv\1\go\1\rqh\5\epbp\1\mt\1792662135\fvip\3\nvgoi\1\short_key\1\ncsapi\1\keepalive\yes\fexp\51565116\dover\13\itag\0\playlist_type\DVR\sparams\expire,ei,ip,id,source,requiressl,xpc,hfr,demuxed,tts_caps,maudio,pcm2,bui,spc,vprv,go,rqh,itag,playlist_type\sig\AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g==\lsparams\playback_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps\lsig\APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13lxh2uCCHZ\file\index.m3u8'
+[00000206372fc290] main demux debug: looking for access_demux module matching "https": 30 candidates
+[00000206372fc290] main demux debug: no access_demux modules matched
+[00000206bfb1c8b0] main stream debug: creating access: https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/source/youtube/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/playback_host/rr2---sn-gwpa-a3vr.googlevideo.com/cps/429/met/1792662541%2C/mh/aP/mm/31%2C29/mn/sn-gwpa-a3vr%2Csn-gwpa-qxae7/ms/au%2Crdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au%2Cau/hfr/1/demuxed/1/tts_caps/1/maudio/1/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/go/1/rqh/5/epbp/1/mt/1792662135/fvip/3/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cdemuxed%2Ctts_caps%2Cmaudio%2Cpcm2%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Citag%2Cplaylist_type/sig/AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g%3D%3D/lsparams/playback_host%2Ccps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps/lsig/APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13lxh2uCCHZ/file/index.m3u8?
+[00000206bfb1c8b0] main stream debug:  (path: \\manifest.googlevideo.com\api\manifest\hls_variant\expire\1792684141\ei\DdzZasKqM6CY77APltm2yA4\ip\152.56.142.169\id\6aacfe284f9ba4a4\source\youtube\requiressl\yes\xpc\EgVo2aDSNQ==\playback_host\rr2---sn-gwpa-a3vr.googlevideo.com\cps\429\met\1792662541,\mh\aP\mm\31,29\mn\sn-gwpa-a3vr,sn-gwpa-qxae7\ms\au,rdu\mv\m\mvi\2\pcm2cms\yes\pl\23\rms\au,au\hfr\1\demuxed\1\tts_caps\1\maudio\1\pcm2\no\initcwndbps\582375\bui\AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL\spc\mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us\vprv\1\go\1\rqh\5\epbp\1\mt\1792662135\fvip\3\nvgoi\1\short_key\1\ncsapi\1\keepalive\yes\fexp\51565116\dover\13\itag\0\playlist_type\DVR\sparams\expire,ei,ip,id,source,requiressl,xpc,hfr,demuxed,tts_caps,maudio,pcm2,bui,spc,vprv,go,rqh,itag,playlist_type\sig\AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g==\lsparams\playback_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps\lsig\APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13lxh2uCCHZ\file\index.m3u8)
+[00000206bfb1c8b0] main stream debug: looking for access module matching "https": 54 candidates
+[00000206bf9d4d30] main tls client debug: looking for tls client module matching "any": 2 candidates
+[00000206bf9d4d30] gnutls tls client debug: using GnuTLS version 3.6.16
+[00000206bf9d4d30] gnutls tls client debug: loaded 47 trusted CAs from system
+[00000206bf9d4d30] main tls client debug: using tls client module "gnutls"
+[00000206bf9d4d30] main tls client debug: resolving manifest.googlevideo.com ...
+[00000206bf9d4d30] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[00000206bf9d4d30] gnutls tls client debug: TLS handshake: Success.
+[00000206bfb1c8b0] http stream debug: out SETTINGS (0x04) frame of 30 bytes, flags 0x00, global
+[00000206bfb1c8b0] http stream debug: out HEADERS (0x01) frame of 1430 bytes, flags 0x05, stream 1
+[00000206bfb1c8b0] http stream debug: in SETTINGS (0x04) frame of 18 bytes, flags 0x00, global
+[00000206bfb1c8b0] http stream debug: setting: Concurrent streams (0x0003): 100
+[00000206bfb1c8b0] http stream debug: setting: Initial window size (0x0004): 1048576
+[00000206bfb1c8b0] http stream debug: setting: Header list size (0x0006): 65536
+[00000206bfb1c8b0] http stream debug: out SETTINGS (0x04) frame of 0 bytes, flags 0x01, global
+[00000206bfb1c8b0] http stream debug: in WINDOW_UPDATE (0x08) frame of 4 bytes, flags 0x00, global
+[00000206bfb1c8b0] http stream debug: in SETTINGS (0x04) frame of 0 bytes, flags 0x01, global
+[00000206bfb1c8b0] http stream debug: in HEADERS (0x01) frame of 248 bytes, flags 0x04, stream 1
+[00000206bfb1c8b0] http stream debug: stream 1 12 headers:
+[00000206bfb1c8b0] http stream debug:  :status: "200"
+[00000206bfb1c8b0] http stream debug:  content-type: "application/vnd.apple.mpegurl"
+[00000206bfb1c8b0] http stream debug:  cross-origin-resource-policy: "cross-origin"
+[00000206bfb1c8b0] http stream debug:  date: "Thu, 22 Oct 2026 09:49:11 GMT"
+[00000206bfb1c8b0] http stream debug:  pragma: "no-cache"
+[00000206bfb1c8b0] http stream debug:  expires: "Fri, 01 Jan 1990 00:00:00 GMT"
+[00000206bfb1c8b0] http stream debug:  cache-control: "no-cache, must-revalidate"
+[00000206bfb1c8b0] http stream debug:  server: "HTTP server (unknown)"
+[00000206bfb1c8b0] http stream debug:  content-length: "26481"
+[00000206bfb1c8b0] http stream debug:  x-xss-protection: "0"
+[00000206bfb1c8b0] http stream debug:  x-frame-options: "SAMEORIGIN"
+[00000206bfb1c8b0] http stream debug:  alt-svc: "h3=":443"; ma=2592000,h3-29=":443"; ma=2592000"
+[00000206bfb1c8b0] main stream debug: using access module "access"
+[00000206bfb1cd30] main stream debug: looking for stream_filter module matching "prefetch,cache_block": 48 candidates
+[00000206bfb1cd30] prefetch stream debug: using 26481 bytes buffer, 26481 bytes read
+[00000206bfb1cd30] main stream debug: using stream_filter module "prefetch"
+[00000206bfb1c5b0] main stream debug: looking for stream_filter module matching "any": 48 candidates
+[00000206bfb1c8b0] http stream debug: in DATA (0x00) frame of 15472 bytes, flags 0x00, stream 1
+[00000206bfb1c8b0] http stream debug: out (priority) WINDOW_UPDATE (0x08) frame of 4 bytes, flags 0x00, global
+[00000206bfb1c5b0] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\playlist
+[00000206bfb1c5b0] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_streams.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_xml.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\appletrailers.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\bbc_co_uk.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\cue.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\dailymotion.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\jamendo.luac
+[00000206bfb1c8b0] http stream debug: in DATA (0x00) frame of 11009 bytes, flags 0x00, stream 1
+[00000206bfb1c8b0] http stream debug: in DATA (0x00) frame of 0 bytes, flags 0x01, stream 1
+[00000206bfb1c8b0] http stream debug: stream 1 closed by peer
+[00000206bfb1c8b0] http stream debug: in PING (0x06) frame of 8 bytes, flags 0x00, global
+[00000206bfb1c8b0] http stream debug: out (priority) PING (0x06) frame of 8 bytes, flags 0x01, global
+[00000206bfb1cd30] prefetch stream debug: end of stream
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\koreus.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\liveleak.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\newgrounds.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\rockbox_fm_presets.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\soundcloud.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\twitch.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vimeo.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vocaroo.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\youtube.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\playlist
+[00000206bfb1c5b0] lua stream debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_streams.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\anevia_xml.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\appletrailers.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\bbc_co_uk.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\cue.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\dailymotion.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\jamendo.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\koreus.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\liveleak.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\newgrounds.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\rockbox_fm_presets.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\soundcloud.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\twitch.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vimeo.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\vocaroo.luac
+[00000206bfb1c5b0] lua stream debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\playlist\youtube.luac
+[00000206bfb1c5b0] main stream debug: no stream_filter modules matched
+[00000206bfaef370] main stream_directory debug: looking for stream_directory module matching "any": 2 candidates
+[00000206bfaef370] main stream_directory debug: no stream_directory modules matched
+[00000206bfb1ed30] main input source debug: attachment of directory-extractor failed for https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/source/youtube/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/playback_host/rr2---sn-gwpa-a3vr.googlevideo.com/cps/429/met/1792662541%2C/mh/aP/mm/31%2C29/mn/sn-gwpa-a3vr%2Csn-gwpa-qxae7/ms/au%2Crdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au%2Cau/hfr/1/demuxed/1/tts_caps/1/maudio/1/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/go/1/rqh/5/epbp/1/mt/1792662135/fvip/3/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cdemuxed%2Ctts_caps%2Cmaudio%2Cpcm2%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Citag%2Cplaylist_type/sig/AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g%3D%3D/lsparams/playback_host%2Ccps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps/lsig/APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13lxh2uCCHZ/file/index.m3u8?
+[00000206bfb1d030] main stream debug: looking for stream_filter module matching "record": 48 candidates
+[00000206bfb1d030] main stream debug: using stream_filter module "record"
+[00000206bfb1ed30] main input source debug: creating demux: access='https' demux='any' location='manifest.googlevideo.com/api/manifest/hls_variant/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/source/youtube/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/playback_host/rr2---sn-gwpa-a3vr.googlevideo.com/cps/429/met/1792662541%2C/mh/aP/mm/31%2C29/mn/sn-gwpa-a3vr%2Csn-gwpa-qxae7/ms/au%2Crdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au%2Cau/hfr/1/demuxed/1/tts_caps/1/maudio/1/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/go/1/rqh/5/epbp/1/mt/1792662135/fvip/3/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cdemuxed%2Ctts_caps%2Cmaudio%2Cpcm2%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Citag%2Cplaylist_type/sig/AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g%3D%3D/lsparams/playback_host%2Ccps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps/lsig/APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13lxh2uCCHZ/file/index.m3u8?' file='\\manifest.googlevideo.com\api\manifest\hls_variant\expire\1792684141\ei\DdzZasKqM6CY77APltm2yA4\ip\152.56.142.169\id\6aacfe284f9ba4a4\source\youtube\requiressl\yes\xpc\EgVo2aDSNQ==\playback_host\rr2---sn-gwpa-a3vr.googlevideo.com\cps\429\met\1792662541,\mh\aP\mm\31,29\mn\sn-gwpa-a3vr,sn-gwpa-qxae7\ms\au,rdu\mv\m\mvi\2\pcm2cms\yes\pl\23\rms\au,au\hfr\1\demuxed\1\tts_caps\1\maudio\1\pcm2\no\initcwndbps\582375\bui\AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL\spc\mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us\vprv\1\go\1\rqh\5\epbp\1\mt\1792662135\fvip\3\nvgoi\1\short_key\1\ncsapi\1\keepalive\yes\fexp\51565116\dover\13\itag\0\playlist_type\DVR\sparams\expire,ei,ip,id,source,requiressl,xpc,hfr,demuxed,tts_caps,maudio,pcm2,bui,spc,vprv,go,rqh,itag,playlist_type\sig\AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g==\lsparams\playback_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps\lsig\APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13lxh2uCCHZ\file\index.m3u8'
+[00000206372fc7d0] main demux debug: looking for demux module matching "any": 110 candidates
+[00000206372fc7d0] adaptive demux debug: Period
+[00000206372fc7d0] adaptive demux debug:  BaseAdaptationSet 234 Default
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/234/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8 [mp4a.40.2]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:  BaseAdaptationSet 233 Default
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/233/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D3871021%3Bdur%3D634.694%3Bgir%3Dyes%3Bitag%3D139%3Blmt%3D1719185020721347/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIgNXlFOXouEnoBnUbVmeMmrpV_LcZUwEn1XNU75c_81WkCIQC5bo2VjbKtDLus6G7at_pl5ckFiX0wgSy8XhV2CC2_eA%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIgLa0vUTYCWSs-y2h6__9Dq7DPKqlZtRGAwWtJSRtLpRcCIQCESYRAueMCR-WHG9HZSDbDnvGPPqHY51ePB0ymEcT1mw%3D%3D/playlist/index.m3u8 [mp4a.40.5]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:  BaseAdaptationSet default_id#0
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/602/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D1938348%3Bdur%3D634.599%3Bgir%3Dyes%3Bitag%3D598%3Blmt%3D1719195727906260/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhANFnLTingIub8a3C-B39G8Ysufy0DDqv7K_trAFY8jiBAiBvXfzUB1Hv5Ar_Qs-8WxB3VAFoDfEgfYc8Ems029HmFw%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAKDKm7QmTTSM7o0uRmA0TZL_WHMHRVal0E5dMNLv5-wkAiEA8KsJRVCXpGsSojt7vTVsHDq_PnHVh01I0cndS9chHmA%3D/playlist/index.m3u8 [vp09.00.10.08]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/603/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D5289812%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D278%3Blmt%3D1719196197831254/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4537434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhALQ829XQBnYzceRxYVcN8120HAYOFZ_l5h6EalvO9HYfAiA07ac4Fdj1Nan5f6f82oq1zx9bfle6HugyF3sJ1Q-TRg%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIhAIjphAFJQz81or02wkSZf10qp78PK80A_4DS3TTNvIHXAiAzTUEef3TcoJvTRvsYQhwQBozMlX1i7d2zSqLH5nwurA%3D%3D/playlist/index.m3u8 [vp09.00.11.08]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/269/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D4323893%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D160%3Blmt%3D1719192893091909/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAK0smAIue3Rfp1hDFYhAWBRK9VLL3fzQ7pzaJydwjLxpAiBO-OLTaEcajTKAo7HaHouUoaJbJTTk3xrz4av4oa1qgg%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgTteWjm5O7v5vya71g2Z8ElbFIq-TfLwwfyPrktnBz-oCIFkZH6iar_OWC2umrtGqDe1UUabgOGzw2mqG6SC06jC0/playlist/index.m3u8 [avc1.4D400C]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/604/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D10198281%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D242%3Blmt%3D1719196412511277/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4537434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAIGWDFOw7-8TMpL-5Vs6M6UO2Mlfbwutj9xHZ0agIWrGAiAe-TeBJZylFPADtsAY2b05gRcgYsEMTY5hZNYwSVDxEQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIhAOCmma7wVJou9eqSTyI_9D4H2xYKMF_wEKYOT8e8HPzLAiBlFzsJZYi5zJFewWvynG-MSeVrJJ4fYlhFOALHL4IM0g%3D%3D/playlist/index.m3u8 [vp09.00.20.08]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/229/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D9323483%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D133%3Blmt%3D1719192935662741/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRgIhALqeeL_-b6QrbBnD7IEpXTpknThseryTHfY5fPY1TnYdAiEAoMIeXLZFQsGLiQL5uWEkp9jkgd-uobQzUdVxtJV6tNk%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIgNY0ixRL4qL-pF7Z7FFqae4ox_jzrsYFz_ZVUGIpUricCIQDv2O5ycAxFxs1eaXwG7kvPDMAn_v38gzADo6iqAJzVEg%3D%3D/playlist/index.m3u8 [avc1.4D4015]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/604/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D10198281%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D242%3Blmt%3D1719196412511277/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4537434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAIGWDFOw7-8TMpL-5Vs6M6UO2Mlfbwutj9xHZ0agIWrGAiAe-TeBJZylFPADtsAY2b05gRcgYsEMTY5hZNYwSVDxEQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIhAOCmma7wVJou9eqSTyI_9D4H2xYKMF_wEKYOT8e8HPzLAiBlFzsJZYi5zJFewWvynG-MSeVrJJ4fYlhFOALHL4IM0g%3D%3D/playlist/index.m3u8 [vp09.00.20.08]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/229/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D9323483%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D133%3Blmt%3D1719192935662741/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRgIhALqeeL_-b6QrbBnD7IEpXTpknThseryTHfY5fPY1TnYdAiEAoMIeXLZFQsGLiQL5uWEkp9jkgd-uobQzUdVxtJV6tNk%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIgNY0ixRL4qL-pF7Z7FFqae4ox_jzrsYFz_ZVUGIpUricCIQDv2O5ycAxFxs1eaXwG7kvPDMAn_v38gzADo6iqAJzVEg%3D%3D/playlist/index.m3u8 [avc1.4D4015]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/605/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D24109536%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D243%3Blmt%3D1719197132320060/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4537434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAMZzHKQf1ZhREx0G8WMf9QTRxvlnw4fwukzANcypP_VDAiBYq1Fev6mqeH0NmZl-NgXcWGD0bQu64VdG1Sy59VSDxQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIhAOpqOT7Kn4oonQlXb6ZOfqnLrOnbMaV6-b1d-3L0GgNjAiBmawzJaWikyONSbbwlmBeDFBegBwTxpcOlNvsfnrn6bA%3D%3D/playlist/index.m3u8 [vp09.00.21.08]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/230/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D18294110%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D134%3Blmt%3D1719192888467139/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhANuOZ2mQjJvDshxUgDY5wsLAOTX0Jo5FaeZSahYl9T9FAiACGCK2eYoT16VYuYeUqzvTdawNZ6zMUPA_Z3LMF2ZeNg%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIgV6rfKvRD6wICGmNCCIDq6phPYqsGLdssza04f4H-VxkCIQDjoMo-KeDs8qcpZHiEHKSRHJy5Q5zKgb9imDy5LwbkyQ%3D%3D/playlist/index.m3u8 [avc1.4D401E]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/606/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D33138062%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D244%3Blmt%3D1719196228768981/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4537434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRgIhAMbvSmM2-OapYFqDr79bMFVcP6t5VwvDnmzqI_4bnVsFAiEAvV0PCGbhyvE2rbNHbvdirmrkeV3KYs7qLUZOUhmyahg%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIhAN9Tx1p_hYbqebw0JOJOwceouFjabdGLx8vaIdfHsJ8ZAiB65BAvtDJSJHRVONhXp9b30xdyfXXcvLdeeWZ8jUuJGQ%3D%3D/playlist/index.m3u8 [vp09.00.30.08]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/231/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D28207144%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D135%3Blmt%3D1719193354283978/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRAIgXWFiIFi_PePMZ3VmW0r93ZB87WRcFEyhMMZZMDys1Q8CIFi_YWcqgk_BQG4SH5WADfoZlq8XT0zQ-PaMLuYtV4-f/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgO5rMOhc1ZU3p21mv1kLdcz7Djrvk_4V5Na1S5XlTLCECIF_KgUYsQjZJexujKPHeS_BevV18uBPeyknYrPezxkR0/playlist/index.m3u8 [avc1.4D401F]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/612/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D112676322%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D302%3Blmt%3D1719206926463879/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4537434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhALjF8VFoBHFuLdwRlbK_f0SmYYpcUo3-hmo8ofxlKoOlAiAmq2z3aeIreTu7lj29u1qD1zJ0-If7HH9vtWiF4a5Giw%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhANs3jLHstiawrW0hF-w2fnRDiTwfr3ti7Y6LxAz1y_5rAiEAh_xelDugygGCk4qhthvdijo9haJvAVnLEfoOw8QIw_w%3D/playlist/index.m3u8 [vp09.00.40.08]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/311/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D150524867%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D298%3Blmt%3D1719194660099790/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAPxuLXU9019g0EdNF709uBhbFf8SEKxOU0VE-u7gXoJzAiAXNbzmwfluMX6zT0p6xAv8GQtmZvOIqpkWcRL4jSywaA%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhALPxcGRzqVWyaHLj_wzviV5Tz0QlM6S-6e19UFlD-f25AiEApreAbk__H5KQYw8_qzaAi8Ya3W26fMY0iYCZmle6N2I%3D/playlist/index.m3u8 [avc1.4D4020]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/617/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D168736189%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D303%3Blmt%3D1719197912122364/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4537434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAOIVGREgTSI1ZyXeKnczRDVXUI663e51oxhBOlhuyWzQAiBn1MuUO1-UXJhq67PNLENdzNmuq94cYoKBGjliTUpnTA%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAP_NmgxwpflmPEbAgmU3Um5CjrMgBxCAAsd2vCYZ6eF_AiEA-YkRgE9-tOwDdW1ur8IxsCeEAMZlzhRSbWW-CMkXMuc%3D/playlist/index.m3u8 [vp09.00.41.08]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/312/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8 [avc1.64002A]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/623/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D473363704%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D308%3Blmt%3D1719195162577941/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRAIgbWHGpP43UdgqZCnUz-_NhSvQUhftqbt66XsKNORGagQCIHldg2di-RN9FQAntHeQm7sxkXRhpXWNrwUNWWvXmOW5/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIgAeVOr9YxpEznRImVuQwfwrZJ2gAU0Ec3iJm1gc_C7w8CIQDC3Y2v6F7jE_gGsBtyVXAe7r5yDGMapun3UCh0U7_qPA%3D%3D/playlist/index.m3u8 [vp09.00.50.08]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206372fc7d0] adaptive demux debug:   Representation https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/628/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D1362269481%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D315%3Blmt%3D1719206982841760/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRgIhAJsn41-PV3Ebxp5V7FOBu_9ayL_hPvDgMHR9r_s7swA_AiEA2NNpVeHuckrokpeyVHE2TNr0nt3meKCG6lj2Qe7iwMA%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRQIhAKZXaAEkc_F1igFB4Tw48PI6Iwsm6vqb_nphDWSvjFqfAiAb0j2VMooLAGRCFsC9CPaugH5wuHyGRs_nwZ0MCGD1-w%3D%3D/playlist/index.m3u8 [vp09.00.51.08]
+[00000206372fc7d0] adaptive demux debug:     (not loaded) Unknown
+[00000206c62091d0] main input debug: selecting program id=0
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/0 len 0rap pl/demux (0/0)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (0) cur 0 rap start (pl 0/dmx 0) pos 0.000000
+[00000206372fc7d0] adaptive demux debug: opening playlist file (manifest.googlevideo.com/api/manifest/hls_variant/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/source/youtube/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/playback_host/rr2---sn-gwpa-a3vr.googlevideo.com/cps/429/met/1792662541%2C/mh/aP/mm/31%2C29/mn/sn-gwpa-a3vr%2Csn-gwpa-qxae7/ms/au%2Crdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au%2Cau/hfr/1/demuxed/1/tts_caps/1/maudio/1/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/go/1/rqh/5/epbp/1/mt/1792662135/fvip/3/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cdemuxed%2Ctts_caps%2Cmaudio%2Cpcm2%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Citag%2Cplaylist_type/sig/AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g%3D%3D/lsparams/playback_host%2Ccps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps/lsig/APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13lxh2uCCHZ/file/index.m3u8?)
+[00000206372fc7d0] main demux debug: using demux module "adaptive"
+[00000206c8545060] main decoder debug: looking for audio decoder module matching "any": 46 candidates
+[00000206c8545060] main decoder debug: using audio decoder module "faad"
+[00000206c8543e90] main decoder debug: looking for video decoder module matching "any": 40 candidates
+[00000206c8543e90] avcodec decoder debug: using ffmpeg Lavc58.134.100
+[00000206c8543e90] avcodec decoder debug: CPU flags: 0x000fd3db
+[00000206c8543e90] avcodec decoder debug: allowing 6 thread(s) for decoding
+[00000206c8543e90] avcodec decoder debug: codec (h264) started
+[00000206c8543e90] avcodec decoder debug: using frame thread mode with 6 threads
+[00000206c8543e90] main decoder debug: using video decoder module "avcodec"
+[00000206bf9d5000] main demux meta debug: looking for meta reader module matching "any": 4 candidates
+[00000206bf9d5000] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\meta\reader
+[00000206bf9d5000] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader
+[00000206bf9d5000] lua demux meta debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader\filename.luac
+[00000206bf9d5000] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Roaming\vlc\lua\meta\reader
+[00000206bf9d5000] lua demux meta debug: Trying Lua scripts in C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader
+[00000206bf9d5000] lua demux meta debug: Trying Lua playlist script C:\Users\Tauseef khan\AppData\Local\YT Desktop\vlc-3.0.21\vlc-3.0.21\lua\meta\reader\filename.luac
+[00000206bf9d5000] main demux meta debug: no meta reader modules matched
+[00000206c62091d0] main input debug: `https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/source/youtube/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/playback_host/rr2---sn-gwpa-a3vr.googlevideo.com/cps/429/met/1792662541%2C/mh/aP/mm/31%2C29/mn/sn-gwpa-a3vr%2Csn-gwpa-qxae7/ms/au%2Crdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au%2Cau/hfr/1/demuxed/1/tts_caps/1/maudio/1/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/go/1/rqh/5/epbp/1/mt/1792662135/fvip/3/nvgoi/1/short_key/1/ncsapi/1/keepalive/yes/fexp/51565116/dover/13/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cdemuxed%2Ctts_caps%2Cmaudio%2Cpcm2%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Citag%2Cplaylist_type/sig/AE0s2JYwRQIgQLo84w8kT9ZIUImzHZLMxhmURzF7kw5OJ9OpugQCjQ8CIQCL5dPxLgNbqY5DFWd4UR1-AZ3bJBQAGn2Gd2q8qc_S9g%3D%3D/lsparams/playback_host%2Ccps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps/lsig/APaTxxMwRAIgdRh6ZJbxP7Um4Seei-yrSBGsIVZ20h_74IxHxzvd2VACIDcHmsUXhc3RC2T0INyk84cz_RfXkY7xE13lxh2uCCHZ/file/index.m3u8?' successfully opened
+[00000206372fc7d0] adaptive demux debug: Retrieving https://manifest.googlevideo.com:443/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/234/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8
+[00000206bf9d4a60] main tls client debug: looking for tls client module matching "any": 2 candidates
+[00000206bf9d4a60] gnutls tls client debug: using GnuTLS version 3.6.16
+[00000206bf9d4a60] gnutls tls client debug: loaded 47 trusted CAs from system
+[00000206bf9d4a60] main tls client debug: using tls client module "gnutls"
+[00000206bf9d4a60] main tls client debug: resolving manifest.googlevideo.com ...
+[00000206bf9d4a60] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[00000206bf9d4a60] gnutls tls client debug: TLS handshake: Success.
+[00000206372fc7d0] http demux debug: out SETTINGS (0x04) frame of 30 bytes, flags 0x00, global
+[00000206372fc7d0] http demux debug: out HEADERS (0x01) frame of 1482 bytes, flags 0x05, stream 1
+[00000206372fc7d0] http demux debug: in SETTINGS (0x04) frame of 18 bytes, flags 0x00, global
+[00000206372fc7d0] http demux debug: setting: Concurrent streams (0x0003): 100
+[00000206372fc7d0] http demux debug: setting: Initial window size (0x0004): 1048576
+[00000206372fc7d0] http demux debug: setting: Header list size (0x0006): 65536
+[00000206372fc7d0] http demux debug: out SETTINGS (0x04) frame of 0 bytes, flags 0x01, global
+[00000206372fc7d0] http demux debug: in WINDOW_UPDATE (0x08) frame of 4 bytes, flags 0x00, global
+[00000206372fc7d0] http demux debug: in SETTINGS (0x04) frame of 0 bytes, flags 0x01, global
+[00000206372fc7d0] http demux debug: in HEADERS (0x01) frame of 252 bytes, flags 0x04, stream 1
+[00000206372fc7d0] http demux debug: stream 1 13 headers:
+[00000206372fc7d0] http demux debug:  :status: "200"
+[00000206372fc7d0] http demux debug:  content-type: "application/vnd.apple.mpegurl"
+[00000206372fc7d0] http demux debug:  cross-origin-resource-policy: "cross-origin"
+[00000206372fc7d0] http demux debug:  date: "Thu, 22 Oct 2026 09:49:12 GMT"
+[00000206372fc7d0] http demux debug:  pragma: "no-cache"
+[00000206372fc7d0] http demux debug:  expires: "Fri, 01 Jan 1990 00:00:00 GMT"
+[00000206372fc7d0] http demux debug:  cache-control: "no-cache, must-revalidate"
+[00000206372fc7d0] http demux debug:  content-encoding: "gzip"
+[00000206372fc7d0] http demux debug:  server: "HTTP server (unknown)"
+[00000206372fc7d0] http demux debug:  content-length: "4333"
+[00000206372fc7d0] http demux debug:  x-xss-protection: "0"
+[00000206372fc7d0] http demux debug:  x-frame-options: "SAMEORIGIN"
+[00000206372fc7d0] http demux debug:  alt-svc: "h3=":443"; ma=2592000,h3-29=":443"; ma=2592000"
+[00000206bfb1c430] main stream debug: looking for stream_filter module matching "inflate": 48 candidates
+[00000206372fc7d0] http demux debug: in DATA (0x00) frame of 4531 bytes, flags 0x08, stream 1
+[00000206372fc7d0] http demux debug: out (priority) WINDOW_UPDATE (0x08) frame of 4 bytes, flags 0x00, global
+[00000206bfb1c430] main stream debug: using stream_filter module "inflate"
+[00000206372fc7d0] http demux debug: in DATA (0x00) frame of 0 bytes, flags 0x01, stream 1
+[00000206372fc7d0] http demux debug: stream 1 closed by peer
+[00000206372fc7d0] http demux debug: in PING (0x06) frame of 8 bytes, flags 0x00, global
+[00000206372fc7d0] http demux debug: out (priority) PING (0x06) frame of 8 bytes, flags 0x01, global
+[00000206bfb1c430] inflate stream debug: end of stream
+[00000206372fc7d0] http demux debug: local stream 1 shut down
+[00000206372fc7d0] http demux debug: out RST_STREAM (0x03) frame of 4 bytes, flags 0x00, stream 1
+[00000206bfb1c430] main stream debug: removing module "inflate"
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/0/len/4033/goap/slices%3D0-163494/gosq/0/file/seg.ts
+[00000206c8853900] main tls client debug: looking for tls client module matching "any": 2 candidates
+[00000206c8853900] gnutls tls client debug: using GnuTLS version 3.6.16
+[00000206c8853900] gnutls tls client debug: loaded 47 trusted CAs from system
+[00000206c8853900] main tls client debug: using tls client module "gnutls"
+[00000206c8853900] main tls client debug: resolving rr2---sn-gwpa-a3vr.googlevideo.com ...
+[00000206c8853900] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[00000206c8853900] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[00000206c8853900] gnutls tls client debug: TLS handshake: Success.
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/0/len/4033/goap/slices%3D0-163494/gosq/0/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Sun, 23 Jun 2024 23:23:40 GMT
+Date: Thu, 22 Oct 2026 09:49:13 GMT
+Expires: Thu, 22 Oct 2026 09:49:13 GMT
+Cache-Control: private, max-age=21288
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206372fc7d0] adaptive demux: Changing stream format Unknown -> Packed AAC
+[00000206372fc7d0] main demux debug: creating demux: access='' demux='aac' location='' file='(null)'
+[00000206372fca70] main demux debug: looking for demux module matching "aac": 110 candidates
+[00000206372fca70] es demux debug: detected format mp4a
+[00000206c87fc270] main demux packetizer debug: looking for packetizer module matching "any": 50 candidates
+[00000206c87fc270] mpeg4[NewPipe+] video probe: status=PLAYING tracks=2 dimension=java.awt.Dimension[width=1920,height=1080] frames=0 audioTracks=3 volume=-1 mute=true audioTrack=0
+audio demux packetizer debug: running MPEG4 audio packetizer
+[00000206c87fc270] main demux packetizer debug: using packetizer module "mpeg4audio"
+[00000206c87fc270] mpeg4audio demux packetizer debug: detected ADTS format
+[00000206c87fc270] mpeg4audio demux packetizer: AAC channels: 2 samplerate: 44100
+[00000206372fca70] main demux debug: using demux module "es"
+[00000206372fc7d0] adaptive demux debug: deactivating Unknown stream 233 Default
+[00000206372fc7d0] adaptive demux debug: Retrieving https://manifest.googlevideo.com:443/api/manifest/hls_playlist/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/id/6aacfe284f9ba4a4/itag/312/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/dover/13/txp/4532434/epbp/1/mt/1792662135/fvip/3/short_key/1/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8
+[00000206372fc7d0] http demux debug: out HEADERS (0x01) frame of 1459 bytes, flags 0x05, stream 3
+[00000206372fc7d0] http demux debug: in HEADERS (0x01) frame of 41 bytes, flags 0x04, stream 3
+[00000206372fc7d0] http demux debug: stream 3 13 headers:
+[00000206372fc7d0] http demux debug:  :status: "200"
+[00000206372fc7d0] http demux debug:  content-type: "application/vnd.apple.mpegurl"
+[00000206372fc7d0] http demux debug:  cross-origin-resource-policy: "cross-origin"
+[00000206372fc7d0] http demux debug:  date: "Thu, 22 Oct 2026 09:49:13 GMT"
+[00000206372fc7d0] http demux debug:  pragma: "no-cache"
+[00000206372fc7d0] http demux debug:  expires: "Fri, 01 Jan 1990 00:00:00 GMT"
+[00000206372fc7d0] http demux debug:  cache-control: "no-cache, must-revalidate"
+[00000206372fc7d0] http demux debug:  content-encoding: "gzip"
+[00000206372fc7d0] http demux debug:  server: "HTTP server (unknown)"
+[00000206372fc7d0] http demux debug:  content-length: "3966"
+[00000206372fc7d0] http demux debug:  x-xss-protection: "0"
+[00000206372fc7d0] http demux debug:  x-frame-options: "SAMEORIGIN"
+[00000206372fc7d0] http demux debug:  alt-svc: "h3=":443"; ma=2592000,h3-29=":443"; ma=2592000"
+[00000206c895ea90] main stream debug: looking for stream_filter module matching "inflate": 48 candidates
+[00000206372fc7d0] http demux debug: in DATA (0x00) frame of 4013 bytes, flags 0x08, stream 3
+[00000206c895ea90] main stream debug: using stream_filter module "inflate"
+[00000206372fc7d0] http demux debug: in DATA (0x00) frame of 0 bytes, flags 0x01, stream 3
+[00000206372fc7d0] http demux debug: stream 3 closed by peer
+[00000206372fc7d0] http demux debug: in PING (0x06) frame of 8 bytes, flags 0x00, global
+[00000206372fc7d0] http demux debug: out (priority) PING (0x06) frame of 8 bytes, flags 0x01, global
+[00000206c895ea90] inflate stream debug: end of stream
+[00000206372fc7d0] http demux debug: local stream 3 shut down
+[00000206372fc7d0] http demux debug: out RST_STREAM (0x03) frame of 4 bytes, flags 0x00, stream 3
+[00000206c895ea90] main stream debug: removing module "inflate"
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-153786/gosq/0/file/seg.ts
+[00000206c89e5be0] main tls client debug: looking for tls client module matching "any": 2 candidates
+[00000206c89e5be0] gnutls tls client debug: using GnuTLS version 3.6.16
+[00000206c89e5be0] gnutls tls client debug: loaded 47 trusted CAs from system
+[00000206c89e5be0] main tls client debug: using tls client module "gnutls"
+[00000206c89e5be0] main tls client debug: resolving rr2---sn-gwpa-a3vr.googlevideo.com ...
+[00000206c89e5be0] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[00000206c89e5be0] gnutls tls client debug: TLS handshake: Resource temporarily unavailable, try again.
+[00000206c89e5be0] gnutls tls client debug: TLS handshake: Success.
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-153786/gosq/0/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Mon, 24 Jun 2024 02:14:50 GMT
+Date: Thu, 22 Oct 2026 09:49:13 GMT
+Expires: Thu, 22 Oct 2026 09:49:13 GMT
+Cache-Control: private, max-age=21288
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206372fc7d0] adaptive demux: Changing stream format Unknown -> TS
+[00000206372fc7d0] main demux debug: creating demux: access='' demux='ts' location='' file='(null)'
+[00000206372fcbc0] main demux debug: looking for demux module matching "ts": 110 candidates
+[00000206372fcbc0] ts demux debug: Standard set to Auto
+[00000206372fcbc0] main demux debug: using demux module "ts"
+[00000206372fcbc0] ts demux debug: PATCallBack called
+[00000206372fcbc0] ts demux debug: new PAT ts_id=1 version=0 current_next=1
+[00000206372fcbc0] ts demux debug:   * number=1 pid=4095
+[00000206372fcbc0] ts demux debug: temporary receiving program 1
+[00000206372fcbc0] ts demux debug: PMTCallBack called for program 1
+[00000206372fcbc0] ts demux debug: new PMT program number=1 version=1 pid_pcr=8191
+[00000206372fcbc0] ts demux debug:   * pid=256 type=0x1b AVC video stream as defined in ITU-T Rec. H.264
+[00000206372fcbc0] ts demux debug:    => pid 256 has now es fcc=h264
+[00000206372fcbc0] ts demux debug: Default program is 1
+[00000206372fcbc0] ts demux debug:   * pid=17 listening for SDT
+[00000206372fcbc0] ts demux debug: enabling pid 256 from program 1
+[00000206372fcbc0] ts demux debug: enabling pcr pid 8191 from program 1
+[00000206372fc7d0] adaptive demux debug: demuxer 00000206c85a8960, fakeesout restarting 0, discontinuity 0, commandsqueue draining 0, commandsqueue eof 0
+[00000206372fc7d0] adaptive demux debug: demuxer 00000206c85a8360, fakeesout restarting 0, discontinuity 0, commandsqueue draining 0, commandsqueue eof 0
+[00000206372fc7d0] adaptive demux debug: demuxer 00000206c85a8960, fakeesout restarting 0, discontinuity 0, commandsqueue draining 0, commandsqueue eof 0
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/193733/len/6767/goap/slices%3D0-722,3071953-3395066/gosq/39/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/193733/len/6767/goap/slices%3D0-722,3071953-3395066/gosq/39/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Sun, 23 Jun 2024 23:23:40 GMT
+Date: Thu, 22 Oct 2026 09:49:14 GMT
+Expires: Thu, 22 Oct 2026 09:49:14 GMT
+Cache-Control: private, max-age=21287
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206372fca70] main demux debug: removing module "es"
+[00000206c87fc270] main demux packetizer debug: removing module "mpeg4audio"
+[00000206372fc7d0] main demux debug: creating demux: access='' demux='aac' location='' file='(null)'
+[00000206372fcfb0] main demux debug: looking for demux module matching "aac": 110 candidates
+[00000206372fcfb0] es demux debug: detected format mp4a
+[00000206c87f9ed0] main demux packetizer debug: looking for packetizer module matching "any": 50 candidates
+[00000206c87f9ed0] mpeg4audio demux packetizer debug: running MPEG4 audio packetizer
+[00000206c87f9ed0] main demux packetizer debug: using packetizer module "mpeg4audio"
+[00000206c87f9ed0] mpeg4audio demux packetizer debug: detected ADTS format
+[00000206c87f9ed0] mpeg4audio demux packetizer: AAC channels: 2 samplerate: 44100
+[00000206372fcfb0] main demux debug: using demux module "es"
+[00000206372fc7d0] adaptive demux debug: demuxer 00000206c85a8360, fakeesout restarting 0, discontinuity 0, commandsqueue draining 0, commandsqueue eof 0
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-741,70897930-73509587/gosq/39/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-741,70897930-73509587/gosq/39/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Mon, 24 Jun 2024 02:14:50 GMT
+Date: Thu, 22 Oct 2026 09:49:14 GMT
+Expires: Thu, 22 Oct 2026 09:49:14 GMT
+Cache-Control: private, max-age=21287
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206372fcbc0] main demux debug: removing module "ts"
+[00000206372fc7d0] main demux debug: creating demux: access='' demux='ts' location='' file='(null)'
+[00000206372fce60] main demux debug: looking for demux module matching "ts": 110 candidates
+[00000206372fce60] ts demux debug: Standard set to Auto
+[00000206372fce60] main demux debug: using demux module "ts"
+[00000206372fce60] ts demux debug: PATCallBack called
+[00000206372fce60] ts demux debug: new PAT ts_id=1 version=0 current_next=1
+[00000206372fce60] ts demux debug:   * number=1 pid=4095
+[00000206372fce60] ts demux debug: temporary receiving program 1
+[00000206372fce60] ts demux debug: PMTCallBack called for program 1
+[00000206372fce60] ts demux debug: new PMT program number=1 version=1 pid_pcr=8191
+[00000206372fce60] ts demux debug:   * pid=256 type=0x1b AVC video stream as defined in ITU-T Rec. H.264
+[00000206372fce60] ts demux debug:    => pid 256 has now es fcc=h264
+[00000206372fce60] ts demux debug: Default program is 1
+[00000206372fce60] ts demux debug:   * pid=17 listening for SDT
+[00000206372fce60] ts demux debug: enabling pid 256 from program 1
+[00000206372fce60] ts demux debug: enabling pcr pid 8191 from program 1
+[00000206c8545060] main decoder debug: killing decoder fourcc `mp4a'
+[00000206c8545060] main decoder debug: removing module "faad"
+[00000206c87fad10] main decoder debug: looking for audio decoder module matching "any": 46 candidates
+[00000206c87fad10] main decoder debug: using audio decoder module "faad"
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (193747300) cur 193747300 rap start (pl 193793739/dmx 193793739) pos 0.305322
+[00000206c87fad10] faad decoder warning: decoded zero sample
+[00000206c60e1e40] main generic debug: creating audio output
+[00000206c8b3a590] main audio output debug: looking for audio output module matching "any": 12 candidates
+[00000206c8b3a590] mmdevice audio output debug: using default device
+[00000206c8b3a590] mmdevice audio output debug: version 2 session control unavailable
+[00000206c8b3a590] mmdevice audio output debug: volume from -65.250000 dB to +0.000000 dB with 0.031250 dB increments
+[00000206c8b3a590] main audio output debug: using audio output module "mmdevice"
+[00000206c8975120] main generic debug: looking for aout stream module matching "any": 4 candidates
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (193747300) cur 193747300 rap start (pl 193793739/dmx 193793739) pos 0.305322
+[00000206372fce60] ts demux warning: No PCR received for program 1, set up workaround using pid 256
+[00000206372fce60] ts demux debug: enabling pid 256 from program 1
+[00000206372fce60] ts demux debug: enabling pcr pid 256 from program 1
+[00000206c87fb430] main packetizer debug: looking for packetizer module matching "any": 50 candidates
+[00000206c87fb430] main packetizer debug: using packetizer module "h264"
+[00000206c87f9b40] main decoder debug: looking for video decoder module matching "any": 40 candidates
+[00000206c87f9b40] avcodec decoder debug: using ffmpeg Lavc58.134.100
+[00000206c87f9b40] avcodec decoder debug: CPU flags: 0x000fd3db
+[00000206c87f9b40] avcodec decoder debug: allowing 6 thread(s) for decoding
+[00000206c87f9b40] avcodec decoder debug: codec (h264) started
+[00000206c87f9b40] avcodec decoder debug: using frame thread mode with 6 threads
+[00000206c87f9b40] main decoder debug: using video decoder module "avcodec"
+[00000206c8543e90] main decoder debug: killing decoder fourcc `h264'
+[00000206c8543e90] main decoder debug: removing module "avcodec"
+[00000206c62091d0] main input debug: Buffering 0%
+[00000206c87fb430] h264 packetizer debug: found NAL_SPS (sps_id=0)
+[00000206c62091d0] main input debug: Buffering 3%
+[00000206c87fb430] h264 packetizer debug: found NAL_PPS (pps_id=0 sps_id=0)
+[00000206c87f9b40] main decoder debug: restarting module due to input format change
+[00000206c62091d0] main input debug: Buffering 8%
+[00000206c87f9b40] main decoder debug: removing module "avcodec"
+[00000206c62091d0] main input debug: Buffering 11%
+[00000206c62091d0] main input debug: Buffering 14%
+[00000206c62091d0] main input debug: Buffering 18%
+[00000206c62091d0] main input debug: Buffering 21%
+[00000206c62091d0] main input debug: Buffering 26%
+[00000206c62091d0] main input debug: Buffering 30%
+[00000206c62091d0] main input debug: Buffering 33%
+[00000206c62091d0] main input debug: Buffering 38%
+[00000206c62091d0] main input debug: Buffering 41%
+[00000206c62091d0] main input debug: Buffering 45%
+[00000206c62091d0] main input debug: Buffering 49%
+[00000206c62091d0] main input debug: Buffering 53%
+[00000206c62091d0] main input debug: Buffering 56%
+[00000206c87f9b40] main decoder debug: looking for video decoder module matching "any": 40 candidates
+[00000206c87f9b40] avcodec decoder debug: using ffmpeg Lavc58.134.100
+[00000206c87f9b40] avcodec decoder debug: CPU flags: 0x000fd3db
+[00000206c87f9b40] avcodec decoder debug: allowing 6 thread(s) for decoding
+[00000206c62091d0] main input debug: Buffering 61%
+[00000206c62091d0] main input debug: Buffering 65%
+[00000206c62091d0] main input debug: Buffering 68%
+[00000206c62091d0] main input debug: Buffering 73%
+[00000206c62091d0] main input debug: Buffering 76%
+[00000206c62091d0] main input debug: Buffering 79%
+[00000206c62091d0] main input debug: Buffering 83%
+[00000206c62091d0] main input debug: Buffering 86%
+[00000206c62091d0] main input debug: Buffering 91%
+[00000206c62091d0] main input debug: Buffering 95%
+[00000206c62091d0] main input debug: Buffering 98%
+[00000206c62091d0] main input debug: Stream buffering done (1032 ms in 29 ms)
+[00000206c87f9b40] avcodec decoder debug: codec (h264) started
+[00000206c87f9b40] avcodec decoder debug: using frame thread mode with 6 threads
+[00000206c87f9b40] main decoder debug: using video decoder module "avcodec"
+[00000206c87f9b40] avcodec decoder debug: available hardware decoder output format 53 (dxva2_vld)
+[00000206c87f9b40] avcodec decoder debug: available hardware decoder output format 118 (d3d11va_vld)
+[00000206c87f9b40] avcodec decoder debug: available hardware decoder output format 174 (d3d11)
+[00000206c87f9b40] avcodec decoder debug: available software decoder output format 0 (yuv420p)
+[00000206c87f9b40] avcodec decoder debug: trying format d3d11va_vld
+[00000206c8bdd400] main spu text debug: looking for text renderer module matching "any": 6 candidates
+[00000206c8bdd400] freetype spu text debug: Using DWrite backend
+[00000206c8bdd400] freetype spu text debug: DWrite_GetFamily(): family name: Arial
+[00000206c8bdd400] freetype spu text debug: DWrite_ParseFamily(): using font at index 0 with weight 400 for bold: 0, italic: 0
+[00000206c8bdd400] freetype spu text debug: DWrite_ParseFamily(): using font at index 1 with weight 700 for bold: 1, italic: 0
+[00000206c8bdd400] freetype spu text debug: DWrite_ParseFamily(): using font at index 2 with weight 400 for bold: 0, italic: 1
+[00000206c8bdd400] freetype spu text debug: DWrite_ParseFamily(): using font at index 3 with weight 700 for bold: 1, italic: 1
+[00000206c8bdd400] main spu text debug: using text renderer module "freetype"
+[00000206c8bdeb30] main scale debug: looking for video converter module matching "any": 48 candidates
+[00000206c8bdeb30] swscale scale debug: 32x32 (32x32) chroma: YUVA -> 16x16 (16x16) chroma: RGBA with scaling using Bicubic (good quality)
+[00000206c8bdeb30] main scale debug: using video converter module "swscale"
+[00000206c8bdd750] main scale debug: looking for video converter module matching "any": 48 candidates
+[00000206c8bdd750] yuvp scale debug: YUVP to YUVA converter
+[00000206c8bdd750] main scale debug: using video converter module "yuvp"
+[00000206c863b9f0] main video output debug: Deinterlacing available
+[00000206c863b9f0] main video output debug: deinterlace -1, mode auto, is_needed 0
+[00000206c87f85e0] main window debug: looking for vout window module matching "none": 6 candidates
+[00000206c87f85e0] main window debug: no vout window modules matched
+[00000206c863b9f0] main video output debug: Opening vout display wrapper
+[00000206c866cb10] main vout display debug: looking for vout display module matching "vmem": 24 candidates
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'resize' 1280x724
+[00000206c866cb10] main vout display debug: using vout display module "vmem"
+[00000206c866cb10] main vout display debug: A filter to adapt decoder DX11 to display RV32 is needed
+[00000206c8630dc0] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206c8630dc0] chain filter debug: Trying to build resize+chroma
+[00000206cadb3d80] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206cadb3d80] main filter debug: no video converter modules matched
+[00000206c8630dc0] main filter error: Failed to create video converter
+[00000206c8630dc0] chain filter debug: Trying to build chroma+resize
+[00000206cadb1b20] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206cadb1b20] chain filter debug: Trying to use chroma I420 as middle man
+[00000206cadb40f0] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206cadb40f0] main filter debug: using video converter module "d3d11_filters"
+[00000206cadb1b20] main filter debug: Filter 'd3d11_filters' (00000206cadb40f0) appended to chain
+[00000206cadb3d80] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206cadb3d80] swscale filter debug: 1920x1080 (1920x1088) chroma: I420 -> 1920x1080 (1920x1088) chroma: RV32 with scaling using Bicubic (good quality)
+[00000206cadb3d80] main filter debug: using video converter module "swscale"
+[00000206cadb1b20] main filter debug: Filter 'Swscale' (00000206cadb3d80) appended to chain
+[00000206cadb1b20] main filter debug: using video converter module "chain"
+[00000206c8630dc0] main filter debug: Filter 'chain' (00000206cadb1b20) appended to chain
+[00000206cadb3330] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206cadb3330] swscale filter debug: 1920x1080 (1920x1088) chroma: RV32 -> 1280x724 (1280x724) chroma: RV32 with scaling using Bicubic (good quality)
+[00000206cadb3330] main filter debug: using video converter module "swscale"
+[00000206c8630dc0] main filter debug: Filter 'Swscale' (00000206cadb3330) appended to chain
+[00000206c8630dc0] main filter debug: using video converter module "chain"
+[00000206c866cb10] main vout display debug: Filter 'chain' (00000206c8630dc0) appended to chain
+[00000206c863b9f0] main video output debug: original format sz 1920x1088, of (0,0), vsz 1920x1080, 4cc DX11, sar 1:1, msk r0x0 g0x0 b0x0
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'window state' 0
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'window state' 0
+[00000206c866cb10] main vout display error: Failed to set on top
+[00000206c8bdd400] main spu text debug: removing module "freetype"
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'resize' 1920x1080
+[00000206c8bdddf0] main spu text debug: looking for text renderer module matching "any": 6 candidates
+[00000206c8bdddf0] freetype spu text debug: Using DWrite backend
+[00000206c8bdddf0] freetype spu text debug: DWrite_GetFamily(): family name: Arial
+[00000206c8bdddf0] freetype spu text debug: DWrite_ParseFamily(): using font at index 0 with weight 400 for bold: 0, italic: 0
+[00000206c8bdddf0] freetype spu text debug: DWrite_ParseFamily(): using font at index 1 with weight 700 for bold: 1, italic: 0
+[00000206c8bdddf0] freetype spu text debug: DWrite_ParseFamily(): using font at index 2 with weight 400 for bold: 0, italic: 1
+[00000206c8bdddf0] freetype spu text debug: DWrite_ParseFamily(): using font at index 3 with weight 700 for bold: 1, italic: 1
+[00000206c8bdddf0] main spu text debug: using text renderer module "freetype"
+[00000206c89e4560] main generic debug: looking for hw decoder module matching "none": 4 candidates
+[00000206c89e4560] main generic debug: no hw decoder modules matched
+[00000206c87f9b40] avcodec decoder debug: trying format dxva2_vld
+[00000206c8630dc0] main filter debug: removing module "chain"
+[00000206cadb1b20] main filter debug: removing module "chain"
+[00000206cadb40f0] main filter debug: removing module "d3d11_filters"
+[00000206cadb1b20] main filter debug: Filter 00000206cadb40f0 removed from chain
+[00000206cadb3d80] main filter debug: removing module "swscale"
+[00000206cadb1b20] main filter debug: Filter 00000206cadb3d80 removed from chain
+[00000206c8630dc0] main filter debug: Filter 00000206cadb1b20 removed from chain
+[00000206cadb3330] main filter debug: removing module "swscale"
+[00000206c8630dc0] main filter debug: Filter 00000206cadb3330 removed from chain
+[00000206c866cb10] main vout display debug: Filter 00000206c8630dc0 removed from chain
+[00000206c866cb10] main vout display debug: removing module "vmem"
+[00000206c863b9f0] main video output debug: deinterlace -1, mode auto, is_needed 0
+[00000206c863b9f0] main video output debug: Opening vout display wrapper
+[00000206c866cb10] main vout display debug: looking for vout display module matching "vmem": 24 candidates
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'resize' 1280x724
+[00000206c866cb10] main vout display debug: using vout display module "vmem"
+[00000206c866cb10] main vout display debug: A filter to adapt decoder DXA9 to display RV32 is needed
+[00000206c8630dc0] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206c8630dc0] chain filter debug: Trying to build resize+chroma
+[00000206cadb1e90] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206cadb1e90] main filter debug: no video converter modules matched
+[00000206c8630dc0] main filter error: Failed to create video converter
+[00000206c8630dc0] chain filter debug: Trying to build chroma+resize
+[00000206cadb3d80] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206cadb3d80] chain filter debug: Trying to use chroma I420 as middle man
+[00000206cadb36a0] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206cadb36a0] d3d9_filters filter debug: Using Direct3D9 Extended API!
+[00000206cadb36a0] main filter debug: using video converter module "d3d9_filters"
+[00000206cadb3d80] main filter debug: Filter 'd3d9_filters' (00000206cadb36a0) appended to chain
+[00000206cadb1e90] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206cadb1e90] swscale filter debug: 1920x1080 (1920x1088) chroma: I420 -> 1920x1080 (1920x1088) chroma: RV32 with scaling using Bicubic (good quality)
+[00000206cadb1e90] main filter debug: using video converter module "swscale"
+[00000206cadb3d80] main filter debug: Filter 'Swscale' (00000206cadb1e90) appended to chain
+[00000206cadb3d80] main filter debug: using video converter module "chain"
+[00000206c8630dc0] main filter debug: Filter 'chain' (00000206cadb3d80) appended to chain
+[00000206cadb28e0] main filter debug: looking for video converter module matching "any": 48 candida[NewPipe+] first video frame: planes=1 size=1280x726 chroma=RV32 pitches=5120 engine=1036915574
+tes
+[00000206cadb28e0] swscale filter debug: 1920x1080 (1920x1088) chroma: RV32 -> 1280x724 (1280x724) chroma: RV32 with scaling using Bicubic (good quality)
+[00000206cadb28e0] main filter debug: using video converter module "swscale"
+[00000206c8630dc0] main filter debug: Filter 'Swscale' (00000206cadb28e0) appended to chain
+[00000206c8630dc0] main filter debug: using video converter module "chain"
+[00000206c866cb10] main vout display debug: Filter 'chain' (00000206c8630dc0) appended to chain
+[00000206c863b9f0] main video output debug: original format sz 1920x1088, of (0,0), vsz 1920x1080, 4cc DXA9, sar 1:1, msk r0x0 g0x0 b0x0
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'window state' 0
+[00000206c60e1e40] main generic debug: reusing provided vout
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'window state' 0
+[00000206c89e4920] main generic debug: looking for hw decoder module matching "none": 4 candidates
+[00000206c89e4920] main generic debug: no hw decoder modules matched
+[h264 @ 00000206cac0f500] Reinit context to 1920x1088, pix_fmt: yuv420p
+[00000206c8630dc0] main filter debug: removing module "chain"
+[00000206cadb3d80] main filter debug: removing module "chain"
+[00000206cadb36a0] main filter debug: removing module "d3d9_filters"
+[00000206cadb3d80] main filter debug: Filter 00000206cadb36a0 removed from chain
+[00000206cadb1e90] main filter debug: removing module "swscale"
+[00000206cadb3d80] main filter debug: Filter 00000206cadb1e90 removed from chain
+[00000206c8630dc0] main filter debug: Filter 00000206cadb3d80 removed from chain
+[00000206cadb28e0] main filter debug: removing module "swscale"
+[00000206c8630dc0] main filter debug: Filter 00000206cadb28e0 removed from chain
+[00000206c866cb10] main vout display debug: Filter 00000206c8630dc0 removed from chain
+[00000206c866cb10] main vout display debug: removing module "vmem"
+[00000206c863b9f0] main video output debug: deinterlace -1, mode auto, is_needed 0
+[00000206c863b9f0] main video output debug: Opening vout display wrapper
+[00000206c866cb10] main vout display debug: looking for vout display module matching "vmem": 24 candidates
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'resize' 1280x726
+[00000206c866cb10] main vout display debug: using vout display module "vmem"
+[00000206c866cb10] main vout display debug: A filter to adapt decoder I420 to display RV32 is needed
+[00000206c8630dc0] main filter debug: looking for video converter module matching "any": 48 candidates
+[00000206c8630dc0] swscale filter debug: 1920x1080 (1920x1090) chroma: I420 -> 1280x726 (1280x726) chroma: RV32 with scaling using Bicubic (good quality)
+[00000206c8630dc0] main filter debug: using video converter module "swscale"
+[00000206c866cb10] main vout display debug: Filter 'Swscale' (00000206c8630dc0) appended to chain
+[00000206c863b9f0] main video output debug: original format sz 1920x1090, of (0,0), vsz 1920x1080, 4cc I420, sar 1:1, msk r0x0 g0x0 b0x0
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'window state' 0
+[00000206c60e1e40] main generic debug: reusing provided vout
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'window state' 0
+[00000206c87f9b40] main decoder debug: Received first picture
+[00000206c8975120] wasapi generic debug: modified format
+[00000206c866cb10] main vout display error: Failed to set on top
+[00000206c866cb10] main vout display debug: VoutDisplayEvent 'resize' 1920x1080
+[00000206c8975120] wasapi generic debug: buffer size    : 96000 frames
+[00000206c8975120] wasapi generic debug: maximum latency: 000 ns
+[00000206c8975120] wasapi generic debug: default period : 10666700 ns
+[00000206c8975120] wasapi generic debug: minimum period : 3000000 ns
+[00000206c8975120] main generic debug: using aout stream module "wasapi"
+[00000206c8b3a590] main audio output debug: output 'f32l' 48000 Hz Stereo frame=1 samples/8 bytes
+[00000206c8973cf0] main volume debug: looking for audio volume module matching "any": 4 candidates
+[00000206c8973cf0] main volume debug: using audio volume module "float_mixer"
+[00000206c8b3a590] main audio output debug: input 'f32l' 44100 Hz Stereo frame=1 samples/8 bytes
+[00000206c8bde7e0] main audio filter debug: looking for audio filter module matching "scaletempo": 32 candidates
+[00000206c8bde7e0] scaletempo audio filter debug: format: 44100 rate, 2 nch, 4 bps, fl32
+[00000206c8bde7e0] scaletempo audio filter debug: params: 30 stride, 0.200 overlap, 14 search
+[00000206c8bde7e0] scaletempo audio filter debug: 1.000 scale, 1323.000 stride_in, 1323 stride_out, 1059 standing, 264 overlap, 617 search, 2204 queue, fl32 mode
+[00000206c8bde7e0] main audio filter debug: using audio filter module "scaletempo"
+[00000206c8b3a590] main audio output debug: conversion: 'f32l'->'f32l' 44100 Hz->44100 Hz Stereo->Stereo
+[00000206c8b3a590] main audio output debug: conversion pipeline complete
+[00000206c8b3a590] main audio output debug: conversion: 'f32l'->'f32l' 44100 Hz->44100 Hz Stereo->Stereo
+[00000206c8b3a590] main audio output debug: conversion pipeline complete
+[00000206c8bdd400] main audio resampler debug: looking for audio resampler module matching "any": 6 candidates
+[00000206c8bdd400] main audio resampler debug: using audio resampler module "samplerate"
+[00000206c62091d0] main input debug: Decoder wait done in 558 ms
+[00000206c8b3a590] main audio output debug: inserting 4569 zeroes
+[00000206c8b3a590] mmdevice audio output debug: state changed: 1
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-741,73509588-74482617/gosq/40/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-741,73509588-74482617/gosq/40/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 8 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (195200001) cur 195200001 rap start (pl 193793739/dmx 193793739) pos 0.307612
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c866cb10] main vout display debug: auto hiding mouse cursor
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 8 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 9 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 11 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 9 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (196231835) cur 196231835 rap start (pl 193793739/dmx 193793739) pos 0.309238
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 16 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 9 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 9 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 13 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 8 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 9 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Mon, 24 Jun 2024 02:14:50 GMT
+Date: Thu, 22 Oct 2026 09:49:17 GMT
+Expires: Thu, 22 Oct 2026 09:49:17 GMT
+Cache-Control: private, max-age=21284
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 11 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 8 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 12 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (197230293) cur 197230293 rap start (pl 193793739/dmx 193793739) pos 0.310811
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 8 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 13 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 12 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/200500/len/3733/goap/slices%3D0-722,3233382-3395066/gosq/40/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/200500/len/3733/goap/slices%3D0-722,3233382-3395066/gosq/40/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 9 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 14 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (198216667) cur 198216667 rap start (pl 193793739/dmx 193793739) pos 0.312365
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 8 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (199100001) cur 199100001 rap start (pl 193793739/dmx 193793739) pos 0.313757
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Sun, 23 Jun 2024 23:23:40 GMT
+Date: Thu, 22 Oct 2026 09:49:19 GMT
+Expires: Thu, 22 Oct 2026 09:49:19 GMT
+Cache-Control: private, max-age=21282
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-741,74482618-75729971/gosq/41/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-741,74482618-75729971/gosq/41/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (200202447) cur 200202447 rap start (pl 193793739/dmx 193793739) pos 0.315495
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Mon, 24 Jun 2024 02:14:50 GMT
+Date: Thu, 22 Oct 2026 09:49:20 GMT
+Expires: Thu, 22 Oct 2026 09:49:20 GMT
+Cache-Control: private, max-age=21281
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 9 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/204233/len/6100/goap/slices%3D0-722,3233382-3556662/gosq/41/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/204233/len/6100/goap/slices%3D0-722,3233382-3556662/gosq/41/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 9 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 9 ms)
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Sun, 23 Jun 2024 23:23:40 GMT
+Date: Thu, 22 Oct 2026 09:49:20 GMT
+Expires: Thu, 22 Oct 2026 09:49:20 GMT
+Cache-Control: private, max-age=21281
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/210333/len/5700/goap/slices%3D0-722,3395067-3556662/gosq/42/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/210333/len/5700/goap/slices%3D0-722,3395067-3556662/gosq/42/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Sun, 23 Jun 2024 23:23:40 GMT
+Date: Thu, 22 Oct 2026 09:49:21 GMT
+Expires: Thu, 22 Oct 2026 09:49:21 GMT
+Cache-Control: private, max-age=21280
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (201200905) cur 201200905 rap start (pl 193793739/dmx 193793739) pos 0.317068
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/216033/len/4100/goap/slices%3D0-722,3395067-3718137/gosq/43/file/seg.ts
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/216033/len/4100/goap/slices%3D0-722,3395067-3718137/gosq/43/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Sun, 23 Jun 2024 23:23:40 GMT
+Date: Thu, 22 Oct 2026 09:49:21 GMT
+Expires: Thu, 22 Oct 2026 09:49:21 GMT
+Cache-Control: private, max-age=21280
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/220133/len/4767/goap/slices%3D0-722,3556663-3718137/gosq/44/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/220133/len/4767/goap/slices%3D0-722,3556663-3718137/gosq/44/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Sun, 23 Jun 2024 23:23:40 GMT
+Date: Thu, 22 Oct 2026 09:49:21 GMT
+Expires: Thu, 22 Oct 2026 09:49:21 GMT
+Cache-Control: private, max-age=21280
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-741,75729972-78595072/gosq/42/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-741,75729972-78595072/gosq/42/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Mon, 24 Jun 2024 02:14:50 GMT
+Date: Thu, 22 Oct 2026 09:49:21 GMT
+Expires: Thu, 22 Oct 2026 09:49:21 GMT
+Cache-Control: private, max-age=21280
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (202199363) cur 202199363 rap start (pl 193793739/dmx 193793739) pos 0.318642
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 12 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/224900/len/5767/goap/slices%3D0-722,3556663-3879671/gosq/45/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/224900/len/5767/goap/slices%3D0-722,3556663-3879671/gosq/45/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Sun, 23 Jun 2024 23:23:40 GMT
+Date: Thu, 22 Oct 2026 09:49:22 GMT
+Expires: Thu, 22 Oct 2026 09:49:22 GMT
+Cache-Control: private, max-age=21279
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/230667/len/6200/goap/slices%3D0-722,3718138-3879671/gosq/46/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/230667/len/6200/goap/slices%3D0-722,3718138-3879671/gosq/46/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (203197821) cur 203197821 rap start (pl 193793739/dmx 193793739) pos 0.320215
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Sun, 23 Jun 2024 23:23:40 GMT
+Date: Thu, 22 Oct 2026 09:49:23 GMT
+Expires: Thu, 22 Oct 2026 09:49:23 GMT
+Cache-Control: private, max-age=21278
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (204219499) cur 204219499 rap start (pl 193793739/dmx 193793739) pos 0.321825
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (205217957) cur 205217957 rap start (pl 193793739/dmx 193793739) pos 0.323399
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (206216415) cur 206216415 rap start (pl 193793739/dmx 193793739) pos 0.324972
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/236867/len/4166/goap/slices%3D0-722,3718138-4041369/gosq/47/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/234/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/goi/133/sgoap/clen%3D10271496%3Bdur%3D634.624%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1719185020722767/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,goi,sgoap,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwRQIhAKQ6cN3RKRix330asUPqARl86BWy7D7iFGhaxDidDxrdAiA0yMT1n9rPdADurfWi3Uvo74Cv6gCYb6P4nizyjlH0LQ%3D%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRgIhAODkjym6SRqEYX8Wv1ICLN67c1wifXuXVLlGfQwoJsLvAiEAt-lYK5ZkSMwfhYY0lveA6dfMpyJFJt94NBSS8ksg4WE%3D/playlist/index.m3u8/begin/236867/len/4166/goap/slices%3D0-722,3718138-4041369/gosq/47/file/seg.ts HTTP/1.1
+Host: rr2---sn-gwpa-a3vr.googlevideo.com:443
+Accept: */*
+Accept-Language: en_US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Accept-Encoding: deflate, gzip
+Cache-Control: no-cache
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 12 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 11 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 9 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (207214873) cur 207214873 rap start (pl 193793739/dmx 193793739) pos 0.326545
+[00000206372fc7d0] http demux debug: incoming response:
+HTTP/1.1 200 OK
+Last-Modified: Sun, 23 Jun 2024 23:23:40 GMT
+Date: Thu, 22 Oct 2026 09:49:26 GMT
+Expires: Thu, 22 Oct 2026 09:49:26 GMT
+Cache-Control: private, max-age=21275
+Content-Type: application/octet-stream
+Transfer-Encoding: chunked
+Connection: keep-alive
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,quic=":443"; ma=2592000; v="46"
+Vary: Origin
+Cross-Origin-Resource-Policy: cross-origin
+X-Content-Type-Options: nosniff
+Server: gvs 1.0
+
+
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (208213331) cur 208213331 rap start (pl 193793739/dmx 193793739) pos 0.328119
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 10 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (209200001) cur 209200001 rap start (pl 193793739/dmx 193793739) pos 0.329674
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (210200001) cur 210200001 rap start (pl 193793739/dmx 193793739) pos 0.331250
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 0 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 3 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 5 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 4 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 6 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 7 ms)
+[00000206c863b9f0] main video output warning: picture is too late to be displayed (missing 8 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206372fc7d0] adaptive demux debug: playlist Start/End 0/634566626 len 634566626rap pl/demux (193793739/193793739)
+[00000206372fc7d0] adaptive demux debug: cached.i_time (211231925) cur 211231925 rap start (pl 193793739/dmx 193793739) pos 0.332876
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 2 ms)
+[00000206c863b9f0] main video output debug: picture might be displayed late (missing 1 ms)
+[00000206372fc7d0] adaptive demux debug: Retrieving https://rr2---sn-gwpa-a3vr.googlevideo.com:443/videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXizBRMgkCIGrweTyzJwUoLu18U3HkIaZA5JSmWx0DKsbwNXRwy4CG/playlist/index.m3u8/govp/slices%3D0-741,78595073-80980480/gosq/43/file/seg.ts
+[00000206372fc7d0] http demux debug: outgoing request:
+GET /videoplayback/id/6aacfe284f9ba4a4/itag/312/source/youtube/expire/1792684141/ei/DdzZasKqM6CY77APltm2yA4/ip/152.56.142.169/requiressl/yes/ratebypass/yes/pfa/1/sgovp/clen%3D257619653%3Bdur%3D634.566%3Bgir%3Dyes%3Bitag%3D299%3Blmt%3D1719195290537273/rqh/1/hls_chunk_host/rr2---sn-gwpa-a3vr.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/cps/429/met/1792662541,/mh/aP/mm/31,29/mn/sn-gwpa-a3vr,sn-gwpa-qxae7/ms/au,rdu/mv/m/mvi/2/pcm2cms/yes/pl/23/rms/au,au/pcm2/no/initcwndbps/582375/bui/AWzQHwqFHqYUikE9snWuPEuS1B2zKT0QMQokWqaXcAKCaiSl1ek-rv2i3Lp_ExiiXH6shV-LYEPMd7HL/spc/mpRQ_xidltecQxFRGs_PNe7PvWDnnezOZkgmkPkebw8wdOlUcBJvfkF4D-8n_us/vprv/1/playlist_type/DVR/txp/4532434/epbp/1/mt/1792662135/fvip/3/keepalive/yes/fexp/51565116/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgovp,rqh,xpc,pcm2,bui,spc,vprv,playlist_type/sig/AE0s2JYwQwIfHUiTOSivR9VoOwl6lzCqbb7yeE_XMHId2v3C78E4fwIgQ-NAhIz7S3rCms9K9bNj0pzW5mM8Q3p9PDpiWJWs1HQ%3D/lsparams/hls_chunk_host,cps,met,mh,mm,mn,ms,mv,mvi,pcm2cms,pl,rms,initcwndbps/lsig/APaTxxMwRAIgXuf7IHQFuYIbrqUls7qsFIyfFCgURtnbkPDXi^C

@@ -47,6 +47,10 @@ private val BadgeShape = RoundedCornerShape(4.dp)
 private val DefaultCardWidth = 240.dp
 private val ListRowThumbnailWidth = 160.dp
 
+/** Grid columns for the available width: one card roughly every [minCardWidth], clamped like NewPipe's phone/tablet grids. */
+fun responsiveVideoColumns(availableWidth: Dp, minCardWidth: Dp = 300.dp): Int =
+    (availableWidth / minCardWidth).toInt().coerceIn(2, 5)
+
 /**
  * A 16:9 media thumbnail with a title and optional metadata line, used in rails and grids.
  *
@@ -58,6 +62,8 @@ private val ListRowThumbnailWidth = 160.dp
  * @param details Optional secondary metadata line (views · date), rendered muted below the subtitle.
  * @param durationText Optional duration badge text, e.g. `12:34`.
  * @param isLive When true, shows a red `LIVE` badge instead of the duration.
+ * @param fillWidth When true, the card fills its parent slot (grid cells sized by weight or
+ *   width constraints) instead of using the fixed [cardWidth]; rails keep the fixed width.
  * @param onClick Invoked when the card is activated.
  */
 @Composable
@@ -71,13 +77,14 @@ fun VideoCard(
     durationText: String? = null,
     isLive: Boolean = false,
     cardWidth: Dp = DefaultCardWidth,
+    fillWidth: Boolean = false,
     onClick: () -> Unit = {}
 ) {
     val colors = plusColors()
     val artwork = thumbnail ?: rememberThumbnailPainter(thumbnailUrl)
     Column(
         modifier = modifier
-            .width(cardWidth)
+            .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier.width(cardWidth))
             .clip(ThumbnailShape)
             .clickable(onClick = onClick)
     ) {

@@ -87,7 +87,17 @@ class RecentlyPlayedStore(
     }
 
     private fun persist(items: List<RecentlyPlayedEntry>) {
-        settings.putString(key, json.encodeToString(RecentlyPlayedSnapshot(items)))
+        // Java preferences store values as strings capped at 8192 chars. Live streams carry very long
+        // manifest URLs, so drop the oldest entries until the snapshot fits instead of throwing.
+        var current = items
+        while (true) {
+            val encoded = json.encodeToString(RecentlyPlayedSnapshot(current))
+            if (encoded.length <= MAX_PREFERENCE_CHARS || current.isEmpty()) {
+                runCatching { settings.putString(key, encoded) }
+                return
+            }
+            current = current.dropLast(1)
+        }
     }
 
     companion object {
@@ -95,6 +105,9 @@ class RecentlyPlayedStore(
 
         /** Maximum number of remembered items; older entries fall off the end. */
         const val MAX_ENTRIES = 50
+
+        /** Java preferences reject string values longer than 8192 characters; keep a safety margin. */
+        private const val MAX_PREFERENCE_CHARS = 8000
 
         /**
          * Pure add/update used by [record]: keeps the input untouched, de-duplicates by id, puts the

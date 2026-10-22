@@ -141,6 +141,17 @@ class ProviderContentRepository(
         return run(provider) { it.subtitles(url) }
     }
 
+    /**
+     * List the top-level comments of the stream page at [url]. Picks the first available provider
+     * whose [ProviderCapabilities.resolve] is enabled, and fails the same way [resolve] does when
+     * none can.
+     */
+    suspend fun comments(url: String): ProviderResult<List<CommentItem>> {
+        val provider = firstFor { it.capabilities.resolve }
+            ?: return noProviderOrUnsupported { it.capabilities.resolve }
+        return run(provider) { it.comments(url) }
+    }
+
     private fun firstFor(predicate: (MediaProvider) -> Boolean): MediaProvider? =
         registry.available.value.firstOrNull { it.isAvailable && predicate(it) }
 

@@ -8,6 +8,7 @@ package net.newpipe.app.screen.library
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -50,6 +51,7 @@ import net.newpipe.app.component.SearchBarField
 import net.newpipe.app.component.SectionHeader
 import net.newpipe.app.component.ToolbarIconButton
 import net.newpipe.app.component.TopToolbar
+import net.newpipe.app.component.responsiveVideoColumns
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.player.LocalMediaFile
@@ -473,27 +475,28 @@ private fun sortLabel(order: SortOrder): String = when (order) {
     SortOrder.NEWEST -> stringResource(Res.string.library_sort_date)
 }
 
-private const val GridColumns = 4
-
 @Composable
 private fun MediaGrid(items: List<LocalMediaFile>, onPlay: (LocalMediaFile) -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        items.chunked(GridColumns).forEach { row ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spaceNormal, vertical = spaceXSmall),
-                horizontalArrangement = Arrangement.spacedBy(spaceSmall)
-            ) {
-                row.forEach { item ->
-                    MediaTile(
-                        item = item,
-                        onClick = { onPlay(item) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                repeat(GridColumns - row.size) {
-                    Spacer(Modifier.weight(1f))
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val columns = responsiveVideoColumns(maxWidth)
+        Column(modifier = Modifier.fillMaxWidth()) {
+            items.chunked(columns).forEach { row ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spaceNormal, vertical = spaceXSmall),
+                    horizontalArrangement = Arrangement.spacedBy(spaceSmall)
+                ) {
+                    row.forEach { item ->
+                        MediaTile(
+                            item = item,
+                            onClick = { onPlay(item) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    repeat(columns - row.size) {
+                        Spacer(Modifier.weight(1f))
+                    }
                 }
             }
         }

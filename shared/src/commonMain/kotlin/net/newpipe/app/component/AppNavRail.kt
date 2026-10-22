@@ -27,6 +27,8 @@ import newpipe.shared.generated.resources.ic_foreground
 import newpipe.shared.generated.resources.ic_headset
 import newpipe.shared.generated.resources.ic_notifications
 import newpipe.shared.generated.resources.ic_palette
+import newpipe.shared.generated.resources.ic_search
+import newpipe.shared.generated.resources.ic_trending_up
 import newpipe.shared.generated.resources.layout_balanced
 import newpipe.shared.generated.resources.layout_compact
 import newpipe.shared.generated.resources.layout_expanded
@@ -97,7 +99,8 @@ private fun railEntries(
         NavEntry(
             label = stringResource(Res.string.nav_trending),
             selected = selected == Destination.Trending,
-            onClick = { onNavigate(Destination.Trending) }
+            onClick = { onNavigate(Destination.Trending) },
+            icon = painterResource(Res.drawable.ic_trending_up)
         ),
         NavEntry(
             label = stringResource(Res.string.subscriptions_screen_title),
@@ -114,7 +117,8 @@ private fun railEntries(
         NavEntry(
             label = stringResource(Res.string.nav_search),
             selected = selected == Destination.Search,
-            onClick = { onNavigate(Destination.Search) }
+            onClick = { onNavigate(Destination.Search) },
+            icon = painterResource(Res.drawable.ic_search)
         ),
         NavEntry(
             label = "Library",
