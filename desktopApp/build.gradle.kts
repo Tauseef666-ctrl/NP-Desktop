@@ -31,6 +31,9 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = NEWPIPE_APPLICATION_ID_NEW
             packageVersion = NEWPIPE_VERSION_NAME
+            description = "NewPipe - Libre lightweight streaming client"
+            copyright = "© 2026 NewPipe e.V. Licensed under GPL-3.0-or-later"
+            vendor = "NewPipe e.V."
         }
     }
 }

@@ -5,6 +5,7 @@
 
 package net.newpipe.app
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -25,13 +26,15 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         title = "NewPipe",
-        state = rememberWindowState(width = 1280.dp, height = 800.dp)
+        state = rememberWindowState(width = 1440.dp, height = 900.dp)
     ) {
-        App(
-            startDestination = Destination.Search,
-            onCloseRequest = ::exitApplication,
-            playbackController = playbackController
-        )
+        MaterialTheme {
+            App(
+                startDestination = Destination.Search,
+                onCloseRequest = ::exitApplication,
+                playbackController = playbackController
+            )
+        }
     }
 
     PlayerWindow(playbackController)
