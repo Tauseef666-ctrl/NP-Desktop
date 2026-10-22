@@ -22,6 +22,7 @@ Compare NewPipe Android behavior against the Windows Desktop port (feature-by-fe
 - [ ] Clean machine test (Windows) - blocked locally (no clean VM). Must run in CI.
 - [x] Desktop compile green after fixes
 - [x] Runtime starts with libVLC found, Koin started, no material3 skew crash
+- [x] Extractor initialized early (ensured in registry/repo), search no longer shows cancellation cascade
 - [ ] Manual: search \"lofi hip hop\", open stream, play in player window, seek/volume/speed/mute
 - [ ] Manual: navigate between screens while playing
 

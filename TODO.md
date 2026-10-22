@@ -249,10 +249,10 @@ In Progress
 
 ## Phase J — Packaging and release
 
-- [ ] **Windows x64 application image** — pending.
-- [ ] **Versioned installer (MSI)** — pending.
+- [~] **Windows x64 application image** — in progress. Compose Desktop `nativeDistributions` configured for Dmg/Msi/Deb; libVLC bundling via `VlcNativeLocator` path discovery + existing `%USERPROFILE%\.gradle\vlcSetup\vlc` tree.
+- [ ] **Versioned installer (MSI)** — pending (requires Windows packaging; test in CI/clean machine).
 - [ ] **Portable ZIP distribution** — pending.
-- [ ] **Third-party notices / licensing documentation** — pending.
+- [ ] **Third-party notices / licensing documentation** — pending (NewPipe GPL-3.0-or-later, libVLC LGPL-2.1+/GPL-2.1+).
 - [ ] **GitHub Actions build + test workflow** — pending.
 - [ ] **Release workflow gated on a clean build** — pending.
 - [ ] **Build and usage documentation** — pending.
