@@ -8,12 +8,16 @@ package net.newpipe.app.navigation
 import androidx.compose.runtime.mutableStateListOf
 import co.touchlab.kermit.Logger
 import net.newpipe.app.screen.about.AboutScreen
+import net.newpipe.app.screen.channel.ChannelScreen
+import net.newpipe.app.screen.playlist.PlaylistScreen
+import net.newpipe.app.screen.search.SearchScreen
 import net.newpipe.app.screen.settings.AppearanceSettingsScreen
 import net.newpipe.app.screen.settings.DebugSettingsScreen
 import net.newpipe.app.screen.settings.DownloadSettingsScreen
 import net.newpipe.app.screen.settings.PlayerSettingsScreen
 import net.newpipe.app.screen.settings.SettingsHomeScreen
 import net.newpipe.app.screen.settings.VideoAudioSettingsScreen
+import net.newpipe.app.screen.stream.StreamScreen
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Singleton
@@ -56,6 +60,31 @@ fun navModule() = module {
 
     navigation<Destination.DownloadSettings> {
         DownloadSettingsScreen()
+    }
+
+    navigation<Destination.Search> {
+        SearchScreen()
+    }
+
+    navigation<Destination.Stream> { destination ->
+        StreamScreen(
+            serviceId = destination.serviceId,
+            url = destination.url
+        )
+    }
+
+    navigation<Destination.Channel> { destination ->
+        ChannelScreen(
+            serviceId = destination.serviceId,
+            url = destination.url
+        )
+    }
+
+    navigation<Destination.Playlist> { destination ->
+        PlaylistScreen(
+            serviceId = destination.serviceId,
+            url = destination.url
+        )
     }
 }
 

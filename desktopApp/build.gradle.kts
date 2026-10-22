@@ -18,6 +18,9 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(libs.jetbrains.coroutines.swing)
     implementation(libs.jetbrains.compose.preview)
+
+    // The player window uses material3 components, the same ones the shared module uses
+    implementation(libs.jetbrains.compose.material3)
 }
 
 compose.desktop {

@@ -113,6 +113,9 @@ kotlin {
 
                 implementation(libs.russhwolf.settings.core)
                 implementation(libs.touchlab.kermit)
+
+                // Image loading for thumbnails and avatars
+                implementation(libs.coil.compose)
             }
         }
         commonTest.dependencies {
@@ -126,6 +129,22 @@ kotlin {
             implementation(libs.androidx.appcompat)
             implementation(libs.androidx.preference)
             implementation(libs.androidx.browser)
+        }
+        // The extraction engine and its HTTP stack are plain JVM libraries. They therefore can
+        // only be used from the desktop jvm target, never from commonMain, which is also
+        // compiled for iOS. See docs/ARCHITECTURE.md section 4.1.
+        // The Android and iOS targets keep their own stubs until the implementation is moved
+        // into a source set that is shared between all JVM flavours.
+        jvmMain.dependencies {
+            implementation(libs.newpipe.extractor)
+            implementation(libs.squareup.okhttp)
+            implementation(libs.squareup.okhttp.brotli)
+
+            // Fetcher for Coil, the image loading library used by the content lists
+            implementation(libs.coil.network.okhttp)
+
+            // libVLC bindings, used for the media playback of the desktop application
+            implementation(libs.vlcj)
         }
         val androidDeviceTest by getting {
             dependencies {

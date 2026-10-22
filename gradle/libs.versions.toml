@@ -44,7 +44,10 @@ lifecycle = "2.11.0"
 localbroadcastmanager = "1.1.0"
 markwon = "4.6.2"
 material = "1.11.0" # TODO: update to newer version after bug is fixed. See https://github.com/TeamNewPipe/NewPipe/pull/13018
-material3 = "1.11.0-alpha07"
+# Material3 must stay binary compatible with the compose foundation that is on the classpath.
+# Material3 1.11.x is built against foundation 1.11.x and fails at runtime with
+# "AbstractMethodError: ... CustomStyle.applyStyle" once foundation 1.12 is used.
+material3 = "1.12.0-alpha03"
 media = "1.7.1"
 mockitoCore = "5.24.0"
 multiplatform = "1.12.2"
@@ -71,6 +74,9 @@ swiperefreshlayout = "1.2.0"
 # This works thanks to JitPack: https://jitpack.io/
 teamnewpipe-filepicker = "5.0.0"
 teamnewpipe-nanojson = "e9d656ddb49a412a5a0a5d5ef20ca7ef09549996"
+# VLCJ is the Java binding of libVLC. It requires VLC 4.0 or newer as of 4.8, but the
+# vlcj-natives 4.8.3 bindings are compatible with the stable libVLC 3.0.21 release.
+vlcj = "4.11.0"
 # WORKAROUND: if you get errors with the NewPipeExtractor dependency, replace `v0.XX.Y` with
 # the corresponding commit hash, since JitPack sometimes deletes artifacts.
 # If there’s already a git hash, just add more of it to the end (or remove a letter)
@@ -175,6 +181,7 @@ squareup-leakcanary-watcher = { module = "com.squareup.leakcanary:leakcanary-obj
 squareup-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 squareup-okhttp-brotli = { module = "com.squareup.okhttp3:okhttp-brotli", version.ref = "okhttp" }
 touchlab-kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
+vlcj = { module = "uk.co.caprica:vlcj", version.ref = "vlcj" }
 zacsweers-autoservice-compiler = { module = "dev.zacsweers.autoservice:auto-service-ksp", version.ref = "autoservice-zacsweers" }
 
 [plugins]
