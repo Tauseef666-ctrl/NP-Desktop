@@ -14,11 +14,11 @@
 - [x] Audit playback architecture (VLCJ/libVLC on desktop, ExoPlayer on Android)
 - [x] Identify Android-specific deps (Context, PreferenceManager, etc.)
 - [x] Identify reusable modules (shared commonMain theme/nav/composables)
-- [ ] Audit all app layouts (113 XML layouts) for UI patterns
-- [ ] Audit fragments/activities for navigation and screens
-- [ ] Audit player implementations
-- [ ] Audit downloads/subscriptions/history/playlists/settings
-- [ ] Document extraction architecture in detail
+- [x] Audit app layouts (113 XML layouts) reviewed
+- [x] Audit MainActivity/fragments for navigation patterns
+- [x] Audit player implementations (Android + desktop)
+- [x] Audit downloads/subscriptions/history/playlists/settings structure
+- [x] Document extraction architecture (ExtractorContentRepository, JvmDownloader)
 
 ## Phase 2 — UI Specification
 - [ ] Create comprehensive UI_SPECIFICATION.md with all screens
@@ -31,13 +31,13 @@
 - [ ] Verify against source
 
 ## Phase 3 — Windows Architecture
-- [ ] Select/confirm framework (Compose Desktop - already in use)
-- [ ] Implement application shell with bezel-less design
+- [x] Select/confirm framework (Compose Desktop - already in use)
+- [x] Implement application shell with bezel-less design (ModernShell)
 - [ ] Custom window chrome or native with integration
-- [ ] Navigation rail/sidebar responsive
-- [ ] Platform adapters
+- [x] Navigation rail/sidebar responsive (collapsible)
+- [x] Platform adapters (VLCJ/native locator, extractor jvmMain)
 - [ ] Persistence (Room KMP planned)
-- [ ] Error handling/logging
+- [x] Error handling/logging (Kermit, try/catch with mapping)
 
 ## Phase 4 — Desktop UI Implementation
 - [ ] Redesign shell (navigation sidebar, toolbar, content area)
