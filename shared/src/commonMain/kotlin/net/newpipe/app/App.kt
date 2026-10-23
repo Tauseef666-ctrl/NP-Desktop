@@ -10,10 +10,14 @@ import net.newpipe.app.di.KoinApp
 import net.newpipe.app.di.contentModule
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.NavDisplay
+import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.navigation.navModule
 import net.newpipe.app.service.PlaybackController
+import net.newpipe.app.shell.ModernShell
 import net.newpipe.app.theme.AppTheme
 import org.koin.compose.KoinApplication
+import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 import org.koin.plugin.module.dsl.koinConfiguration
 
 /**
@@ -39,10 +43,19 @@ fun App(
         )
     ) {
         AppTheme {
-            NavDisplay(
-                startDestination = startDestination,
-                onCloseRequest = onCloseRequest
-            )
+            val navigator: Navigator = koinInject {
+                parametersOf(startDestination, onCloseRequest)
+            }
+            ModernShell(
+                currentDestination = navigator.backstack.lastOrNull() ?: startDestination,
+                onNavigate = navigator::switchTo
+            ) {
+                NavDisplay(
+                    startDestination = startDestination,
+                    onCloseRequest = onCloseRequest,
+                    navigator = navigator
+                )
+            }
             withKoin()
         }
     }

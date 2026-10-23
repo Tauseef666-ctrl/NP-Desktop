@@ -8,7 +8,9 @@ package net.newpipe.app.viewmodel.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -60,6 +62,7 @@ class SearchViewModel(
     val hasMore = _hasMore.asStateFlow()
 
     private var searchJob: Job? = null
+    private var searchGeneration = 0
     private var nextPage = 0
 
     init {
@@ -92,11 +95,17 @@ class SearchViewModel(
 
     /**
      * Runs a new search and replaces the current results.
+     *
+     * When [debounce] is `true` the request is delayed briefly so that typing a query does not
+     * start one request per keystroke. Submitting the query (for example with the Enter key) uses
+     * `false` to search immediately.
      */
-    fun search(query: String) {
+    fun search(query: String, debounce: Boolean = true) {
         _query.value = query
+        searchJob?.cancel()
+        val generation = ++searchGeneration
+
         if (query.isBlank()) {
-            searchJob?.cancel()
             _items.value = emptyList()
             _error.value = null
             _loading.value = false
@@ -104,7 +113,6 @@ class SearchViewModel(
             return
         }
 
-        searchJob?.cancel()
         nextPage = 0
         _items.value = emptyList()
         _error.value = null
@@ -112,6 +120,7 @@ class SearchViewModel(
 
         searchJob = viewModelScope.launch {
             try {
+                if (debounce) delay(SEARCH_DEBOUNCE_MILLIS)
                 val result = repository.search(
                     SearchRequest(
                         query = query,
@@ -120,19 +129,22 @@ class SearchViewModel(
                         page = 0
                     )
                 )
+                if (generation != searchGeneration) return@launch
                 _items.value = result
                 _hasMore.value = result.isNotEmpty()
                 nextPage = 1
-            } catch (exception: ContentException) {
-                Logger.e(messageString = "Search failed", throwable = exception)
-                _error.value = exception.message
-                _hasMore.value = false
+            } catch (exception: CancellationException) {
+                // A newer search replaced this one; it owns the state from here on.
+                throw exception
             } catch (exception: Exception) {
+                if (generation != searchGeneration) return@launch
                 Logger.e(messageString = "Search failed", throwable = exception)
-                _error.value = exception.message
+                _error.value = exception.message ?: "Search failed"
                 _hasMore.value = false
             } finally {
-                _loading.value = false
+                if (generation == searchGeneration) {
+                    _loading.value = false
+                }
             }
         }
     }
@@ -190,5 +202,6 @@ class SearchViewModel(
     companion object {
         /** YouTube, the default service of NewPipe. */
         const val DEFAULT_SERVICE_ID = 0
+        private const val SEARCH_DEBOUNCE_MILLIS = 300L
     }
 }

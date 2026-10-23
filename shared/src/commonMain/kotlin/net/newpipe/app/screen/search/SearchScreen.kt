@@ -101,7 +101,7 @@ fun SearchScreen(
                 placeholder = { Text("Search") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { viewModel.search(query) })
+                keyboardActions = KeyboardActions(onSearch = { viewModel.search(query, debounce = false) })
             )
 
             Row(

@@ -30,5 +30,21 @@ object Layout {
     val navRailExpanded = 240.dp
     val toolbarHeight = 56.dp
     val playerMinHeight = 200.dp
+    val navigationItemHeight = 44.dp
+    val contentMaxWidth = 1600.dp
+}
+
+/** Width thresholds at which the shell changes its layout. */
+object Breakpoints {
+    val compact = 900.dp
+    val medium = 1200.dp
+    val expanded = 1600.dp
+}
+
+/** Animation durations in milliseconds, matching the specification. */
+object Motion {
+    const val fast = 120
+    const val medium = 220
+    const val slow = 300
 }
 

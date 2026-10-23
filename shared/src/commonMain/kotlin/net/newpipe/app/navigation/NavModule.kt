@@ -111,6 +111,22 @@ class Navigator(
     fun navigateTo(destination: Destination) = backstack.add(destination)
 
     /**
+     * Switches to a top level destination, as selected in the navigation rail.
+     *
+     * The backstack is reset so that repeated use of the rail does not pile up screens. The start
+     * destination stays at the bottom of the stack as the place "back" returns to, unless the
+     * requested destination is the start destination itself.
+     */
+    fun switchTo(destination: Destination) {
+        if (backstack.lastOrNull() == destination) return
+        backstack.clear()
+        if (destination != startDestination) {
+            backstack.add(startDestination)
+        }
+        backstack.add(destination)
+    }
+
+    /**
      * Navigates to the previous entry in the backstack
      */
     fun navigateUp() = when {
