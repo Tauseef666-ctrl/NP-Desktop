@@ -21,14 +21,14 @@
 - [x] Document extraction architecture (ExtractorContentRepository, JvmDownloader)
 
 ## Phase 2 — UI Specification
-- [ ] Create comprehensive UI_SPECIFICATION.md with all screens
-- [ ] Define design tokens (colors, typography, spacing, radius, elevation)
-- [ ] Define responsive breakpoints (900, 1200, 1600+)
-- [ ] Document navigation structure
-- [ ] Document player layouts
-- [ ] Document all screens and states
-- [ ] Define animation system and reduced-motion
-- [ ] Verify against source
+- [x] Create comprehensive UI_SPECIFICATION.md with all screens
+- [x] Define design tokens (colors, typography, spacing, radius, elevation)
+- [x] Define responsive breakpoints (900, 1200, 1600+)
+- [x] Document navigation structure (Android + desktop)
+- [x] Document player layouts
+- [x] Document all screens and states
+- [x] Define animation system and reduced-motion
+- [x] Verify against source (layouts, fragments, activities reviewed)
 
 ## Phase 3 — Windows Architecture
 - [x] Select/confirm framework (Compose Desktop - already in use)
