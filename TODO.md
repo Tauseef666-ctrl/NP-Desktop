@@ -33,10 +33,10 @@
 ## Phase 3 — Windows Architecture
 - [x] Select/confirm framework (Compose Desktop - already in use)
 - [x] Implement application shell with bezel-less design (ModernShell)
-- [ ] Custom window chrome or native with integration
+- [x] Native window chrome integrated (Compose Desktop Window)
 - [x] Navigation rail/sidebar responsive (collapsible)
 - [x] Platform adapters (VLCJ/native locator, extractor jvmMain)
-- [ ] Persistence (Room KMP planned)
+- [~] Persistence (Room KMP planned, not yet integrated)
 - [x] Error handling/logging (Kermit, try/catch with mapping)
 
 ## Phase 4 — Desktop UI Implementation
