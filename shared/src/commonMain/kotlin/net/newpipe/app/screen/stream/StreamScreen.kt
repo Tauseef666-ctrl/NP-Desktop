@@ -7,14 +7,20 @@ package net.newpipe.app.screen.stream
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,6 +57,8 @@ import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.screen.search.Message
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.PlaybackRequest
+import net.newpipe.app.ui.Breakpoints
+import net.newpipe.app.ui.Layout
 import net.newpipe.app.util.formatDuration
 import net.newpipe.app.util.formatViewCount
 import net.newpipe.app.viewmodel.stream.StreamViewModel
@@ -152,6 +161,10 @@ fun StreamScreen(
 
 /**
  * The content of the stream screen, once the details have been loaded.
+ *
+ * On wide screens the description sits in a column on the left while the related streams scroll in
+ * a second column to its right. On narrow screens everything is stacked in a single scrolling
+ * column, so no information is lost when the window is small.
  */
 @Composable
 private fun StreamContent(
@@ -164,95 +177,165 @@ private fun StreamContent(
     onPlay: () -> Unit,
     onOpenItem: (ContentItem) -> Unit
 ) {
-    LazyColumn(modifier = modifier.fillMaxSize()) {
-        item {
-            val thumbnailUrl = details.thumbnailUrl
-            if (thumbnailUrl != null) {
-                AsyncImage(
-                    model = thumbnailUrl,
-                    contentDescription = details.title,
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        if (maxWidth >= Breakpoints.compact && details.relatedItems.isNotEmpty()) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(16f / 9f)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .widthIn(max = Layout.contentMaxWidth)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    StreamHeader(
+                        details = details,
+                        selectedVideo = selectedVideo,
+                        selectedAudio = selectedAudio,
+                        onSelectVideo = onSelectVideo,
+                        onSelectAudio = onSelectAudio,
+                        onPlay = onPlay
+                    )
+                }
+
+                VerticalDivider()
+
+                LazyColumn(
+                    modifier = Modifier
+                        .width(360.dp)
+                        .fillMaxHeight()
+                ) {
+                    item {
+                        Text(
+                            text = "Related streams",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+
+                    items(details.relatedItems, key = { it.url }) { item ->
+                        ContentListItem(
+                            item = item,
+                            onClick = { onOpenItem(item) }
+                        )
+                    }
+                }
             }
-
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = details.title,
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                val metadata = buildMetadata(details)
-                if (metadata.isNotEmpty()) {
-                    Text(
-                        text = metadata,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp)
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                item {
+                    StreamHeader(
+                        details = details,
+                        selectedVideo = selectedVideo,
+                        selectedAudio = selectedAudio,
+                        onSelectVideo = onSelectVideo,
+                        onSelectAudio = onSelectAudio,
+                        onPlay = onPlay
                     )
                 }
 
-                val description = details.description
-                if (!description.isNullOrBlank()) {
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 6,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
+                if (details.relatedItems.isNotEmpty()) {
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
+                        Text(
+                            text = "Related streams",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    StreamSelector(
-                        label = "Video",
-                        streams = details.videoStreams,
-                        selected = selectedVideo,
-                        onSelect = onSelectVideo
-                    )
-
-                    StreamSelector(
-                        label = "Audio",
-                        streams = details.audioStreams,
-                        selected = selectedAudio,
-                        onSelect = onSelectAudio
-                    )
-                }
-
-                Button(
-                    onClick = onPlay,
-                    enabled = selectedVideo != null,
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text("Play")
+                    items(details.relatedItems, key = { it.url }) { item ->
+                        ContentListItem(
+                            item = item,
+                            onClick = { onOpenItem(item) }
+                        )
+                    }
                 }
             }
         }
+    }
+}
 
-        if (details.relatedItems.isNotEmpty()) {
-            item {
-                HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
+/**
+ * The thumbnail, metadata, stream selectors and play button shared by both layouts.
+ */
+@Composable
+private fun StreamHeader(
+    details: StreamDetails,
+    selectedVideo: MediaStream?,
+    selectedAudio: MediaStream?,
+    onSelectVideo: (MediaStream) -> Unit,
+    onSelectAudio: (MediaStream) -> Unit,
+    onPlay: () -> Unit
+) {
+    Column {
+        val thumbnailUrl = details.thumbnailUrl
+        if (thumbnailUrl != null) {
+            AsyncImage(
+                model = thumbnailUrl,
+                contentDescription = details.title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = details.title,
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            val metadata = buildMetadata(details)
+            if (metadata.isNotEmpty()) {
                 Text(
-                    text = "Related streams",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(16.dp)
+                    text = metadata,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
 
-            items(details.relatedItems, key = { it.url }) { item ->
-                ContentListItem(
-                    item = item,
-                    onClick = { onOpenItem(item) }
+            val description = details.description
+            if (!description.isNullOrBlank()) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 6,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StreamSelector(
+                    label = "Video",
+                    streams = details.videoStreams,
+                    selected = selectedVideo,
+                    onSelect = onSelectVideo
+                )
+
+                StreamSelector(
+                    label = "Audio",
+                    streams = details.audioStreams,
+                    selected = selectedAudio,
+                    onSelect = onSelectAudio
+                )
+            }
+
+            Button(
+                onClick = onPlay,
+                enabled = selectedVideo != null,
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Play")
             }
         }
     }

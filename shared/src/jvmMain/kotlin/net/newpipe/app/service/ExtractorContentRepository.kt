@@ -65,6 +65,37 @@ class ExtractorContentRepository(
         }
     }
 
+    override fun kiosks(serviceId: Int): List<ServiceKiosk> = runCatching {
+        val kioskList = serviceForId(serviceId).kioskList ?: return emptyList()
+        val defaultKiosk = kioskList.defaultKioskId
+        // "Trending" is the list users expect to see first on the home screen. Services that do
+        // not offer it fall back to their own default kiosk.
+        kioskList.availableKiosks
+            .sortedBy {
+                when {
+                    it == TRENDING_KIOSK_ID -> 0
+                    it == defaultKiosk -> 1
+                    else -> 2
+                }
+            }
+            .map { ServiceKiosk(id = it, name = kioskDisplayName(it)) }
+    }.getOrDefault(emptyList())
+
+    override suspend fun kiosk(serviceId: Int, kioskId: String): List<ContentItem> =
+        withContext(Dispatchers.IO) {
+            guard {
+                val service = serviceForId(serviceId)
+                val kioskList = service.kioskList
+                    ?: throw ContentException.Unsupported("The service does not provide kiosks")
+                // Use the extractor directly instead of KioskInfo: KioskInfo also parses the
+                // localized name of the kiosk, which is not needed here and can fail when the
+                // service changes the shape of its response header.
+                val extractor = kioskList.getExtractorById(kioskId, null)
+                extractor.fetchPage()
+                extractor.initialPage.items.mapNotNull { it.toContentItem() }
+            }
+        }
+
     override suspend fun streamDetails(serviceId: Int, url: String): StreamDetails =
         withContext(Dispatchers.IO) {
             guard {
@@ -262,6 +293,19 @@ class ExtractorContentRepository(
 }
 
 private data class SearchCursor(val index: Int, val page: Page)
+
+/** The id of the "Trending" kiosk of the extraction engine. */
+private const val TRENDING_KIOSK_ID = "Trending"
+
+/**
+ * Turns a kiosk id such as `trending_music` into the label `Trending Music`.
+ */
+private fun kioskDisplayName(id: String): String = id
+    .split('_')
+    .filter { it.isNotBlank() }
+    .joinToString(" ") { word ->
+        word.replaceFirstChar { character -> character.uppercaseChar() }
+    }
 
 /**
  * The URL of the image with the largest area, or `null` when there is no image.

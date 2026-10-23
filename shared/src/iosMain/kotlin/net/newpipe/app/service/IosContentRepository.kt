@@ -37,6 +37,10 @@ class IosContentRepository : ContentRepository {
 
     override suspend fun search(request: SearchRequest): List<ContentItem> = throw unsupported()
 
+    override fun kiosks(serviceId: Int): List<ServiceKiosk> = emptyList()
+
+    override suspend fun kiosk(serviceId: Int, kioskId: String): List<ContentItem> = throw unsupported()
+
     override suspend fun streamDetails(serviceId: Int, url: String): StreamDetails = throw unsupported()
 
     override suspend fun channel(serviceId: Int, url: String): ChannelDetails = throw unsupported()

@@ -29,6 +29,17 @@ data class SearchRequest(
 )
 
 /**
+ * One of the predefined content lists a service offers, for example "Trending" on YouTube.
+ *
+ * @param id the identifier the extraction engine uses for the kiosk
+ * @param name the label shown to the user
+ */
+data class ServiceKiosk(
+    val id: String,
+    val name: String
+)
+
+/**
  * Provides access to the content of the supported streaming services.
  *
  * The interface is intentionally free of any extraction-engine type so that it can be implemented
@@ -40,6 +51,17 @@ interface ContentRepository {
      * Searches the given service and returns one page of results.
      */
     suspend fun search(request: SearchRequest): List<ContentItem>
+
+    /**
+     * The predefined content lists ("kiosks") the service offers, with the service default first.
+     * An empty list means the service does not provide such lists.
+     */
+    fun kiosks(serviceId: Int): List<ServiceKiosk>
+
+    /**
+     * Loads the items of one kiosk, for example the trending page of the service.
+     */
+    suspend fun kiosk(serviceId: Int, kioskId: String): List<ContentItem>
 
     /**
      * Loads the metadata and the stream list of a single stream.

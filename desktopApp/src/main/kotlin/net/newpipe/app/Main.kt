@@ -30,7 +30,7 @@ fun main() = application {
     ) {
         MaterialTheme {
             App(
-                startDestination = Destination.Search,
+                startDestination = Destination.Home,
                 onCloseRequest = ::exitApplication,
                 playbackController = playbackController
             )

@@ -54,6 +54,7 @@ import net.newpipe.app.ui.Motion
 import net.newpipe.app.ui.Radius
 import net.newpipe.app.ui.Spacing
 import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.ic_home
 import newpipe.shared.generated.resources.ic_language
 import newpipe.shared.generated.resources.ic_search
 import newpipe.shared.generated.resources.ic_settings_backup_restore
@@ -73,6 +74,7 @@ private data class ShellEntry(
 )
 
 private val shellEntries = listOf(
+    ShellEntry(Destination.Home, "Home", Res.drawable.ic_home),
     ShellEntry(Destination.Search, "Search", Res.drawable.ic_search),
     ShellEntry(Destination.Settings, "Settings", Res.drawable.ic_settings_backup_restore),
     ShellEntry(Destination.About, "About", Res.drawable.ic_language)

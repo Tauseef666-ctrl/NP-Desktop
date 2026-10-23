@@ -36,6 +36,11 @@ class AndroidContentRepository : ContentRepository {
     override suspend fun search(request: SearchRequest): List<net.newpipe.app.model.ContentItem> =
         throw unsupported()
 
+    override fun kiosks(serviceId: Int): List<ServiceKiosk> = emptyList()
+
+    override suspend fun kiosk(serviceId: Int, kioskId: String): List<net.newpipe.app.model.ContentItem> =
+        throw unsupported()
+
     override suspend fun streamDetails(serviceId: Int, url: String): net.newpipe.app.model.StreamDetails =
         throw unsupported()
 

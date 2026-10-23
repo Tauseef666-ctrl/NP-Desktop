@@ -5,10 +5,13 @@
 
 package net.newpipe.app.service
 
+import java.util.Locale
 import net.newpipe.app.model.ServiceInfo
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.StreamingService
+import org.schabi.newpipe.extractor.localization.ContentCountry
+import org.schabi.newpipe.extractor.localization.Localization
 
 /**
  * Initialises the extraction engine exactly once per process.
@@ -33,7 +36,12 @@ object ExtractorInitializer {
         val existing = runCatching { NewPipe.getDownloader() }.getOrNull()
         val own = existing as? JvmDownloader ?: JvmDownloader()
         if (existing == null) {
-            NewPipe.init(own)
+            // Mirror what the Android app does: the extraction engine needs the user's language
+            // and content country to request the localized content lists of a service.
+            val locale = Locale.getDefault()
+            val localization = Localization.fromLocale(locale)
+            val contentCountry = ContentCountry(locale.country.ifBlank { "US" })
+            NewPipe.init(own, localization, contentCountry)
         }
         downloader = own
         own

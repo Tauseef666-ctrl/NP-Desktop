@@ -36,7 +36,13 @@ sealed interface Destination : NavKey {
     data object About : Destination
 
     /**
-     * The search screen, which is the entry point of the desktop application.
+     * The home screen: the predefined content lists of a service, for example trending.
+     */
+    @Serializable
+    data object Home : Destination
+
+    /**
+     * The search screen.
      */
     @Serializable
     data object Search : Destination
