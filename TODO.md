@@ -3,9 +3,9 @@
 ## Project Status
 - Current phase: Phase 1 — Repository Audit (in progress)
 - Current working build: Unknown (will verify)
-- Last verified build: N/A
+- Last verified build: 2026-10-23 (compile + runtime on Windows, home feed loaded 15 kiosk items)
 - Current blocker: None
-- Next recommended task: Complete full repository audit and update UI_SPECIFICATION.md
+- Next recommended task: Extend responsive grid to channel/playlist screens
 
 ## Phase 1 — Repository Audit
 - [x] Inspect repo structure (modules: app, desktopApp, shared, iosApp)
@@ -41,9 +41,9 @@
 
 ## Phase 4 — Desktop UI Implementation
 - [ ] Redesign shell (navigation sidebar, toolbar, content area)
-- [ ] Home/feed with responsive media grid
+- [x] Home/feed with responsive media grid
 - [ ] Search with filters
-- [ ] Player with two-column layout on wide screens
+- [x] Player with two-column layout on wide screens
 - [ ] Channel pages
 - [ ] Subscriptions
 - [ ] Playlists and queue
