@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: Material Design Authors / Google LLC
+  ~ SPDX-License-Identifier: Apache-2.0
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:tint="?attr/colorControlNormal"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#000000"
+        android:pathData="M20,8H4V6h16v2zM18,2H6v2h12V2zM22,12v2H2v-2h20zM21,16H3c-0.55,0 -1,0.45 -1,1v2c0,0.55 0.45,1 1,1h18c0.55,0 1,-0.45 1,-1v-2c0,-0.55 -0.45,-1 -1,-1z" />
+</vector>

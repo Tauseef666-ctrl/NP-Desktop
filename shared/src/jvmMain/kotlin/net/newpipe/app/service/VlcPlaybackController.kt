@@ -16,22 +16,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.media.MediaSlaveType
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
-import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent
-import java.awt.Component
-
-/**
- * Provides the native video output of a player, so that a user interface can embed it.
- */
-interface VideoSurfaceProvider {
-
-    /**
-     * The component that renders the video, or `null` when the player has no video output.
-     */
-    val videoComponent: Component?
-}
+import uk.co.caprica.vlcj.player.component.CallbackMediaPlayerComponent
+import uk.co.caprica.vlcj.player.component.MediaPlayerSpecs
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.BufferFormat
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.BufferFormatCallback
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.RenderCallbackAdapter
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.format.RV32BufferFormat
+import java.nio.ByteBuffer
 
 /**
  * Plays media with libVLC, using the VLCJ bindings.
@@ -39,12 +34,21 @@ interface VideoSurfaceProvider {
  * NewPipe usually extracts a video stream without audio plus a separate audio only stream. Both
  * are handed to libVLC as a media with an additional audio slave, so that the audio is played
  * even though the video stream itself carries no audio.
+ *
+ * The frames are delivered through a render callback instead of a native AWT video surface. This
+ * keeps the video inside the Compose layer, so that player controls and the surrounding layout are
+ * never covered by a heavyweight component.
  */
-class VlcPlaybackController : PlaybackController, VideoSurfaceProvider {
+class VlcPlaybackController : PlaybackController, VideoFrameProvider {
 
-    private val component: EmbeddedMediaPlayerComponent? = createComponent()
+    private val factory: MediaPlayerFactory? = createFactory()
+
+    private val component: CallbackMediaPlayerComponent? = factory?.let { createComponent(it) }
 
     private val player: MediaPlayer? = component?.mediaPlayer()
+
+    private val _frame = MutableStateFlow<VideoFrame?>(null)
+    override val frame = _frame.asStateFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -52,9 +56,6 @@ class VlcPlaybackController : PlaybackController, VideoSurfaceProvider {
     override val state = _state.asStateFlow()
 
     private var ticker: Job? = null
-
-    override val videoComponent: Component?
-        get() = component?.videoSurfaceComponent()
 
     init {
         val player = player
@@ -105,7 +106,18 @@ class VlcPlaybackController : PlaybackController, VideoSurfaceProvider {
         }
 
         ticker?.cancel()
-        _state.value = PlaybackState(title = request.title, loading = true)
+        Logger.i(messageString = "Starting playback of '${request.title}'")
+
+        // The user settings of the player survive a change of the media.
+        val previous = _state.value
+        _frame.value = null
+        _state.value = PlaybackState(
+            title = request.title,
+            loading = true,
+            volume = previous.volume,
+            muted = previous.muted,
+            speed = previous.speed
+        )
 
         // All calls into libVLC are queued on the player, because calling back into libVLC from
         // its own event thread is not allowed.
@@ -128,6 +140,9 @@ class VlcPlaybackController : PlaybackController, VideoSurfaceProvider {
                     Logger.w(messageString = "The audio stream could not be attached")
                 }
 
+                player.audio().setVolume(previous.volume)
+                player.audio().setMute(previous.muted)
+                player.controls().setRate(previous.speed)
                 player.controls().play()
             } catch (exception: Throwable) {
                 Logger.e(messageString = "The playback could not be started", throwable = exception)
@@ -156,6 +171,7 @@ class VlcPlaybackController : PlaybackController, VideoSurfaceProvider {
     override fun stop() {
         val player = player ?: return
         ticker?.cancel()
+        _frame.value = null
         player.submit {
             player.controls().stop()
             player.media().reset()
@@ -167,6 +183,22 @@ class VlcPlaybackController : PlaybackController, VideoSurfaceProvider {
         val player = player ?: return
         player.submit { player.controls().setTime(positionMs) }
         _state.update { it.copy(positionMs = positionMs) }
+    }
+
+    override fun clear() {
+        val player = player ?: return
+        ticker?.cancel()
+        _frame.value = null
+        val previous = _state.value
+        _state.value = PlaybackState(
+            volume = previous.volume,
+            muted = previous.muted,
+            speed = previous.speed
+        )
+        player.submit {
+            player.controls().stop()
+            player.media().reset()
+        }
     }
 
     override fun setVolume(volume: Int) {
@@ -192,19 +224,56 @@ class VlcPlaybackController : PlaybackController, VideoSurfaceProvider {
     override fun release() {
         ticker?.cancel()
         scope.coroutineContext[Job]?.cancel()
-        val component = component ?: return
-        component.release()
+        _frame.value = null
+        component?.release()
+        factory?.release()
     }
 
     /**
-     * Creates the embedded player, or returns `null` when libVLC is not available.
+     * Creates the media player factory, or returns `null` when libVLC is not available.
      */
-    private fun createComponent(): EmbeddedMediaPlayerComponent? = try {
+    private fun createFactory(): MediaPlayerFactory? = try {
         VlcNativeLocator.locate()
-        EmbeddedMediaPlayerComponent(*LIBRARY_ARGUMENTS)
+        MediaPlayerFactory(*LIBRARY_ARGUMENTS)
     } catch (exception: Throwable) {
         Logger.e(messageString = "libVLC could not be initialised", throwable = exception)
         null
+    }
+
+    /**
+     * Creates the player that delivers its frames through a render callback.
+     */
+    private fun createComponent(factory: MediaPlayerFactory): CallbackMediaPlayerComponent {
+        val buffer = IntArray(FRAME_WIDTH * FRAME_HEIGHT)
+
+        val renderCallback = object : RenderCallbackAdapter(buffer) {
+            override fun onDisplay(mediaPlayer: MediaPlayer, rgbBuffer: IntArray) {
+                // The render callback runs on a libVLC thread. A copied buffer is handed to the
+                // user interface, so that libVLC can reuse its own buffer immediately.
+                _frame.value = VideoFrame(FRAME_WIDTH, FRAME_HEIGHT, rgbBuffer.copyOf())
+            }
+        }
+
+        val bufferFormatCallback = object : BufferFormatCallback {
+            override fun getBufferFormat(sourceWidth: Int, sourceHeight: Int): BufferFormat =
+                RV32BufferFormat(FRAME_WIDTH, FRAME_HEIGHT)
+
+            override fun newFormatSize(
+                width: Int,
+                height: Int,
+                visibleWidth: Int,
+                visibleHeight: Int
+            ) = Unit
+
+            override fun allocatedBuffers(buffers: Array<ByteBuffer>) = Unit
+        }
+
+        return MediaPlayerSpecs.callbackMediaPlayerSpec()
+            .withFactory(factory)
+            .withUnsupportedFullScreenStrategy()
+            .withRenderCallback(renderCallback)
+            .withBufferFormatCallback(bufferFormatCallback)
+            .callbackMediaPlayer()
     }
 
     /**
@@ -246,6 +315,15 @@ class VlcPlaybackController : PlaybackController, VideoSurfaceProvider {
          * The interval the playback position is refreshed with.
          */
         private const val TICK_INTERVAL_MS = 250L
+
+        /**
+         * The size the video frames are decoded to.
+         *
+         * The frames are copied once per frame for the user interface, so the size is a balance
+         * between image quality and the amount of memory that is moved per second.
+         */
+        private const val FRAME_WIDTH = 1280
+        private const val FRAME_HEIGHT = 720
     }
 }
 

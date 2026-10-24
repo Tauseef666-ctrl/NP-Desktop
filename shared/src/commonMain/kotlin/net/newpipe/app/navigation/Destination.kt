@@ -42,10 +42,37 @@ sealed interface Destination : NavKey {
     data object Home : Destination
 
     /**
+     * A single content list ("kiosk") of the service, for example Trending, Live or Gaming.
+     *
+     * @param kioskId the identifier of the kiosk in the extraction engine
+     * @param title the label shown to the user
+     */
+    @Serializable
+    data class Feed(val kioskId: String, val title: String) : Destination
+
+    /**
      * The search screen.
      */
     @Serializable
     data object Search : Destination
+
+    /**
+     * The videos that were downloaded to the local storage.
+     */
+    @Serializable
+    data object Downloads : Destination
+
+    /**
+     * The watch history.
+     */
+    @Serializable
+    data object History : Destination
+
+    /**
+     * The channels the user subscribed to, together with their latest uploads.
+     */
+    @Serializable
+    data object Subscriptions : Destination
 
     /**
      * The details of a single stream.

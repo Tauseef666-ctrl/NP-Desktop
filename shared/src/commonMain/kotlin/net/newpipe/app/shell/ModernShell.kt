@@ -7,10 +7,11 @@ package net.newpipe.app.shell
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
@@ -36,10 +37,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,14 +48,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import kotlinx.coroutines.delay
 import net.newpipe.app.navigation.Destination
-import net.newpipe.app.ui.Breakpoints
 import net.newpipe.app.ui.Layout
 import net.newpipe.app.ui.Motion
 import net.newpipe.app.ui.Radius
 import net.newpipe.app.ui.Spacing
 import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.ic_file_download
+import newpipe.shared.generated.resources.ic_live_tv
+import newpipe.shared.generated.resources.ic_movie
+import newpipe.shared.generated.resources.ic_music_note
+import newpipe.shared.generated.resources.ic_podcasts
+import newpipe.shared.generated.resources.ic_sports_esports
+import newpipe.shared.generated.resources.ic_subscriptions
+import newpipe.shared.generated.resources.ic_trending_up
+import newpipe.shared.generated.resources.ic_history
 import newpipe.shared.generated.resources.ic_home
+import newpipe.shared.generated.resources.ic_yt_desktop_logo
 import newpipe.shared.generated.resources.ic_language
 import newpipe.shared.generated.resources.ic_search
 import newpipe.shared.generated.resources.ic_settings_backup_restore
@@ -75,21 +87,49 @@ private data class ShellEntry(
 
 private val shellEntries = listOf(
     ShellEntry(Destination.Home, "Home", Res.drawable.ic_home),
-    ShellEntry(Destination.Search, "Search", Res.drawable.ic_search),
+    ShellEntry(
+        Destination.Feed("Trending", "Trending"),
+        "Trending",
+        Res.drawable.ic_trending_up
+    ),
+    ShellEntry(Destination.Feed("live", "Live"), "Live", Res.drawable.ic_live_tv),
+    ShellEntry(
+        Destination.Feed("trending_gaming", "Gaming"),
+        "Gaming",
+        Res.drawable.ic_sports_esports
+    ),
+    ShellEntry(
+        Destination.Feed("trending_music", "Music"),
+        "Music",
+        Res.drawable.ic_music_note
+    ),
+    ShellEntry(
+        Destination.Feed("trending_movies_and_shows", "Movies"),
+        "Movies",
+        Res.drawable.ic_movie
+    ),
+    ShellEntry(
+        Destination.Feed("trending_podcasts_episodes", "Podcasts"),
+        "Podcasts",
+        Res.drawable.ic_podcasts
+    ),
+        ShellEntry(Destination.Subscriptions, "Subscriptions", Res.drawable.ic_subscriptions),
+        ShellEntry(Destination.History, "History", Res.drawable.ic_history),
+        ShellEntry(Destination.Downloads, "Downloads", Res.drawable.ic_file_download),
     ShellEntry(Destination.Settings, "Settings", Res.drawable.ic_settings_backup_restore),
     ShellEntry(Destination.About, "About", Res.drawable.ic_language)
 )
 
 /**
- * The desktop application shell: a collapsible navigation rail on the left and the screen content
- * on the right.
+ * The desktop application shell.
  *
- * The rail starts expanded on wide windows and collapsed on narrow ones. The user can toggle it at
- * any time; the manual choice is kept while the application runs. Below [Breakpoints.compact] the
- * rail is always collapsed so that the content keeps as much room as possible.
+ * The navigation rail is hidden by default, so the screen content uses the whole window. Moving the
+ * pointer to the left edge of the window reveals the rail; it hides again shortly after the pointer
+ * leaves it. Rail clicks work normally because the rail stays open while the pointer is over it.
  *
  * @param currentDestination the destination currently shown, used to highlight the rail entry
  * @param onNavigate invoked when a rail entry is activated
+ * @param immersive whether the player currently uses the whole window; the rail stays hidden then
  * @param content the screen content
  */
 @Composable
@@ -97,35 +137,107 @@ fun ModernShell(
     currentDestination: Destination,
     onNavigate: (Destination) -> Unit,
     modifier: Modifier = Modifier,
+    immersive: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val edgeInteraction = remember { MutableInteractionSource() }
+    val edgeHovered by edgeInteraction.collectIsHoveredAsState()
+    val railInteraction = remember { MutableInteractionSource() }
+    val railHovered by railInteraction.collectIsHoveredAsState()
+
+    var revealed by remember { mutableStateOf(false) }
+
+    // On the home screen the rail is always visible in its collapsed form and expands on hover.
+    val collapsedRail = currentDestination == Destination.Home && !immersive
+
+    LaunchedEffect(edgeHovered, railHovered, immersive) {
+        if (immersive) {
+            revealed = false
+            return@LaunchedEffect
+        }
+
+        if (edgeHovered || railHovered) {
+            revealed = true
+        } else {
+            delay(RAIL_HIDE_DELAY_MS)
+            revealed = false
+        }
+    }
+
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val compact = maxWidth < Breakpoints.compact
-        val expandedByDefault = maxWidth >= Breakpoints.medium
-        var userExpanded by rememberSaveable { mutableStateOf<Boolean?>(null) }
-        val expanded = !compact && (userExpanded ?: expandedByDefault)
-
-        val railWidth by animateDpAsState(
-            targetValue = if (expanded) Layout.navRailExpanded else Layout.navRailCollapsed,
-            animationSpec = tween(durationMillis = Motion.medium),
-            label = "navigation-rail-width"
-        )
-
-        Row(modifier = Modifier.fillMaxSize()) {
-            NavigationRail(
-                expanded = expanded,
-                width = railWidth,
-                currentDestination = currentDestination,
-                onNavigate = onNavigate,
-                onToggleExpanded = { userExpanded = !expanded }
-            )
-
+        Box(modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
+                    .fillMaxSize()
+                    .padding(start = if (collapsedRail) Layout.navRailCollapsed else 0.dp)
             ) {
                 content()
+            }
+
+            // A small, transparent search shortcut in the top right corner of every screen.
+            if (!immersive) {
+                IconButton(
+                    onClick = { onNavigate(Destination.Search) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = Spacing.xs, end = Spacing.xs)
+                        .size(32.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_search),
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            if (collapsedRail && !revealed) {
+                NavigationRail(
+                    currentDestination = currentDestination,
+                    onNavigate = onNavigate,
+                    interactionSource = railInteraction,
+                    expanded = false,
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .width(Layout.navRailCollapsed)
+                        .fillMaxHeight()
+                        .zIndex(1f)
+                )
+            }
+
+            if (!immersive) {
+                // A narrow, invisible strip at the left window edge reveals the rail on hover.
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .fillMaxHeight()
+                        .width(RAIL_EDGE_WIDTH)
+                        .hoverable(edgeInteraction)
+                )
+
+                AnimatedVisibility(
+                    visible = revealed,
+                    enter = slideInHorizontally(
+                        animationSpec = tween(Motion.medium),
+                        initialOffsetX = { -it }
+                    ) + fadeIn(animationSpec = tween(Motion.fast)),
+                    exit = slideOutHorizontally(
+                        animationSpec = tween(Motion.medium),
+                        targetOffsetX = { -it }
+                    ) + fadeOut(animationSpec = tween(Motion.fast)),
+                    modifier = Modifier.zIndex(1f)
+                ) {
+                    NavigationRail(
+                        currentDestination = currentDestination,
+                        onNavigate = onNavigate,
+                        interactionSource = railInteraction,
+                        expanded = true,
+                        modifier = Modifier
+                            .width(Layout.navRailExpanded)
+                            .fillMaxHeight()
+                    )
+                }
             }
         }
     }
@@ -133,17 +245,16 @@ fun ModernShell(
 
 @Composable
 private fun NavigationRail(
-    expanded: Boolean,
-    width: androidx.compose.ui.unit.Dp,
     currentDestination: Destination,
     onNavigate: (Destination) -> Unit,
-    onToggleExpanded: () -> Unit
+    interactionSource: MutableInteractionSource,
+    expanded: Boolean,
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = Modifier
-            .width(width)
-            .fillMaxHeight(),
-        color = MaterialTheme.colorScheme.surfaceContainer
+        modifier = modifier.hoverable(interactionSource),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shadowElevation = 8.dp
     ) {
         Column(
             modifier = Modifier
@@ -156,22 +267,28 @@ private fun NavigationRail(
                     .fillMaxWidth()
                     .height(Layout.toolbarHeight)
                     .padding(horizontal = Spacing.sm),
+                horizontalArrangement = if (expanded) {
+                    Arrangement.Start
+                } else {
+                    Arrangement.Center
+                },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
                         .size(28.dp)
-                        .clip(RoundedCornerShape(Radius.sm))
-                        .background(MaterialTheme.colorScheme.primary)
-                )
-
-                AnimatedVisibility(
-                    visible = expanded,
-                    enter = expandHorizontally(animationSpec = tween(Motion.medium)),
-                    exit = shrinkHorizontally(animationSpec = tween(Motion.medium))
                 ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_yt_desktop_logo),
+                        contentDescription = "YT Desktop",
+                        modifier = Modifier.fillMaxSize(),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                if (expanded) {
                     Text(
-                        text = "NewPipe",
+                        text = "YT Desktop",
                         modifier = Modifier.padding(start = Spacing.md),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
@@ -185,22 +302,9 @@ private fun NavigationRail(
             shellEntries.forEach { entry ->
                 NavigationRailItem(
                     entry = entry,
-                    expanded = expanded,
                     selected = entry.destination == currentDestination,
+                    expanded = expanded,
                     onClick = { onNavigate(entry.destination) }
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            IconButton(
-                onClick = onToggleExpanded,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text(
-                    text = if (expanded) "\u00AB" else "\u00BB",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -210,8 +314,8 @@ private fun NavigationRail(
 @Composable
 private fun NavigationRailItem(
     entry: ShellEntry,
-    expanded: Boolean,
     selected: Boolean,
+    expanded: Boolean,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -245,7 +349,8 @@ private fun NavigationRailItem(
             .background(background)
             .hoverable(interactionSource)
             .clickable(onClick = onClick)
-            .padding(horizontal = Spacing.md),
+            .padding(horizontal = if (expanded) Spacing.md else 0.dp),
+        horizontalArrangement = if (expanded) Arrangement.Start else Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -255,11 +360,7 @@ private fun NavigationRailItem(
             modifier = Modifier.size(20.dp)
         )
 
-        AnimatedVisibility(
-            visible = expanded,
-            enter = expandHorizontally(animationSpec = tween(Motion.medium)),
-            exit = shrinkHorizontally(animationSpec = tween(Motion.medium))
-        ) {
+        if (expanded) {
             Text(
                 text = entry.label,
                 modifier = Modifier.padding(start = Spacing.md),
@@ -271,3 +372,9 @@ private fun NavigationRailItem(
         }
     }
 }
+
+/** How long the pointer may leave the rail before it hides. */
+private const val RAIL_HIDE_DELAY_MS = 450L
+
+/** Width of the invisible hover strip at the left window edge. */
+private val RAIL_EDGE_WIDTH = 10.dp

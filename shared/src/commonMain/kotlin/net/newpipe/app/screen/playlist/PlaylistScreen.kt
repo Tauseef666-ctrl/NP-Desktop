@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -22,21 +22,27 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import net.newpipe.app.composable.ContentListItem
+import coil3.compose.AsyncImage
+import net.newpipe.app.composable.ContentGrid
 import net.newpipe.app.composable.TopAppBar
 import net.newpipe.app.model.ContentItem
 import net.newpipe.app.model.ContentType
+import net.newpipe.app.model.PlaylistDetails
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.screen.search.Message
+import net.newpipe.app.ui.Radius
+import net.newpipe.app.ui.Spacing
 import net.newpipe.app.viewmodel.playlist.PlaylistViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Shows a playlist together with its entries.
+ * Shows a playlist together with its entries in a responsive grid.
  *
  * @param serviceId the id of the service the playlist belongs to
  * @param url the canonical url of the playlist
@@ -89,62 +95,72 @@ fun PlaylistScreen(
                     .padding(paddingValues)
             )
 
-            else -> LazyColumn(
+            else -> ContentGrid(
+                items = playlistDetails.items,
+                onOpenItem = { item -> openItem(item, navigator) },
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = playlistDetails.name,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                    .padding(paddingValues),
+                header = { PlaylistHeader(playlistDetails) }
+            )
+        }
+    }
+}
 
-                        val uploader = playlistDetails.uploader
-                        if (!uploader.isNullOrBlank()) {
-                            Text(
-                                text = uploader,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
+/**
+ * The thumbnail and metadata shown above the entries of a playlist.
+ */
+@Composable
+private fun PlaylistHeader(details: PlaylistDetails) {
+    Column {
+        val thumbnailUrl = details.thumbnailUrl
+        if (thumbnailUrl != null) {
+            AsyncImage(
+                model = thumbnailUrl,
+                contentDescription = details.name,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(Radius.lg)),
+                contentScale = ContentScale.Crop
+            )
+        }
 
-                        val itemCount = playlistDetails.itemCount
-                        if (itemCount != null) {
-                            Text(
-                                text = "$itemCount videos",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
+        Text(
+            text = details.name,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(top = Spacing.md)
+        )
 
-                        val description = playlistDetails.description
-                        if (!description.isNullOrBlank()) {
-                            Text(
-                                text = description,
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 6,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                        }
-                    }
-                }
+        val uploader = details.uploader
+        if (!uploader.isNullOrBlank()) {
+            Text(
+                text = uploader,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = Spacing.xs)
+            )
+        }
 
-                items(playlistDetails.items, key = { it.url }) { item ->
-                    ContentListItem(
-                        item = item,
-                        onClick = { openItem(item, navigator) }
-                    )
-                }
-            }
+        val itemCount = details.itemCount
+        if (itemCount != null) {
+            Text(
+                text = "$itemCount videos",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = Spacing.xs)
+            )
+        }
+
+        val description = details.description
+        if (!description.isNullOrBlank()) {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 6,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = Spacing.sm)
+            )
         }
     }
 }

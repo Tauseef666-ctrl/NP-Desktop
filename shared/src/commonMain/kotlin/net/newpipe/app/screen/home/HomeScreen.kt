@@ -5,25 +5,31 @@
 
 package net.newpipe.app.screen.home
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -31,37 +37,38 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import net.newpipe.app.composable.TopAppBar
+import net.newpipe.app.composable.ContentCard
 import net.newpipe.app.model.ContentItem
 import net.newpipe.app.model.ContentType
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.screen.search.Message
-import net.newpipe.app.ui.Radius
 import net.newpipe.app.ui.Spacing
-import net.newpipe.app.util.formatDuration
-import net.newpipe.app.util.formatViewCount
 import net.newpipe.app.viewmodel.home.HomeViewModel
+import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.ic_search
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * The home screen: the predefined content lists ("kiosks") of a service in a responsive grid.
+ * The home screen: a personalised feed followed by the predefined content lists ("kiosks") of the
+ * selected service.
  *
- * The grid adapts its column count to the available width, so the same screen works on a small
- * window and on an ultrawide monitor.
+ * The feed mixes the most recent uploads of the channels the user watched last with a random
+ * selection of the service content, so it changes as the user consumes content. The grid adapts
+ * its column count to the available width.
  */
 @Composable
 fun HomeScreen(
@@ -73,12 +80,72 @@ fun HomeScreen(
     val kiosks by viewModel.kiosks.collectAsState()
     val selectedKiosk by viewModel.selectedKiosk.collectAsState()
     val items by viewModel.items.collectAsState()
+    val feed by viewModel.feed.collectAsState()
+    val feedLoading by viewModel.feedLoading.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val loadingMore by viewModel.loadingMore.collectAsState()
+    val canLoadMore by viewModel.canLoadMore.collectAsState()
+
+    val gridState = rememberLazyGridState()
+    val nearEnd by remember {
+        derivedStateOf {
+            val last = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            last >= gridState.layoutInfo.totalItemsCount - 6
+        }
+    }
+
+    LaunchedEffect(nearEnd, loadingMore, canLoadMore) {
+        if (nearEnd && canLoadMore && !loadingMore) {
+            viewModel.loadMore()
+        }
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = "Home")
+            Surface(color = MaterialTheme.colorScheme.surface) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(HOME_BAR_HEIGHT)
+                        .padding(horizontal = Spacing.md),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Home",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Surface(
+                        onClick = { navigator.navigateTo(Destination.Search) },
+                        shape = RoundedCornerShape(percent = 50),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .width(HOME_SEARCH_WIDTH)
+                            .height(HOME_SEARCH_HEIGHT)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = Spacing.md),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_search),
+                                contentDescription = "Search",
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "Search",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(start = Spacing.sm)
+                            )
+                        }
+                    }
+                }
+            }
         }
     ) { paddingValues ->
         Column(
@@ -97,7 +164,8 @@ fun HomeScreen(
                     serviceName = services.firstOrNull { it.id == serviceId }?.name ?: "Service",
                     serviceNames = services.map { it.name },
                     onSelect = { name ->
-                        services.firstOrNull { it.name == name }?.let { viewModel.selectService(it.id) }
+                        services.firstOrNull { it.name == name }
+                            ?.let { viewModel.selectService(it.id) }
                     }
                 )
 
@@ -125,26 +193,70 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                items.isEmpty() && loading -> Box(
+                items.isEmpty() && feed.isEmpty() && loading -> Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
 
-                items.isEmpty() -> Message(
+                items.isEmpty() && feed.isEmpty() -> Message(
                     text = "Nothing to show here right now",
                     modifier = Modifier.fillMaxSize()
                 )
 
                 else -> LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 280.dp),
+                    state = gridState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(Spacing.lg),
+                    contentPadding = PaddingValues(Spacing.lg),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                     verticalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
-                    items(items, key = { it.url }) { item ->
+                    if (feed.isNotEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            SectionHeader(
+                                title = "Feed",
+                                subtitle = if (feedLoading) {
+                                    "Updating your feed\u2026"
+                                } else {
+                                    "Mixed from what you watched"
+                                },
+                                actionLabel = "Shuffle",
+                                onAction = viewModel::shuffleFeed
+                            )
+                        }
+
+                        items(feed, key = { "feed-${it.url}" }) { item ->
+                            ContentCard(
+                                item = item,
+                                onClick = { navigateToItem(item, navigator) }
+                            )
+                        }
+                    }
+
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        SectionHeader(
+                            title = kiosks.firstOrNull { it.id == selectedKiosk }?.name
+                                ?: "Trending",
+                            subtitle = if (loading) "Loading\u2026" else null
+                        )
+                    }
+
+                    if (items.isEmpty() && loading) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(Spacing.xl),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    }
+
+                    items(items, key = { "kiosk-${it.url}" }) { item ->
                         ContentCard(
                             item = item,
                             onClick = { navigateToItem(item, navigator) }
@@ -157,89 +269,55 @@ fun HomeScreen(
 }
 
 /**
- * A single entry of the grid: a thumbnail with the title and the metadata below it.
+ * The heading of a feed or kiosk section, optionally with an action on the right.
  */
 @Composable
-private fun ContentCard(
-    item: ContentItem,
-    onClick: () -> Unit
+private fun SectionHeader(
+    title: String,
+    subtitle: String? = null,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
 ) {
-    Surface(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.md))
-            .clickable(onClick = onClick),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = RoundedCornerShape(Radius.md)
+            .padding(top = Spacing.sm),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            val thumbnailUrl = item.thumbnailUrl
-            if (thumbnailUrl != null) {
-                Box {
-                    AsyncImage(
-                        model = thumbnailUrl,
-                        contentDescription = item.title,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(16f / 9f),
-                        contentScale = ContentScale.Crop
-                    )
-
-                    val duration = item.durationSeconds
-                    if (duration != null && duration > 0 && !item.liveNow) {
-                        Surface(
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(Spacing.sm),
-                            color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.8f),
-                            shape = RoundedCornerShape(Radius.sm)
-                        ) {
-                            Text(
-                                text = formatDuration(duration),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.inverseOnSurface,
-                                modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            Column(modifier = Modifier.padding(Spacing.md)) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (subtitle != null) {
                 Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
 
-                val metadata = buildMetadata(item)
-                if (metadata.isNotEmpty()) {
-                    Text(
-                        text = metadata,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = Spacing.xs)
-                    )
-                }
+        if (actionLabel != null && onAction != null) {
+            TextButton(onClick = onAction) {
+                Text(actionLabel)
             }
         }
     }
 }
 
-private fun buildMetadata(item: ContentItem): String {
-    val parts = mutableListOf<String>()
-    item.uploader?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
-    item.viewCount?.let { parts.add("${formatViewCount(it)} views") }
-    if (item.liveNow) parts.add("LIVE")
-    return parts.joinToString(" · ")
-}
-
 /**
  * Navigates to the screen that matches the type of the item.
  */
+/** Height of the compact home toolbar. */
+private val HOME_BAR_HEIGHT = 48.dp
+
+/** Width of the search entry in the home toolbar. */
+private val HOME_SEARCH_WIDTH = 280.dp
+
+/** Height of the search entry in the home toolbar. */
+private val HOME_SEARCH_HEIGHT = 34.dp
+
 private fun navigateToItem(item: ContentItem, navigator: Navigator) {
     when (item.type) {
         ContentType.STREAM -> navigator.navigateTo(Destination.Stream(item.serviceId, item.url))

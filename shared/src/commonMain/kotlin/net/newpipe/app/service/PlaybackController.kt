@@ -70,6 +70,13 @@ interface PlaybackController {
     fun stop()
 
     /**
+     * Stops playback, releases the media and clears the current title.
+     *
+     * The user settings, such as the volume and the speed, are kept.
+     */
+    fun clear()
+
+    /**
      * Seeks to the given position in milliseconds.
      */
     fun seekTo(positionMs: Long)

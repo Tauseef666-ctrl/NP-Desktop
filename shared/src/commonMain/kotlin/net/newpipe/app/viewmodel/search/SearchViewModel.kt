@@ -18,6 +18,7 @@ import net.newpipe.app.model.ContentItem
 import net.newpipe.app.model.ServiceInfo
 import net.newpipe.app.service.ContentException
 import net.newpipe.app.service.ContentRepository
+import net.newpipe.app.service.SearchHistoryRepository
 import net.newpipe.app.service.SearchRequest
 import net.newpipe.app.service.ServiceRegistry
 import org.koin.core.annotation.KoinViewModel
@@ -31,7 +32,8 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class SearchViewModel(
     private val repository: ContentRepository,
-    private val serviceRegistry: ServiceRegistry
+    private val serviceRegistry: ServiceRegistry,
+    private val searchHistory: SearchHistoryRepository
 ) : ViewModel() {
 
     private val _services = MutableStateFlow<List<ServiceInfo>>(emptyList())
@@ -133,6 +135,9 @@ class SearchViewModel(
                 _items.value = result
                 _hasMore.value = result.isNotEmpty()
                 nextPage = 1
+                if (!debounce && result.isNotEmpty()) {
+                    searchHistory.record(query)
+                }
             } catch (exception: CancellationException) {
                 // A newer search replaced this one; it owns the state from here on.
                 throw exception

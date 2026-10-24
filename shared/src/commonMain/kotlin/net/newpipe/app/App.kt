@@ -6,6 +6,8 @@
 package net.newpipe.app
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import net.newpipe.app.di.KoinApp
 import net.newpipe.app.di.contentModule
 import net.newpipe.app.navigation.Destination
@@ -15,6 +17,8 @@ import net.newpipe.app.navigation.navModule
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.shell.ModernShell
 import net.newpipe.app.theme.AppTheme
+import net.newpipe.app.ui.PlayerShortcuts
+import net.newpipe.app.ui.PlayerUiState
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
@@ -46,15 +50,21 @@ fun App(
             val navigator: Navigator = koinInject {
                 parametersOf(startDestination, onCloseRequest)
             }
-            ModernShell(
-                currentDestination = navigator.backstack.lastOrNull() ?: startDestination,
-                onNavigate = navigator::switchTo
-            ) {
-                NavDisplay(
-                    startDestination = startDestination,
-                    onCloseRequest = onCloseRequest,
-                    navigator = navigator
-                )
+            val playerUiState: PlayerUiState = koinInject()
+            val immersive by playerUiState.immersive.collectAsState()
+
+            PlayerShortcuts {
+                ModernShell(
+                    currentDestination = navigator.backstack.lastOrNull() ?: startDestination,
+                    onNavigate = navigator::switchTo,
+                    immersive = immersive
+                ) {
+                    NavDisplay(
+                        startDestination = startDestination,
+                        onCloseRequest = onCloseRequest,
+                        navigator = navigator
+                    )
+                }
             }
             withKoin()
         }

@@ -83,7 +83,7 @@ fun SearchScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = "NewPipe")
+            TopAppBar(title = "YT Desktop")
         }
     ) { paddingValues ->
         Column(

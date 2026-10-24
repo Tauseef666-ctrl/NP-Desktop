@@ -29,6 +29,8 @@ class AndroidPlaybackController : PlaybackController {
 
     override fun stop() = Unit
 
+    override fun clear() = Unit
+
     override fun seekTo(positionMs: Long) = Unit
 
     override fun setVolume(volume: Int) = Unit

@@ -14,10 +14,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.newpipe.app.model.ContentItem
+import net.newpipe.app.model.ContentType
 import net.newpipe.app.model.ServiceInfo
 import net.newpipe.app.service.ContentRepository
+import net.newpipe.app.service.SearchRequest
 import net.newpipe.app.service.ServiceKiosk
 import net.newpipe.app.service.ServiceRegistry
+import net.newpipe.app.service.SearchHistoryRepository
+import net.newpipe.app.service.WatchHistoryRepository
 import org.koin.core.annotation.KoinViewModel
 
 /**
@@ -29,7 +33,9 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class HomeViewModel(
     private val repository: ContentRepository,
-    private val serviceRegistry: ServiceRegistry
+    private val serviceRegistry: ServiceRegistry,
+    private val watchHistory: WatchHistoryRepository,
+    private val searchHistory: SearchHistoryRepository
 ) : ViewModel() {
 
     private val _services = MutableStateFlow<List<ServiceInfo>>(emptyList())
@@ -53,8 +59,27 @@ class HomeViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
+    private val _feed = MutableStateFlow<List<ContentItem>>(emptyList())
+    val feed = _feed.asStateFlow()
+
+    private val _feedLoading = MutableStateFlow(false)
+    val feedLoading = _feedLoading.asStateFlow()
+
+    private val _loadingMore = MutableStateFlow(false)
+    val loadingMore = _loadingMore.asStateFlow()
+
+    private val _canLoadMore = MutableStateFlow(true)
+    val canLoadMore = _canLoadMore.asStateFlow()
+
     private var loadJob: Job? = null
     private var loadGeneration = 0
+    private var kioskPage = 0
+    private var feedJob: Job? = null
+    private var feedPool: List<ContentItem> = emptyList()
+    private var feedChannelUrl: String? = null
+    private var feedChannelItems: List<ContentItem> = emptyList()
+    private var feedSearchKey: String? = null
+    private var feedSearchItems: List<ContentItem> = emptyList()
 
     init {
         val services = serviceRegistry.services()
@@ -63,6 +88,15 @@ class HomeViewModel(
             services.firstOrNull()?.let { _serviceId.value = it.id }
         }
         refreshKiosks()
+
+        viewModelScope.launch {
+            watchHistory.items.collect { rebuildFeed() }
+        }
+        viewModelScope.launch {
+            searchHistory.queries.collect {
+                if (_items.value.isNotEmpty()) rebuildFeed()
+            }
+        }
     }
 
     /**
@@ -72,6 +106,14 @@ class HomeViewModel(
         if (_serviceId.value == id) return
         _serviceId.value = id
         _items.value = emptyList()
+        _feed.value = emptyList()
+        feedPool = emptyList()
+        feedChannelUrl = null
+        feedChannelItems = emptyList()
+        feedSearchKey = null
+        feedSearchItems = emptyList()
+        kioskPage = 0
+        _canLoadMore.value = true
         refreshKiosks()
     }
 
@@ -111,6 +153,8 @@ class HomeViewModel(
         _items.value = emptyList()
         _error.value = null
         _loading.value = true
+        kioskPage = 0
+        _canLoadMore.value = true
 
         loadJob = viewModelScope.launch {
             try {
@@ -118,6 +162,9 @@ class HomeViewModel(
                 if (generation != loadGeneration) return@launch
                 Logger.i(messageString = "Loaded ${items.size} items from kiosk '$kioskId'")
                 _items.value = items
+                kioskPage = 1
+                if (items.isEmpty()) _canLoadMore.value = false
+                rebuildFeed()
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
@@ -128,6 +175,44 @@ class HomeViewModel(
                 if (generation == loadGeneration) {
                     _loading.value = false
                 }
+            }
+        }
+    }
+
+    /**
+     * Appends the next page of the selected kiosk to the feed.
+     *
+     * The home grid calls this when the user scrolls close to the end, so the feed keeps growing
+     * without a "load more" button.
+     */
+    fun loadMore() {
+        if (_loading.value || _loadingMore.value || !_canLoadMore.value) return
+        val kioskId = _selectedKiosk.value ?: return
+
+        _loadingMore.value = true
+        Logger.i(messageString = "Loading kiosk page $kioskPage of $kioskId")
+        viewModelScope.launch {
+            try {
+                val items = repository.kioskPage(_serviceId.value, kioskId, kioskPage)
+                if (items.isEmpty()) {
+                    _canLoadMore.value = false
+                } else {
+                    kioskPage += 1
+                    val known = _items.value.map { it.url }.toSet()
+                    val fresh = items.filterNot { it.url in known }
+                    _items.value = _items.value + fresh
+                    appendToFeed(fresh)
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                Logger.w(
+                    messageString = "Loading more kiosk content failed",
+                    throwable = exception
+                )
+                _canLoadMore.value = false
+            } finally {
+                _loadingMore.value = false
             }
         }
     }
@@ -158,6 +243,7 @@ class HomeViewModel(
                     Logger.i(messageString = "Loaded ${items.size} items from kiosk '${kiosk.id}'")
                     loaded = kiosk
                     _items.value = items
+                    rebuildFeed()
                     lastError = null
                     break
                 } catch (exception: CancellationException) {
@@ -177,11 +263,123 @@ class HomeViewModel(
             val kiosk = loaded
             if (kiosk != null) {
                 _selectedKiosk.value = kiosk.id
+                kioskPage = 1
+                _canLoadMore.value = _items.value.isNotEmpty()
             } else {
                 _error.value = lastError?.message ?: "The content could not be loaded"
             }
             _loading.value = false
         }
+    }
+
+    /**
+     * Replaces the feed with a new random selection.
+     *
+     * The recently watched streams stay at the front, the recommendations are reshuffled.
+     */
+    fun shuffleFeed() {
+        val watched = watchHistory.items.value
+        _feed.value = (watched.take(RECENT_WATCHED) + feedPool.shuffled())
+            .distinctBy { it.url }
+            .take(FEED_LIMIT)
+    }
+
+    /**
+     * Rebuilds the personalised feed from the history, the recorded searches and the content of
+     * the selected service.
+     *
+     * The most recent uploads of the channel the user watched last and the results of their latest
+     * searches are mixed with the current kiosk, so the feed follows what the user watches and
+     * looks for. The network requests only run again when the channel or the search terms change.
+     */
+    private fun rebuildFeed() {
+        val kioskItems = _items.value
+        val watched = watchHistory.items.value
+        val channelUrl = watched.firstOrNull { !it.uploaderUrl.isNullOrBlank() }?.uploaderUrl
+        val terms = searchHistory.queries.value.take(SEARCH_QUERY_LIMIT)
+        val searchKey = terms.joinToString("|")
+
+        if (kioskItems.isEmpty() && watched.isEmpty()) {
+            _feed.value = emptyList()
+            return
+        }
+
+        if (channelUrl == feedChannelUrl && searchKey == feedSearchKey) {
+            publishFeed()
+            return
+        }
+
+        feedJob?.cancel()
+        feedChannelUrl = channelUrl
+        feedSearchKey = searchKey
+        _feedLoading.value = true
+
+        feedJob = viewModelScope.launch {
+            val channelItems = if (channelUrl != null) {
+                try {
+                    repository.channel(_serviceId.value, channelUrl).items
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    Logger.w(
+                        messageString = "The feed channel could not be loaded",
+                        throwable = exception
+                    )
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
+
+            val searchItems = terms.flatMap { term ->
+                try {
+                    repository.search(
+                        SearchRequest(query = term, serviceId = _serviceId.value)
+                    ).take(SEARCH_RESULTS_PER_TERM)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    Logger.w(
+                        messageString = "The feed search '$term' could not be loaded",
+                        throwable = exception
+                    )
+                    emptyList()
+                }
+            }
+
+            feedChannelItems = channelItems
+            feedSearchItems = searchItems
+            publishFeed()
+            _feedLoading.value = false
+        }
+    }
+
+    private fun publishFeed() {
+        val watched = watchHistory.items.value
+        val watchedUrls = watched.map { it.url }.toSet()
+
+        feedPool = (feedChannelItems + feedSearchItems + _items.value)
+            .filter { it.type == ContentType.STREAM && it.url !in watchedUrls }
+            .distinctBy { it.url }
+
+        _feed.value = (watched.take(RECENT_WATCHED) + feedPool.shuffled())
+            .distinctBy { it.url }
+            .take(FEED_LIMIT)
+    }
+
+    /**
+     * Adds the content of a newly loaded kiosk page to the feed without reshuffling the entries
+     * that are already on screen.
+     */
+    private fun appendToFeed(items: List<ContentItem>) {
+        val known = (_feed.value.map { it.url } + watchHistory.items.value.map { it.url }).toSet()
+        val fresh = items
+            .filter { it.type == ContentType.STREAM && it.url !in known }
+            .distinctBy { it.url }
+        if (fresh.isEmpty()) return
+
+        feedPool = (feedPool + fresh).distinctBy { it.url }
+        _feed.value = (_feed.value + fresh.shuffled()).take(FEED_LIMIT)
     }
 
     companion object {
@@ -190,5 +388,17 @@ class HomeViewModel(
 
         /** How many content lists are tried before the home screen reports an error. */
         private const val MAX_KIOSK_ATTEMPTS = 3
+
+        /** How many recommendations the feed can grow to while the user scrolls. */
+        private const val FEED_LIMIT = 300
+
+        /** How many recently watched streams are pinned to the front of the feed. */
+        private const val RECENT_WATCHED = 4
+
+        /** How many recent search terms personalise the feed. */
+        private const val SEARCH_QUERY_LIMIT = 3
+
+        /** How many results of each search are mixed into the feed. */
+        private const val SEARCH_RESULTS_PER_TERM = 8
     }
 }

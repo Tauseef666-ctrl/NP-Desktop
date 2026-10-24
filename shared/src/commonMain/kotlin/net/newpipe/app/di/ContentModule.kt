@@ -6,11 +6,18 @@
 package net.newpipe.app.di
 
 import net.newpipe.app.service.ContentRepository
+import net.newpipe.app.service.DownloadRepository
+import net.newpipe.app.service.MediaDownloader
+import net.newpipe.app.service.PlaylistRepository
+import net.newpipe.app.service.SearchHistoryRepository
+import net.newpipe.app.service.SubscriptionRepository
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.ServiceRegistry
+import net.newpipe.app.service.WatchHistoryRepository
 import net.newpipe.app.service.createContentRepository
 import net.newpipe.app.service.createPlaybackController
 import net.newpipe.app.service.createServiceRegistry
+import net.newpipe.app.ui.PlayerUiState
 import org.koin.dsl.module
 
 /**
@@ -26,4 +33,11 @@ fun contentModule(playbackController: PlaybackController? = null) = module {
     single<ServiceRegistry> { createServiceRegistry() }
     single<ContentRepository> { createContentRepository() }
     single<PlaybackController> { playbackController ?: createPlaybackController() }
+    single { PlayerUiState() }
+    single { WatchHistoryRepository(get()) }
+    single { PlaylistRepository(get()) }
+    single { DownloadRepository(get()) }
+    single { SearchHistoryRepository(get()) }
+    single { SubscriptionRepository(get()) }
+    single { MediaDownloader() }
 }

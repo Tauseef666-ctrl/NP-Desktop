@@ -5,68 +5,55 @@
 
 package net.newpipe.app.screen.stream
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import net.newpipe.app.composable.ContentListItem
-import net.newpipe.app.composable.TopAppBar
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.zIndex
+import androidx.compose.ui.text.AnnotatedString
+import kotlinx.coroutines.launch
+import net.newpipe.app.composable.VideoPlayer
 import net.newpipe.app.model.ContentItem
 import net.newpipe.app.model.ContentType
 import net.newpipe.app.model.MediaStream
 import net.newpipe.app.model.StreamDetails
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
+import net.newpipe.app.platform.ShareHandler
 import net.newpipe.app.screen.search.Message
+import net.newpipe.app.service.DownloadRepository
+import net.newpipe.app.service.MediaDownloader
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.PlaybackRequest
-import net.newpipe.app.ui.Breakpoints
-import net.newpipe.app.ui.Layout
-import net.newpipe.app.util.formatDuration
-import net.newpipe.app.util.formatViewCount
+import net.newpipe.app.service.PopupPlayer
+import net.newpipe.app.service.WatchHistoryRepository
+import net.newpipe.app.ui.PlayerShortcutHooks
+import net.newpipe.app.ui.PlayerUiState
+import net.newpipe.app.ui.Spacing
 import net.newpipe.app.viewmodel.stream.StreamViewModel
+import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.ic_arrow_back
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Shows the details of a single stream and lets the user start the playback.
+ * Shows the details of a single stream and plays it right inside the screen.
  *
  * @param serviceId the id of the service the stream belongs to
  * @param url the canonical url of the stream
@@ -77,25 +64,64 @@ fun StreamScreen(
     url: String,
     navigator: Navigator = koinInject(),
     viewModel: StreamViewModel = koinViewModel(),
-    playbackController: PlaybackController = koinInject()
+    playbackController: PlaybackController = koinInject(),
+    playerUiState: PlayerUiState = koinInject(),
+    watchHistory: WatchHistoryRepository = koinInject(),
+    downloads: DownloadRepository = koinInject(),
+    downloader: MediaDownloader = koinInject(),
+    shareHandler: ShareHandler = koinInject()
 ) {
     val details by viewModel.details.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
     val selectedVideo by viewModel.selectedVideo.collectAsState()
     val selectedAudio by viewModel.selectedAudio.collectAsState()
+    val channel by viewModel.channel.collectAsState()
+    val relatedItems by viewModel.relatedItems.collectAsState()
+    val loadingMoreRelated by viewModel.loadingMoreRelated.collectAsState()
+    val hasMoreRelated by viewModel.hasMoreRelated.collectAsState()
+    val playbackState by playbackController.state.collectAsState()
+    val immersive by playerUiState.immersive.collectAsState()
+    val audioOnly by playerUiState.audioOnly.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboardManager.current
 
     LaunchedEffect(serviceId, url) {
+        playerUiState.setImmersive(false)
+        playbackController.clear()
         viewModel.load(serviceId, url)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = details?.title ?: "",
-                onNavigateUp = { navigator.navigateUp() }
-            )
+    DisposableEffect(Unit) {
+        onDispose {
+            playerUiState.setImmersive(false)
+            PopupPlayer.close()
+            playbackController.clear()
         }
+    }
+
+    DisposableEffect(serviceId, url, relatedItems, navigator.backstack.size) {
+        PlayerShortcutHooks.next = relatedItems
+            .firstOrNull { it.type == ContentType.STREAM }
+            ?.let { next ->
+                { navigator.navigateTo(Destination.Stream(next.serviceId, next.url)) }
+            }
+        PlayerShortcutHooks.previous = if (navigator.backstack.size > 1) {
+            ({ navigator.navigateUp() })
+        } else {
+            null
+        }
+
+        onDispose {
+            PlayerShortcutHooks.next = null
+            PlayerShortcutHooks.previous = null
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         val streamDetails = details
         when {
@@ -122,273 +148,322 @@ fun StreamScreen(
                     .padding(paddingValues)
             )
 
-            else -> StreamContent(
-                details = streamDetails,
-                selectedVideo = selectedVideo,
-                selectedAudio = selectedAudio,
-                modifier = Modifier.padding(paddingValues),
-                onSelectVideo = viewModel::selectVideo,
-                onSelectAudio = viewModel::selectAudio,
-                onPlay = {
-                    val video = selectedVideo
-                    if (video != null) {
-                        playbackController.play(
-                            PlaybackRequest(
-                                title = streamDetails.title,
-                                videoUrl = video.url,
-                                audioUrl = selectedAudio?.url,
-                                thumbnailUrl = streamDetails.thumbnailUrl
+            else -> {
+                val selectVideo: (MediaStream) -> Unit = { stream ->
+                    viewModel.selectVideo(stream)
+                    if (playbackState.title.isNotEmpty()) {
+                        playStream(
+                            details = streamDetails,
+                            selectedVideoUrl = stream.url,
+                            selectedAudioUrl = selectedAudio?.url,
+                            controller = playbackController,
+                            watchHistory = watchHistory
+                        )
+                    }
+                }
+                val selectAudio: (MediaStream) -> Unit = { stream ->
+                    viewModel.selectAudio(stream)
+                    if (playbackState.title.isNotEmpty()) {
+                        playStream(
+                            details = streamDetails,
+                            selectedVideoUrl = selectedVideo?.url,
+                            selectedAudioUrl = stream.url,
+                            controller = playbackController,
+                            watchHistory = watchHistory
+                        )
+                    }
+                }
+                val openPopup: () -> Unit = {
+                    PopupPlayer.open(
+                        PopupPlayer.State(
+                            title = streamDetails.title,
+                            thumbnailUrl = streamDetails.thumbnailUrl,
+                            videoStreams = streamDetails.videoStreams,
+                            selectedVideo = selectedVideo,
+                            canPlay = selectedVideo != null,
+                            onPlay = {
+                                playStream(
+                                    details = streamDetails,
+                                    selectedVideoUrl = selectedVideo?.url,
+                                    selectedAudioUrl = selectedAudio?.url,
+                                    controller = playbackController,
+                                    watchHistory = watchHistory
+                                )
+                            },
+                            onSelectVideo = selectVideo
+                        )
+                    )
+                }
+                PlayerShortcutHooks.togglePopup = {
+                    if (PopupPlayer.state.value != null) {
+                        PopupPlayer.close()
+                    } else {
+                        openPopup()
+                    }
+                }
+                DisposableEffect(Unit) {
+                    onDispose { PlayerShortcutHooks.togglePopup = null }
+                }
+
+                if (immersive && playbackState.title.isNotEmpty()) {
+                    VideoPlayer(
+                        controller = playbackController,
+                        thumbnailUrl = streamDetails.thumbnailUrl,
+                        canPlay = selectedVideo != null,
+                        onPlay = {
+                            playStream(
+                                details = streamDetails,
+                                selectedVideoUrl = selectedVideo?.url,
+                                selectedAudioUrl = selectedAudio?.url,
+                                controller = playbackController,
+                                watchHistory = watchHistory
                             )
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                        videoStreams = streamDetails.videoStreams,
+                        selectedVideo = selectedVideo,
+                        onSelectVideo = selectVideo,
+                        audioStreams = streamDetails.audioStreams,
+                        selectedAudio = selectedAudio,
+                        onSelectAudio = selectAudio,
+                        onShare = {
+                            clipboard.setText(AnnotatedString(streamDetails.url))
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Link copied to the clipboard")
+                            }
+                        },
+                        audioOnly = audioOnly,
+                        immersive = true,
+                        onToggleImmersive = playerUiState::toggleImmersive,
+                        onClose = playbackController::clear,
+                        onNext = relatedItems
+                            .firstOrNull { it.type == ContentType.STREAM }
+                            ?.let { next ->
+                                {
+                                    navigator.navigateTo(
+                                        Destination.Stream(next.serviceId, next.url)
+                                    )
+                                }
+                            },
+                        onPrevious = if (navigator.backstack.size > 1) {
+                            ({ navigator.navigateUp() })
+                        } else {
+                            null
+                        }
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                    ) {
+                        WatchPage(
+                        details = streamDetails,
+                        channel = channel,
+                        controller = playbackController,
+                        selectedVideo = selectedVideo,
+                        selectedAudio = selectedAudio,
+                        relatedItems = relatedItems,
+                        loadingMoreRelated = loadingMoreRelated,
+                        hasMoreRelated = hasMoreRelated,
+                        onToggleImmersive = playerUiState::toggleImmersive,
+                        onClosePlayer = playbackController::clear,
+                        onNext = relatedItems
+                            .firstOrNull { it.type == ContentType.STREAM }
+                            ?.let { next ->
+                                {
+                                    navigator.navigateTo(
+                                        Destination.Stream(next.serviceId, next.url)
+                                    )
+                                }
+                            },
+                        onPrevious = if (navigator.backstack.size > 1) {
+                            ({ navigator.navigateUp() })
+                        } else {
+                            null
+                        },
+                        onLoadMoreRelated = viewModel::loadMoreRelated,
+                        onSelectVideo = selectVideo,
+                        onSelectAudio = selectAudio,
+                        onPlay = {
+                            playStream(
+                                details = streamDetails,
+                                selectedVideoUrl = selectedVideo?.url,
+                                selectedAudioUrl = selectedAudio?.url,
+                                controller = playbackController,
+                                watchHistory = watchHistory
+                            )
+                        },
+                        onSeekTo = playbackController::seekTo,
+                        onCopyLink = {
+                            clipboard.setText(AnnotatedString(streamDetails.url))
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Link copied to the clipboard")
+                            }
+                        },
+                        onOpenInBrowser = {
+                            shareHandler.openUrlInBrowser(streamDetails.url)
+                        },
+                        onOpenChannel = {
+                            streamDetails.uploaderUrl?.let { channelUrl ->
+                                navigator.navigateTo(
+                                    Destination.Channel(streamDetails.serviceId, channelUrl)
+                                )
+                            }
+                        },
+                        onOpenItem = { item -> navigateToItem(item, navigator) },
+                        audioOnly = audioOnly,
+                        onToggleAudioOnly = playerUiState::toggleAudioOnly,
+                        onOpenPopup = openPopup,
+                        onDownload = {
+                            val muxed = streamDetails.videoStreams
+                                .filterNot { it.isVideoOnly }
+                                .maxByOrNull { it.height ?: 0 }
+                            val target = muxed ?: selectedVideo
+
+                            if (target == null) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("No video stream is available to download")
+                                }
+                            } else {
+                                val extension = if (target.formatId.contains("webm")) {
+                                    "webm"
+                                } else {
+                                    "mp4"
+                                }
+
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Downloading ${target.quality}...")
+                                }
+
+                                scope.launch {
+                                    try {
+                                        val path = downloader.download(
+                                            url = target.url,
+                                            fileName = "${streamDetails.title}.$extension"
+                                        )
+                                        val audioPath = if (target.isVideoOnly) {
+                                            streamDetails.audioStreams
+                                                .maxByOrNull { it.bitrate }
+                                                ?.let { audio ->
+                                                    runCatching {
+                                                        downloader.download(
+                                                            url = audio.url,
+                                                            fileName = "${streamDetails.title}.m4a"
+                                                        )
+                                                    }.getOrNull()
+                                                }
+                                        } else {
+                                            null
+                                        }
+                                        downloads.add(
+                                            item = streamDetails.toContentItem(),
+                                            filePath = path,
+                                            quality = target.quality,
+                                            formatId = target.formatId,
+                                            audioFilePath = audioPath
+                                        )
+                                        snackbarHostState.showSnackbar("Saved to $path")
+                                    } catch (exception: Exception) {
+                                        snackbarHostState.showSnackbar(
+                                            "Download failed: ${exception.message}"
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+
+                    FilledIconButton(
+                        onClick = { navigator.navigateUp() },
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(Spacing.sm)
+                            .zIndex(2f)
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_arrow_back),
+                            contentDescription = "Back"
                         )
                     }
-                },
-                onOpenItem = { item ->
-                    when (item.type) {
-                        ContentType.STREAM ->
-                            navigator.navigateTo(Destination.Stream(item.serviceId, item.url))
-
-                        ContentType.CHANNEL ->
-                            navigator.navigateTo(Destination.Channel(item.serviceId, item.url))
-
-                        ContentType.PLAYLIST ->
-                            navigator.navigateTo(Destination.Playlist(item.serviceId, item.url))
-                    }
                 }
-            )
+            }
         }
     }
 }
+}
 
 /**
- * The content of the stream screen, once the details have been loaded.
+ * Converts the loaded details into a library entry.
+ */
+private fun StreamDetails.toContentItem() = ContentItem(
+    serviceId = serviceId,
+    url = url,
+    title = title,
+    type = ContentType.STREAM,
+    uploader = uploader,
+    uploaderUrl = uploaderUrl,
+    thumbnailUrl = thumbnailUrl,
+    durationSeconds = durationSeconds,
+    viewCount = viewCount,
+    uploadDate = uploadDate,
+    liveNow = liveNow
+)
+
+/**
+ * Starts the playback and records the stream in the watch history.
  *
- * On wide screens the description sits in a column on the left while the related streams scroll in
- * a second column to its right. On narrow screens everything is stacked in a single scrolling
- * column, so no information is lost when the window is small.
+ * The stream is recorded even when no video stream is available, so the feed reflects what the user
+ * tried to watch, but playback only starts when there is something to play.
  */
-@Composable
-private fun StreamContent(
+private fun playStream(
     details: StreamDetails,
-    selectedVideo: MediaStream?,
-    selectedAudio: MediaStream?,
-    modifier: Modifier = Modifier,
-    onSelectVideo: (MediaStream) -> Unit,
-    onSelectAudio: (MediaStream) -> Unit,
-    onPlay: () -> Unit,
-    onOpenItem: (ContentItem) -> Unit
+    selectedVideoUrl: String?,
+    selectedAudioUrl: String?,
+    controller: PlaybackController,
+    watchHistory: WatchHistoryRepository
 ) {
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        if (maxWidth >= Breakpoints.compact && details.relatedItems.isNotEmpty()) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .widthIn(max = Layout.contentMaxWidth)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    StreamHeader(
-                        details = details,
-                        selectedVideo = selectedVideo,
-                        selectedAudio = selectedAudio,
-                        onSelectVideo = onSelectVideo,
-                        onSelectAudio = onSelectAudio,
-                        onPlay = onPlay
-                    )
-                }
+    watchHistory.record(
+        ContentItem(
+            serviceId = details.serviceId,
+            url = details.url,
+            title = details.title,
+            type = ContentType.STREAM,
+            uploader = details.uploader,
+            uploaderUrl = details.uploaderUrl,
+            thumbnailUrl = details.thumbnailUrl,
+            durationSeconds = details.durationSeconds,
+            viewCount = details.viewCount,
+            uploadDate = details.uploadDate,
+            liveNow = details.liveNow
+        )
+    )
 
-                VerticalDivider()
+    if (selectedVideoUrl == null) return
 
-                LazyColumn(
-                    modifier = Modifier
-                        .width(360.dp)
-                        .fillMaxHeight()
-                ) {
-                    item {
-                        Text(
-                            text = "Related streams",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-
-                    items(details.relatedItems, key = { it.url }) { item ->
-                        ContentListItem(
-                            item = item,
-                            onClick = { onOpenItem(item) }
-                        )
-                    }
-                }
-            }
-        } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                item {
-                    StreamHeader(
-                        details = details,
-                        selectedVideo = selectedVideo,
-                        selectedAudio = selectedAudio,
-                        onSelectVideo = onSelectVideo,
-                        onSelectAudio = onSelectAudio,
-                        onPlay = onPlay
-                    )
-                }
-
-                if (details.relatedItems.isNotEmpty()) {
-                    item {
-                        HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
-                        Text(
-                            text = "Related streams",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-
-                    items(details.relatedItems, key = { it.url }) { item ->
-                        ContentListItem(
-                            item = item,
-                            onClick = { onOpenItem(item) }
-                        )
-                    }
-                }
-            }
-        }
-    }
+    controller.play(
+        PlaybackRequest(
+            title = details.title,
+            videoUrl = selectedVideoUrl,
+            audioUrl = selectedAudioUrl,
+            thumbnailUrl = details.thumbnailUrl
+        )
+    )
 }
 
 /**
- * The thumbnail, metadata, stream selectors and play button shared by both layouts.
+ * Navigates to the screen that matches the type of the item.
  */
-@Composable
-private fun StreamHeader(
-    details: StreamDetails,
-    selectedVideo: MediaStream?,
-    selectedAudio: MediaStream?,
-    onSelectVideo: (MediaStream) -> Unit,
-    onSelectAudio: (MediaStream) -> Unit,
-    onPlay: () -> Unit
-) {
-    Column {
-        val thumbnailUrl = details.thumbnailUrl
-        if (thumbnailUrl != null) {
-            AsyncImage(
-                model = thumbnailUrl,
-                contentDescription = details.title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
-        }
+private fun navigateToItem(item: ContentItem, navigator: Navigator) {
+    when (item.type) {
+        ContentType.STREAM ->
+            navigator.navigateTo(Destination.Stream(item.serviceId, item.url))
 
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = details.title,
-                style = MaterialTheme.typography.titleLarge
-            )
+        ContentType.CHANNEL ->
+            navigator.navigateTo(Destination.Channel(item.serviceId, item.url))
 
-            val metadata = buildMetadata(details)
-            if (metadata.isNotEmpty()) {
-                Text(
-                    text = metadata,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            val description = details.description
-            if (!description.isNullOrBlank()) {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 6,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StreamSelector(
-                    label = "Video",
-                    streams = details.videoStreams,
-                    selected = selectedVideo,
-                    onSelect = onSelectVideo
-                )
-
-                StreamSelector(
-                    label = "Audio",
-                    streams = details.audioStreams,
-                    selected = selectedAudio,
-                    onSelect = onSelectAudio
-                )
-            }
-
-            Button(
-                onClick = onPlay,
-                enabled = selectedVideo != null,
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Play")
-            }
-        }
+        ContentType.PLAYLIST ->
+            navigator.navigateTo(Destination.Playlist(item.serviceId, item.url))
     }
-}
-
-/**
- * A dropdown that lets the user pick one of the available streams.
- */
-@Composable
-private fun StreamSelector(
-    label: String,
-    streams: List<MediaStream>,
-    selected: MediaStream?,
-    onSelect: (MediaStream) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        TextButton(
-            onClick = { expanded = true },
-            enabled = streams.isNotEmpty()
-        ) {
-            Text(text = "$label: ${selected?.quality ?: "none"}")
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            streams.forEach { stream ->
-                DropdownMenuItem(
-                    text = { Text(stream.quality) },
-                    onClick = {
-                        expanded = false
-                        onSelect(stream)
-                    }
-                )
-            }
-        }
-    }
-}
-
-/**
- * Builds the line that shows the uploader, the view count and the upload date.
- */
-private fun buildMetadata(details: StreamDetails): String {
-    val parts = mutableListOf<String>()
-
-    details.uploader.takeIf { it.isNotBlank() }?.let { parts.add(it) }
-    details.viewCount?.let { parts.add("${formatViewCount(it)} views") }
-    details.uploadDate?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
-    details.durationSeconds?.let { parts.add(formatDuration(it)) }
-    if (details.liveNow) parts.add("LIVE")
-
-    return parts.joinToString(" · ")
 }

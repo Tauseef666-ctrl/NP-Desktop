@@ -5,6 +5,7 @@
 
 package net.newpipe.app.service
 
+import co.touchlab.kermit.Logger
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Dispatchers
@@ -82,19 +83,51 @@ class ExtractorContentRepository(
     }.getOrDefault(emptyList())
 
     override suspend fun kiosk(serviceId: Int, kioskId: String): List<ContentItem> =
-        withContext(Dispatchers.IO) {
-            guard {
-                val service = serviceForId(serviceId)
-                val kioskList = service.kioskList
-                    ?: throw ContentException.Unsupported("The service does not provide kiosks")
-                // Use the extractor directly instead of KioskInfo: KioskInfo also parses the
-                // localized name of the kiosk, which is not needed here and can fail when the
-                // service changes the shape of its response header.
-                val extractor = kioskList.getExtractorById(kioskId, null)
-                extractor.fetchPage()
-                extractor.initialPage.items.mapNotNull { it.toContentItem() }
+        kioskPage(serviceId, kioskId, 0)
+
+    /**
+     * Remembers the page tokens of every kiosk, so that scrolling down costs one request instead
+     * of re-fetching all previous pages.
+     */
+    private val kioskCursors = ConcurrentHashMap<String, MutableList<Page?>>()
+
+    override suspend fun kioskPage(
+        serviceId: Int,
+        kioskId: String,
+        pageIndex: Int
+    ): List<ContentItem> = withContext(Dispatchers.IO) {
+        guard {
+            val service = serviceForId(serviceId)
+            val kioskList = service.kioskList
+                ?: throw ContentException.Unsupported("The service does not provide kiosks")
+            // Use the extractor directly instead of KioskInfo: KioskInfo also parses the
+            // localized name of the kiosk, which is not needed here and can fail when the
+            // service changes the shape of its response header.
+            val extractor = kioskList.getExtractorById(kioskId, null)
+            extractor.fetchPage()
+
+            val key = "$serviceId:$kioskId"
+            val cursors = kioskCursors.getOrPut(key) { mutableListOf(null) }
+            synchronized(cursors) {
+                while (cursors.size <= pageIndex) {
+                    if (cursors.last() == null && cursors.size > 1) return@guard emptyList()
+                    val page = if (cursors.size == 1) {
+                        extractor.initialPage
+                    } else {
+                        extractor.getPage(cursors.last()!!)
+                    }
+                    cursors.add(page.nextPage)
+                }
+
+                val page = if (pageIndex == 0) {
+                    extractor.initialPage
+                } else {
+                    extractor.getPage(cursors[pageIndex]!!)
+                }
+                page.items.mapNotNull { it.toContentItem() }
             }
         }
+    }
 
     override suspend fun streamDetails(serviceId: Int, url: String): StreamDetails =
         withContext(Dispatchers.IO) {
@@ -134,13 +167,21 @@ class ExtractorContentRepository(
             guard {
                 val service = serviceForId(serviceId)
                 val info = ChannelInfo.getInfo(service, url)
-                val tabs = info.tabs
-                val items = if (tabs.isEmpty()) {
-                    emptyList()
-                } else {
-                    val tab = ChannelTabInfo.getInfo(service, tabs.first())
-                    tab.relatedItems.mapNotNull { it.toContentItem() }
-                }
+                val items = info.tabs.asSequence()
+                    .mapNotNull { tab ->
+                        try {
+                            ChannelTabInfo.getInfo(service, tab).relatedItems
+                        } catch (exception: Exception) {
+                            Logger.w(
+                                messageString = "A channel tab could not be loaded",
+                                throwable = exception
+                            )
+                            null
+                        }
+                    }
+                    .firstOrNull { it.isNotEmpty() }
+                    ?.mapNotNull { it.toContentItem() }
+                    ?: emptyList()
                 ChannelDetails(
                     serviceId = serviceId,
                     url = info.url ?: url,

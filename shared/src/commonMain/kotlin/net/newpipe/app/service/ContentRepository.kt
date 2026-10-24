@@ -64,6 +64,18 @@ interface ContentRepository {
     suspend fun kiosk(serviceId: Int, kioskId: String): List<ContentItem>
 
     /**
+     * Loads one page of a kiosk, so that the feed can grow while the user scrolls.
+     *
+     * @param pageIndex zero based page index
+     * @return the items of the page, or an empty list once the kiosk has no further pages
+     */
+    suspend fun kioskPage(
+        serviceId: Int,
+        kioskId: String,
+        pageIndex: Int
+    ): List<ContentItem>
+
+    /**
      * Loads the metadata and the stream list of a single stream.
      */
     suspend fun streamDetails(serviceId: Int, url: String): StreamDetails
