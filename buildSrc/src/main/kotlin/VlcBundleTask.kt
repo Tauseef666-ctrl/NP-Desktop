@@ -3,6 +3,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -26,8 +27,11 @@ abstract class VlcBundleTask : DefaultTask() {
 
     /**
      * The libVLC installation to bundle. The task only re-bundles when the installation changes.
+     * Optional, because CI environments may not have any libVLC to bundle; the package then
+     * falls back to the system lookup order.
      */
     @get:InputDirectory
+    @get:Optional
     @get:org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE)
     abstract val vlcRoot: DirectoryProperty
 
