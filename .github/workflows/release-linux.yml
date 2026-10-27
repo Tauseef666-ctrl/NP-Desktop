@@ -1,0 +1,86 @@
+name: Release Linux Deb
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and release (e.g. v0.25.5)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  JAVA_VERSION: '21'
+
+jobs:
+  build-deb:
+    name: Build Linux Deb Package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        shell: bash
+
+      - name: Build Deb package
+        run: ./gradlew :desktopApp:packageReleaseDeb --no-daemon
+        shell: bash
+
+      - name: Locate Deb artifact
+        id: locate
+        shell: bash
+        run: |
+          deb=$(find desktopApp/build/compose/binaries/main-release/deb -name "*.deb" | head -n 1)
+          if [ -z "$deb" ]; then
+            echo "No deb found in build output" >&2
+            exit 1
+          fi
+          echo "Found deb: $deb ($(du -h "$deb" | cut -f1))"
+          echo "DEB_PATH=$deb" >> "$GITHUB_OUTPUT"
+          echo "DEB_NAME=$(basename "$deb")" >> "$GITHUB_OUTPUT"
+
+      - name: Generate SHA-256 checksum
+        id: checksum
+        shell: bash
+        run: |
+          hash=$(sha256sum "${{ steps.locate.outputs.DEB_PATH }}" | cut -d' ' -f1)
+          checksumLine="$hash  ${{ steps.locate.outputs.DEB_NAME }}"
+          echo "Checksum: $checksumLine"
+          echo "$checksumLine" > checksums-sha256.txt
+
+      - name: Upload Deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-linux-deb
+          path: |
+            ${{ steps.locate.outputs.DEB_PATH }}
+            checksums-sha256.txt
+          retention-days: 7
+
+      - name: Attach to GitHub Release
+        shell: bash
+        run: |
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          gh release upload "$tag" \
+            "${{ steps.locate.outputs.DEB_PATH }}" \
+            checksums-sha256.txt \
+            --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
