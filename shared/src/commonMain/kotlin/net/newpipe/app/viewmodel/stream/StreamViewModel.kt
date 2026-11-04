@@ -86,19 +86,27 @@ class StreamViewModel(
                 )
                 _selectedVideo.value = pickPreferredVideo(details, preferredResolution)
                 _selectedAudio.value = pickPreferredAudio(details, preferredAudioFormat)
-                _channel.value = details.uploaderUrl?.let { channelUrl ->
-                    try {
-                        repository.channel(details.serviceId, channelUrl)
-                    } catch (exception: CancellationException) {
-                        throw exception
-                    } catch (exception: Exception) {
-                        Logger.w(messageString = "The channel of the stream could not be loaded", throwable = exception)
-                        null
-                    }
-                }
                 _relatedItems.value = details.relatedItems
                 _hasMoreRelated.value = details.uploaderUrl != null
                 _loadingMoreRelated.value = false
+
+                // The uploader chip only needs the channel avatar and subscriber count. It is
+                // loaded outside the critical playback path, so that the video starts as soon
+                // as the stream details arrive instead of after a second round trip.
+                details.uploaderUrl?.let { channelUrl ->
+                    viewModelScope.launch {
+                        try {
+                            _channel.value = repository.channel(details.serviceId, channelUrl)
+                        } catch (exception: CancellationException) {
+                            throw exception
+                        } catch (exception: Exception) {
+                            Logger.w(
+                                messageString = "The channel of the stream could not be loaded",
+                                throwable = exception
+                            )
+                        }
+                    }
+                }
             } catch (exception: ContentException) {
                 Logger.e(messageString = "Loading the stream failed", throwable = exception)
                 _error.value = exception.message

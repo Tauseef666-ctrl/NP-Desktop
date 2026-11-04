@@ -8,6 +8,7 @@ package net.newpipe.app.service
 import co.touchlab.kermit.Logger
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.newpipe.app.model.ChannelDetails
@@ -57,7 +58,33 @@ class ExtractorContentRepository(
      */
     private val searchCursors = ConcurrentHashMap<String, SearchCursor>()
 
+    /**
+     * Short-lived caches that make repeated navigation feel instant: revisiting a stream,
+     * channel, playlist or the home feed inside the cache window costs no network round trip at
+     * all, and two concurrent requests for the same item share a single fetch.
+     *
+     * Stream metadata is cached for the shortest time, because the extracted playback URLs of
+     * some services expire; lists live a little longer. Values are consumed read-only by the
+     * user interface, so sharing them across callers is safe.
+     */
+    private val streamCache = ResultsCache<CacheKey, StreamDetails>(ttlMillis = 5 * 60_000L)
+    private val channelCache = ResultsCache<CacheKey, ChannelDetails>(ttlMillis = 10 * 60_000L)
+    private val playlistCache = ResultsCache<CacheKey, PlaylistDetails>(ttlMillis = 10 * 60_000L)
+    private val kioskCache = ResultsCache<CacheKey, List<ContentItem>>(ttlMillis = 2 * 60_000L)
+    private val searchCache = ResultsCache<CacheKey, List<ContentItem>>(ttlMillis = 2 * 60_000L)
+
     override suspend fun search(request: SearchRequest): List<ContentItem> = withContext(Dispatchers.IO) {
+        guard {
+            if (request.page != 0) {
+                return@guard rawSearch(request)
+            }
+            searchCache.getOrFetch(
+                CacheKey(request.serviceId, request.query + "|" + (request.filter ?: ""))
+            ) { rawSearch(request) }
+        }
+    }
+
+    private suspend fun rawSearch(request: SearchRequest): List<ContentItem> = withContext(Dispatchers.IO) {
         guard {
             val service = serviceForId(request.serviceId)
             val filters = listOfNotNull(request.filter)
@@ -98,6 +125,21 @@ class ExtractorContentRepository(
         pageIndex: Int
     ): List<ContentItem> = withContext(Dispatchers.IO) {
         guard {
+            if (pageIndex != 0) {
+                return@guard rawKioskPage(serviceId, kioskId, pageIndex)
+            }
+            kioskCache.getOrFetch(CacheKey(serviceId, kioskId)) {
+                rawKioskPage(serviceId, kioskId, 0)
+            }
+        }
+    }
+
+    private suspend fun rawKioskPage(
+        serviceId: Int,
+        kioskId: String,
+        pageIndex: Int
+    ): List<ContentItem> = withContext(Dispatchers.IO) {
+        guard {
             val service = serviceForId(serviceId)
             if (kioskId == TRENDING_KIOSK_ID) {
                 // YouTube retired the trending feed: /feed/trending serves an empty
@@ -109,7 +151,7 @@ class ExtractorContentRepository(
                     listOf(TRENDING_FALLBACK_FILTER),
                     null
                 )
-                return@withContext loadSearchPage(
+                return@guard loadSearchPage(
                     service,
                     handler,
                     TRENDING_FALLBACK_QUERY,
@@ -155,36 +197,41 @@ class ExtractorContentRepository(
 
     override suspend fun streamDetails(serviceId: Int, url: String): StreamDetails =
         withContext(Dispatchers.IO) {
-            guard {
-                val service = serviceForId(serviceId)
-                val info = withBotWallRetry(service, url)
-                StreamDetails(
-                    serviceId = serviceId,
-                    url = info.url ?: url,
-                    title = info.name.orEmpty(),
-                    uploader = info.uploaderName.orEmpty(),
-                    uploaderUrl = info.uploaderUrl,
-                    thumbnailUrl = info.thumbnails.bestImageUrl(),
-                    description = info.description?.content,
-                    durationSeconds = info.duration.takeIf { it > 0 },
-                    viewCount = info.viewCount.takeIf { it >= 0 },
-                    uploadDate = info.textualUploadDate,
-                    liveNow = info.streamType == StreamType.LIVE_STREAM,
-                    videoStreams = (info.videoStreams + info.videoOnlyStreams)
-                        .mapNotNull { it.toMediaStream() },
-                    audioStreams = info.audioStreams.mapNotNull { it.toMediaStream() },
-                    subtitles = info.subtitles.mapNotNull {
-                        val url = it.url ?: return@mapNotNull null
-                        SubtitleTrack(
-                            url = url,
-                            name = it.name ?: it.displayLanguageName.orEmpty(),
-                            languageTag = it.languageTag
-                        )
-                    },
-                    relatedItems = info.relatedStreams.mapNotNull { it.toContentItem() }
-                )
+            streamCache.getOrFetch(CacheKey(serviceId, url)) {
+                guard { extractStreamDetails(serviceId, url) }
             }
         }
+
+    private fun extractStreamDetails(serviceId: Int, url: String): StreamDetails {
+        val service = serviceForId(serviceId)
+        val info = withBotWallRetry(service, url)
+        return StreamDetails(
+            serviceId = serviceId,
+            url = info.url ?: url,
+            title = info.name.orEmpty(),
+            uploader = info.uploaderName.orEmpty(),
+            uploaderUrl = info.uploaderUrl,
+            uploaderAvatarUrl = info.uploaderAvatars.bestImageUrl(),
+            thumbnailUrl = info.thumbnails.bestImageUrl(),
+            description = info.description?.content,
+            durationSeconds = info.duration.takeIf { it > 0 },
+            viewCount = info.viewCount.takeIf { it >= 0 },
+            uploadDate = info.textualUploadDate,
+            liveNow = info.streamType == StreamType.LIVE_STREAM,
+            videoStreams = (info.videoStreams + info.videoOnlyStreams)
+                .mapNotNull { it.toMediaStream() },
+            audioStreams = info.audioStreams.mapNotNull { it.toMediaStream() },
+            subtitles = info.subtitles.mapNotNull {
+                val url = it.url ?: return@mapNotNull null
+                SubtitleTrack(
+                    url = url,
+                    name = it.name ?: it.displayLanguageName.orEmpty(),
+                    languageTag = it.languageTag
+                )
+            },
+            relatedItems = info.relatedStreams.mapNotNull { it.toContentItem() }
+        )
+    }
 
     /**
      * Fetches the stream details and retries when YouTube answers the "Sign in to confirm that
@@ -234,55 +281,63 @@ class ExtractorContentRepository(
 
     override suspend fun channel(serviceId: Int, url: String): ChannelDetails =
         withContext(Dispatchers.IO) {
-            guard {
-                val service = serviceForId(serviceId)
-                val info = ChannelInfo.getInfo(service, url)
-                val items = info.tabs.asSequence()
-                    .mapNotNull { tab ->
-                        try {
-                            ChannelTabInfo.getInfo(service, tab).relatedItems
-                        } catch (exception: Exception) {
-                            Logger.w(
-                                messageString = "A channel tab could not be loaded",
-                                throwable = exception
-                            )
-                            null
-                        }
-                    }
-                    .firstOrNull { it.isNotEmpty() }
-                    ?.mapNotNull { it.toContentItem() }
-                    ?: emptyList()
-                ChannelDetails(
-                    serviceId = serviceId,
-                    url = info.url ?: url,
-                    name = info.name.orEmpty(),
-                    avatarUrl = info.avatars.bestImageUrl(),
-                    bannerUrl = info.banners.bestImageUrl(),
-                    description = info.description,
-                    subscriberCount = info.subscriberCount.takeIf { it >= 0 },
-                    items = items
-                )
+            channelCache.getOrFetch(CacheKey(serviceId, url)) {
+                guard { extractChannel(serviceId, url) }
             }
         }
 
+    private fun extractChannel(serviceId: Int, url: String): ChannelDetails {
+        val service = serviceForId(serviceId)
+        val info = ChannelInfo.getInfo(service, url)
+        val items = info.tabs.asSequence()
+            .mapNotNull { tab ->
+                try {
+                    ChannelTabInfo.getInfo(service, tab).relatedItems
+                } catch (exception: Exception) {
+                    Logger.w(
+                        messageString = "A channel tab could not be loaded",
+                        throwable = exception
+                    )
+                    null
+                }
+            }
+            .firstOrNull { it.isNotEmpty() }
+            ?.mapNotNull { it.toContentItem() }
+            ?: emptyList()
+        return ChannelDetails(
+            serviceId = serviceId,
+            url = info.url ?: url,
+            name = info.name.orEmpty(),
+            avatarUrl = info.avatars.bestImageUrl(),
+            bannerUrl = info.banners.bestImageUrl(),
+            description = info.description,
+            subscriberCount = info.subscriberCount.takeIf { it >= 0 },
+            items = items
+        )
+    }
+
     override suspend fun playlist(serviceId: Int, url: String): PlaylistDetails =
         withContext(Dispatchers.IO) {
-            guard {
-                val service = serviceForId(serviceId)
-                val info = PlaylistInfo.getInfo(service, url)
-                PlaylistDetails(
-                    serviceId = serviceId,
-                    url = info.url ?: url,
-                    name = info.name.orEmpty(),
-                    thumbnailUrl = info.thumbnails.bestImageUrl(),
-                    description = info.description?.content,
-                    uploader = info.uploaderName,
-                    uploaderUrl = info.uploaderUrl,
-                    itemCount = info.streamCount.takeIf { it >= 0 },
-                    items = info.relatedItems.mapNotNull { it.toContentItem() }
-                )
+            playlistCache.getOrFetch(CacheKey(serviceId, url)) {
+                guard { extractPlaylist(serviceId, url) }
             }
         }
+
+    private fun extractPlaylist(serviceId: Int, url: String): PlaylistDetails {
+        val service = serviceForId(serviceId)
+        val info = PlaylistInfo.getInfo(service, url)
+        return PlaylistDetails(
+            serviceId = serviceId,
+            url = info.url ?: url,
+            name = info.name.orEmpty(),
+            thumbnailUrl = info.thumbnails.bestImageUrl(),
+            description = info.description?.content,
+            uploader = info.uploaderName,
+            uploaderUrl = info.uploaderUrl,
+            itemCount = info.streamCount.takeIf { it >= 0 },
+            items = info.relatedItems.mapNotNull { it.toContentItem() }
+        )
+    }
 
     override suspend fun resolveUrl(url: String): ResolvedContent = withContext(Dispatchers.IO) {
         guard {
@@ -405,6 +460,69 @@ class ExtractorContentRepository(
 }
 
 private data class SearchCursor(val index: Int, val page: Page)
+
+/** The cache key of one repository result: the service and a content-specific identifier. */
+private data class CacheKey(val serviceId: Int, val id: String)
+
+/**
+ * A small in-memory cache with a time to live and in-flight request deduplication.
+ *
+ * Repeated navigation is served from the cache, and two concurrent requests for the same item
+ * share a single fetch instead of racing each other. The least recently added entries are
+ * evicted once the cache grows past [maxSize].
+ */
+internal class ResultsCache<K : Any, V : Any>(
+    private val ttlMillis: Long,
+    private val maxSize: Int = 24
+) {
+    private class Entry<V>(val value: V, val storedAt: Long)
+
+    private val entries = LinkedHashMap<K, Entry<V>>()
+    private val inFlight = ConcurrentHashMap<K, CompletableDeferred<V>>()
+
+    /**
+     * The cached value for [key], or `null` when it is missing or expired.
+     */
+    fun getOrNull(key: K): V? = synchronized(entries) {
+        val entry = entries[key]
+        if (entry == null || System.currentTimeMillis() - entry.storedAt > ttlMillis) {
+            entries.remove(key)
+            null
+        } else {
+            entry.value
+        }
+    }
+
+    /**
+     * Serves [key] from the cache, or fetches it once through [fetch] and stores the result.
+     */
+    suspend fun getOrFetch(key: K, fetch: suspend () -> V): V {
+        getOrNull(key)?.let { return it }
+
+        val pending = inFlight[key] ?: CompletableDeferred<V>()
+        if (inFlight.putIfAbsent(key, pending) != null) {
+            return pending.await()
+        }
+
+        try {
+            val value = fetch()
+            synchronized(entries) {
+                entries.remove(key)
+                entries[key] = Entry(value, System.currentTimeMillis())
+                while (entries.size > maxSize) {
+                    entries.remove(entries.keys.first())
+                }
+            }
+            pending.complete(value)
+            return value
+        } catch (throwable: Throwable) {
+            pending.completeExceptionally(throwable)
+            throw throwable
+        } finally {
+            inFlight.remove(key, pending)
+        }
+    }
+}
 
 /** The id of the "Trending" kiosk of the extraction engine. */
 private const val TRENDING_KIOSK_ID = "Trending"

@@ -103,6 +103,12 @@ interface PlaybackController {
     fun setSpeed(speed: Float)
 
     /**
+     * Starts preparing the underlying player engine before the first playback, so that the
+     * first video starts without an engine setup delay. Implementations may ignore this.
+     */
+    fun warmUp() {}
+
+    /**
      * Releases the native resources that are held by the controller.
      *
      * The controller must not be used afterwards.

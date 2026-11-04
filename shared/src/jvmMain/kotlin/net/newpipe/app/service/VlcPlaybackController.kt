@@ -119,6 +119,24 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         )
     }
 
+    /**
+     * Initialises the libVLC factory and media player in the background, so that the first
+     * playback starts without the multi-second native setup delay.
+     */
+    override fun warmUp() {
+        scope.launch(Dispatchers.Default) {
+            runCatching {
+                // Reading the getters initialises the lazy delegates exactly like a play()
+                // call would; the heavy native work simply happens earlier and off the UI.
+                component
+            }.onFailure {
+                Logger.w(messageString = "Warming up libVLC failed", throwable = it)
+            }.onSuccess {
+                Logger.i(messageString = "libVLC warmed up and ready for playback")
+            }
+        }
+    }
+
     override fun play(request: PlaybackRequest) {
         val player = player
         if (player == null) {

@@ -62,6 +62,9 @@ fun main() = application {
     LaunchedEffect(Unit) {
         val created = withContext(Dispatchers.Default) { createPlaybackController() }
         controller = created
+        // Prepare libVLC in the background while the user browses, so the first video starts
+        // playing instantly.
+        withContext(Dispatchers.Default) { created.warmUp() }
     }
 
     // The fullscreen flag of the player drives the real window placement of the main window.

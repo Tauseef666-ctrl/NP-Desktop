@@ -149,18 +149,19 @@ class Navigator(
     /**
      * Switches to a top level destination, as selected in the navigation rail.
      *
-     * The backstack is reset so that repeated use of the rail does not pile up screens. The start
-     * destination stays at the bottom of the stack as the place "back" returns to, unless the
-     * requested destination is the start destination itself.
+     * Everything above the start destination is removed, but the start destination itself stays
+     * at the bottom of the stack: switching between rail sections does not destroy the state of
+     * the home screen, so it does not re-fetch its whole feed on every rail selection.
      */
     fun switchTo(destination: Destination) {
         Logger.i(messageString = "Switching to $destination")
         if (backstack.lastOrNull() == destination) return
-        backstack.clear()
-        if (destination != startDestination) {
-            backstack.add(startDestination)
+        while (backstack.size > 1) {
+            backstack.removeAt(backstack.size - 1)
         }
-        backstack.add(destination)
+        if (destination != startDestination && destination != backstack.firstOrNull()) {
+            backstack.add(destination)
+        }
     }
 
     /**

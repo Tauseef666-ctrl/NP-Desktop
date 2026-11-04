@@ -82,6 +82,7 @@ data class StreamDetails(
     val title: String,
     val uploader: String,
     val uploaderUrl: String? = null,
+    val uploaderAvatarUrl: String? = null,
     val thumbnailUrl: String? = null,
     val description: String? = null,
     val durationSeconds: Long? = null,

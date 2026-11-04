@@ -420,7 +420,7 @@ private fun ChannelRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         ChannelAvatar(
-            avatarUrl = channel?.avatarUrl,
+            avatarUrl = channel?.avatarUrl ?: details.uploaderAvatarUrl,
             name = details.uploader,
             modifier = channelClick
         )
@@ -509,7 +509,7 @@ private fun SubscribeButton(
                         serviceId = details.serviceId,
                         url = channelUrl,
                         name = details.uploader,
-                        avatarUrl = channel?.avatarUrl
+                        avatarUrl = channel?.avatarUrl ?: details.uploaderAvatarUrl
                     )
                 )
             }
