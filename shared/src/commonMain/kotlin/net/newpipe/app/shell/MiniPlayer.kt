@@ -102,30 +102,17 @@ fun MiniPlayer(
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
             shape = MINI_SHAPE,
-            color = MINI_GLASS,
+            color = net.newpipe.app.ui.Glass.color(0.92f),
             tonalElevation = 0.dp,
             shadowElevation = 16.dp,
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                Brush.verticalGradient(
-                    listOf(
-                        Color.White.copy(alpha = 0.32f),
-                        Color.White.copy(alpha = 0.08f)
-                    )
-                )
-            )
+            border = net.newpipe.app.ui.Glass.borderStroke()
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(MINI_HEIGHT)
                     .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.06f),
-                                Color.Transparent
-                            )
-                        )
+                        net.newpipe.app.ui.Glass.shine
                     )
                     .padding(Spacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
@@ -184,19 +171,29 @@ fun MiniPlayer(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
+                        if (state.live) {
+                            Text(
+                                text = "\u00B7 LIVE",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFFFF3B30)
+                            )
+                        }
                     }
 
-                    LinearProgressIndicator(
-                        progress = {
-                            (state.positionMs.toFloat() / state.durationMs.coerceAtLeast(1L))
-                                .coerceIn(0f, 1f)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(4.dp),
-                        trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    if (!state.live) {
+                        LinearProgressIndicator(
+                            progress = {
+                                (state.positionMs.toFloat() / state.durationMs.coerceAtLeast(1L))
+                                    .coerceIn(0f, 1f)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp),
+                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
 
                 IconButton(
@@ -276,13 +273,6 @@ fun MiniPlayer(
 private val MINI_HEIGHT = 104.dp
 private val MINI_VIDEO_WIDTH = 176.dp
 private val MINI_SHAPE: Shape = RoundedCornerShape(Radius.lg)
-
-private val MINI_GLASS: Color
-    @Composable get() = MaterialTheme.colorScheme.surface.copy(
-        // High alpha keeps the title, timestamps and controls readable even while bright
-        // thumbnails scroll behind the glass bar.
-        alpha = 0.92f
-    )
 
 private fun formatMiniTime(ms: Long): String {
     val totalSeconds = ms / 1_000

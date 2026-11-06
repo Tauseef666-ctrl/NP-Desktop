@@ -121,28 +121,15 @@ fun VideoActionsMenu(
         Surface(
             modifier = Modifier.widthIn(max = 430.dp),
             shape = MENU_SHAPE,
-            color = menuGlass,
+            color = net.newpipe.app.ui.Glass.color(0.86f),
             tonalElevation = 0.dp,
             shadowElevation = 24.dp,
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                Brush.verticalGradient(
-                    listOf(
-                        Color.White.copy(alpha = 0.30f),
-                        Color.White.copy(alpha = 0.08f)
-                    )
-                )
-            )
+            border = net.newpipe.app.ui.Glass.borderStroke()
         ) {
             Column(
                 modifier = Modifier
                     .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.05f),
-                                Color.Transparent
-                            )
-                        )
+                        net.newpipe.app.ui.Glass.shine
                     )
                     .padding(16.dp)
             ) {
@@ -288,12 +275,6 @@ private fun ActionTile(
 }
 
 private val MENU_SHAPE: androidx.compose.ui.graphics.Shape = RoundedCornerShape(20.dp)
-
-/**
- * The frosted glass the menu is painted on, matching the mini player bar.
- */
-private val menuGlass: Color
-    @Composable get() = MaterialTheme.colorScheme.surface.copy(alpha = 0.86f)
 
 /**
  * A single clickable action row of the menu.

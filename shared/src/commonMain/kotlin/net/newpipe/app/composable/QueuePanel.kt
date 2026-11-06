@@ -53,6 +53,7 @@ fun QueuePanel(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = net.newpipe.app.ui.Glass.color(0.92f),
         title = {
             Text(
                 text = "Play queue" + (if (queue.isEmpty()) "" else " (${queue.size})"),

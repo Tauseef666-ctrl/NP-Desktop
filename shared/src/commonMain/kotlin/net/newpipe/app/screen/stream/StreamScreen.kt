@@ -19,8 +19,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -90,6 +92,7 @@ fun StreamScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboardManager.current
+    var showDownloadDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(serviceId, url) {
         playerUiState.setImmersive(false)
@@ -263,14 +266,7 @@ fun StreamScreen(
                     val intent = StreamIntents.take(streamDetails.url)
                     when (intent) {
                         null -> Unit
-                        StreamIntents.Action.DOWNLOAD -> startDownload(
-                            details = streamDetails,
-                            selectedVideo = selectedVideo,
-                            downloader = downloader,
-                            downloads = downloads,
-                            scope = scope,
-                            snackbarHostState = snackbarHostState
-                        )
+                        StreamIntents.Action.DOWNLOAD -> showDownloadDialog = true
                         else -> {
                             playStream(
                                 details = streamDetails,
@@ -406,16 +402,7 @@ fun StreamScreen(
                         audioOnly = audioOnly,
                         onToggleAudioOnly = playerUiState::toggleAudioOnly,
                         onOpenPopup = openPopup,
-                        onDownload = {
-                            startDownload(
-                                details = streamDetails,
-                                selectedVideo = selectedVideo,
-                                downloader = downloader,
-                                downloads = downloads,
-                                scope = scope,
-                                snackbarHostState = snackbarHostState
-                            )
-                        },
+                        onDownload = { showDownloadDialog = true },
                         modifier = Modifier.fillMaxSize()
                     )
 
@@ -434,14 +421,41 @@ fun StreamScreen(
                 }
             }
         }
+        }
+
+        if (showDownloadDialog) {
+            streamDetails?.let { openDetails ->
+                DownloadDialog(
+                    details = openDetails,
+                    item = openDetails.toContentItem(),
+                    downloader = downloader,
+                    repository = downloads,
+                    onResult = { result ->
+                        result.fold(
+                            onSuccess = { path ->
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Downloaded to $path")
+                                }
+                            },
+                            onFailure = { failure ->
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Download failed: ${failure.message}"
+                                    )
+                                }
+                            }
+                        )
+                    },
+                    onDismiss = { showDownloadDialog = false }
+                )
+            }
+        }
     }
-}
 }
 
 /**
  * Converts the loaded details into a library entry.
- */
-private fun StreamDetails.toContentItem() = ContentItem(
+ */private fun StreamDetails.toContentItem() = ContentItem(
     serviceId = serviceId,
     url = url,
     title = title,
@@ -518,7 +532,8 @@ private fun playStream(
             serviceId = details.serviceId,
             webUrl = details.url,
             qualityLabel = details.videoStreams
-                .firstOrNull { it.url == selectedVideoUrl }?.quality
+                .firstOrNull { it.url == selectedVideoUrl }?.quality,
+            live = details.liveNow
         )
     )
 }

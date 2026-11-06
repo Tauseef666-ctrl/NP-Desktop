@@ -54,9 +54,12 @@ import kotlinx.coroutines.delay
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.PopupPlayer
+import net.newpipe.app.ui.Breakpoints
 import net.newpipe.app.ui.Layout
 import net.newpipe.app.ui.PlayerUiState
 import net.newpipe.app.ui.Motion
+import net.newpipe.app.ui.isTvLayout
+import net.newpipe.app.ui.Glass
 import net.newpipe.app.ui.Radius
 import net.newpipe.app.ui.Spacing
 import newpipe.shared.generated.resources.Res
@@ -152,12 +155,25 @@ fun ModernShell(
     val railInteraction = remember { MutableInteractionSource() }
     val railHovered by railInteraction.collectIsHoveredAsState()
 
+    // The layout split between desktop (Windows/Linux, hover driven) and television
+    // (Android TV, remote driven): a television always shows its rail and never uses the
+    // hover reveal, while the desktop keeps the edge reveal with auto collapse.
+    val tv = isTvLayout
+
     var revealed by remember { mutableStateOf(false) }
 
     // On the home screen the rail is always visible in its collapsed form and expands on hover.
-    val collapsedRail = currentDestination == Destination.Home && !immersive
+    val collapsedRail = !tv && currentDestination == Destination.Home && !immersive
 
-    LaunchedEffect(edgeHovered, railHovered, immersive) {
+    // Navigating from the rail collapses it at once, so that the expanded panel does not stay
+    // open over the content of the new screen while the pointer is still on it.
+    val railNavigate: (Destination) -> Unit = { destination ->
+        revealed = false
+        onNavigate(destination)
+    }
+
+    LaunchedEffect(edgeHovered, railHovered, immersive, tv) {
+        if (tv) return@LaunchedEffect
         if (immersive) {
             revealed = false
             return@LaunchedEffect
@@ -174,10 +190,24 @@ fun ModernShell(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val playbackState by controller.state.collectAsState()
         val popupState by PopupPlayer.state.collectAsState()
+
+        // The layout split between desktop (Windows/Linux, hover driven) and television
+        // (Android TV, remote driven): a television always shows its rail and never uses the
+        // hover reveal, while the desktop keeps the edge reveal with auto collapse.
+        val tvRailExpanded = maxWidth >= Breakpoints.medium
+
         // Only one player surface at a time: while the popup player is open the mini player
         // bar is hidden, so the video is never playing twice on the same screen.
         val showMiniPlayer = playbackState.title.isNotEmpty() && popupState == null && !immersive &&
             currentDestination !is Destination.Stream
+
+        val contentStartPadding = when {
+            immersive -> 0.dp
+            tv && tvRailExpanded -> Layout.navRailExpanded
+            collapsedRail -> Layout.navRailCollapsed
+            tv -> Layout.navRailCollapsed
+            else -> 0.dp
+        }
 
         Box(
             modifier = Modifier.fillMaxSize()
@@ -189,7 +219,7 @@ fun ModernShell(
                     // Scaffold paint it themselves, the others (history, downloads, ...) rely
                     // on this one so they never show the bright default window background.
                     .background(MaterialTheme.colorScheme.background)
-                    .padding(start = if (collapsedRail) Layout.navRailCollapsed else 0.dp)
+                    .padding(start = contentStartPadding)
             ) {
                 content()
             }
@@ -205,8 +235,6 @@ fun ModernShell(
                         }
                     },
                     onExpand = {
-                        // The expand button of the mini player opens the video directly in the
-                        // fullscreen main player, like the fullscreen button of the watch page.
                         val state = controller.state.value
                         if (state.webUrl.isNotEmpty()) {
                             playerUiState.setFullscreen(true)
@@ -220,69 +248,86 @@ fun ModernShell(
                 )
             }
 
-            // A small, transparent search shortcut in the top right corner of every screen.
-            if (!immersive) {
-                IconButton(
-                    onClick = { onNavigate(Destination.Search) },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = Spacing.xs, end = Spacing.xs)
-                        .size(32.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_search),
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            if (collapsedRail && !revealed) {
-                NavigationRail(
-                    currentDestination = currentDestination,
-                    onNavigate = onNavigate,
-                    interactionSource = railInteraction,
-                    expanded = false,
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .width(Layout.navRailCollapsed)
-                        .fillMaxHeight()
-                        .zIndex(1f)
-                )
-            }
-
-            if (!immersive) {
-                // A narrow, invisible strip at the left window edge reveals the rail on hover.
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .fillMaxHeight()
-                        .width(RAIL_EDGE_WIDTH)
-                        .hoverable(edgeInteraction)
-                )
-
-                AnimatedVisibility(
-                    visible = revealed,
-                    enter = slideInHorizontally(
-                        animationSpec = tween(Motion.medium),
-                        initialOffsetX = { -it }
-                    ) + fadeIn(animationSpec = tween(Motion.fast)),
-                    exit = slideOutHorizontally(
-                        animationSpec = tween(Motion.medium),
-                        targetOffsetX = { -it }
-                    ) + fadeOut(animationSpec = tween(Motion.fast)),
-                    modifier = Modifier.zIndex(1f)
-                ) {
+            // On TV the rail is permanently visible; on desktop it is hover revealed.
+            if (tv) {
+                if (!immersive) {
                     NavigationRail(
                         currentDestination = currentDestination,
-                        onNavigate = onNavigate,
+                        onNavigate = railNavigate,
                         interactionSource = railInteraction,
-                        expanded = true,
+                        expanded = tvRailExpanded,
                         modifier = Modifier
-                            .width(Layout.navRailExpanded)
+                            .align(Alignment.CenterStart)
+                            .width(if (tvRailExpanded) Layout.navRailExpanded else Layout.navRailCollapsed)
                             .fillMaxHeight()
+                            .zIndex(1f)
                     )
+                }
+            } else {
+                // A small, transparent search shortcut in the top right corner of every screen.
+                if (!immersive) {
+                    IconButton(
+                        onClick = { onNavigate(Destination.Search) },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = Spacing.xs, end = Spacing.xs)
+                            .size(32.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_search),
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                if (collapsedRail && !revealed) {
+                    NavigationRail(
+                        currentDestination = currentDestination,
+                        onNavigate = railNavigate,
+                        interactionSource = railInteraction,
+                        expanded = false,
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .width(Layout.navRailCollapsed)
+                            .fillMaxHeight()
+                            .zIndex(1f)
+                    )
+                }
+
+                if (!immersive) {
+                    // A narrow, invisible strip at the left window edge reveals the rail on hover.
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .fillMaxHeight()
+                            .width(RAIL_EDGE_WIDTH)
+                            .hoverable(edgeInteraction)
+                    )
+
+                    AnimatedVisibility(
+                        visible = revealed,
+                        enter = slideInHorizontally(
+                            animationSpec = tween(Motion.medium),
+                            initialOffsetX = { -it }
+                        ) + fadeIn(animationSpec = tween(Motion.fast)),
+                        exit = slideOutHorizontally(
+                            animationSpec = tween(Motion.medium),
+                            targetOffsetX = { -it }
+                        ) + fadeOut(animationSpec = tween(Motion.fast)),
+                        modifier = Modifier.zIndex(1f)
+                    ) {
+                        NavigationRail(
+                            currentDestination = currentDestination,
+                            onNavigate = railNavigate,
+                            interactionSource = railInteraction,
+                            expanded = true,
+                            modifier = Modifier
+                                .width(Layout.navRailExpanded)
+                                .fillMaxHeight()
+                        )
+                    }
                 }
             }
         }
@@ -299,8 +344,9 @@ private fun NavigationRail(
 ) {
     Surface(
         modifier = modifier.hoverable(interactionSource),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shadowElevation = 8.dp
+        color = net.newpipe.app.ui.Glass.color(0.9f),
+        shadowElevation = 8.dp,
+        border = net.newpipe.app.ui.Glass.borderStroke()
     ) {
         Column(
             modifier = Modifier

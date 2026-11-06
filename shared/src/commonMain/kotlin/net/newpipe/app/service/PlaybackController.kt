@@ -21,7 +21,8 @@ data class PlaybackRequest(
     val startPositionMs: Long = 0,
     val serviceId: Int = -1,
     val webUrl: String = "",
-    val qualityLabel: String? = null
+    val qualityLabel: String? = null,
+    val live: Boolean = false
 )
 
 /**
@@ -39,7 +40,8 @@ data class PlaybackState(
     val error: String? = null,
     val serviceId: Int = -1,
     val webUrl: String = "",
-    val qualityLabel: String? = null
+    val qualityLabel: String? = null,
+    val live: Boolean = false
 )
 
 /**

@@ -103,7 +103,9 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 }
 
                 override fun finished(mediaPlayer: MediaPlayer) {
-                    _state.update { it.copy(playing = false, positionMs = it.durationMs) }
+                    if (!_state.value.live) {
+                        _state.update { it.copy(playing = false, positionMs = it.durationMs) }
+                    }
                 }
 
                 override fun error(mediaPlayer: MediaPlayer) {
@@ -111,7 +113,10 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 }
 
                 override fun lengthChanged(mediaPlayer: MediaPlayer, length: Long) {
-                    if (length > 0) {
+                    // Live streams report a bogus, constantly changing length (the buffered
+                    // segment size); the duration is cleared so that the user interface
+                    // hides the scrubber instead of showing a wrong position.
+                    if (length > 0 && !_state.value.live) {
                         _state.update { it.copy(durationMs = length) }
                     }
                 }
@@ -158,7 +163,8 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
             speed = previous.speed,
             serviceId = request.serviceId,
             webUrl = request.webUrl,
-            qualityLabel = request.qualityLabel
+            qualityLabel = request.qualityLabel,
+            live = request.live
         )
 
         // All calls into libVLC are queued on the player, because calling back into libVLC from
@@ -364,7 +370,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 _state.update {
                     it.copy(
                         positionMs = if (time > 0) time else it.positionMs,
-                        durationMs = if (length > 0) length else it.durationMs
+                        durationMs = if (length > 0 && !it.live) length else if (it.live) 0 else it.durationMs
                     )
                 }
 

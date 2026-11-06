@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import net.newpipe.app.composable.ContentThumbnail
 import net.newpipe.app.composable.VideoPlayer
 import net.newpipe.app.model.DownloadedVideo
+import net.newpipe.app.service.DownloadManager
 import net.newpipe.app.service.DownloadRepository
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.PlaybackRequest
@@ -67,6 +69,7 @@ fun DownloadsScreen(
 ) {
     val downloads by repository.downloads.collectAsState()
     val audioOnly by playerUiState.audioOnly.collectAsState()
+    val activeDownloads by DownloadManager.active.collectAsState()
     var selected by remember { mutableStateOf<DownloadedVideo?>(null) }
 
     LazyColumn(
@@ -174,6 +177,32 @@ fun DownloadsScreen(
                                 contentDescription = "Close player"
                             )
                         }
+                    }
+                }
+            }
+        }
+
+        activeDownloads.forEach { active ->
+            item(key = "active-${active.id}") {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    shape = RoundedCornerShape(Radius.md)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(Spacing.sm),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        Text(
+                            text = "${active.title} \u00B7 ${active.label}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        LinearProgressIndicator(
+                            progress = { active.progress },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }

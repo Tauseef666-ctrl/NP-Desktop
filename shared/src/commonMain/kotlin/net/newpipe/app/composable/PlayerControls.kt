@@ -7,6 +7,7 @@ package net.newpipe.app.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import net.newpipe.app.service.PlaybackController
@@ -101,35 +103,48 @@ fun PlayerControls(
             .padding(top = Spacing.md, start = Spacing.sm, end = Spacing.sm, bottom = Spacing.sm),
         verticalArrangement = Arrangement.spacedBy(Spacing.xs)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = formatDuration(seekPosition.toLong() / 1000),
-                color = PlayerForeground,
-                style = MaterialTheme.typography.bodySmall
-            )
+        // Live streams have no fixed duration; libVLC keeps reporting the size of the currently
+        // buffered segment as the length, so a scrubber would show a meaningless position and
+        // duration. They show a live badge instead.
+        if (state.live) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                LiveBadge(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = Spacing.sm)
+                )
+            }
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = formatDuration(seekPosition.toLong() / 1000),
+                    color = PlayerForeground,
+                    style = MaterialTheme.typography.bodySmall
+                )
 
-            Slider(
-                value = seekPosition.coerceIn(0f, durationMs.toFloat()),
-                onValueChange = {
-                    seekPosition = it
-                    isSeeking = true
-                },
-                onValueChangeFinished = {
-                    isSeeking = false
-                    controller.seekTo(seekPosition.toLong())
-                },
-                valueRange = 0f..durationMs.toFloat(),
-                colors = playerSliderColors(),
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = Spacing.sm)
-            )
+                Slider(
+                    value = seekPosition.coerceIn(0f, durationMs.toFloat()),
+                    onValueChange = {
+                        seekPosition = it
+                        isSeeking = true
+                    },
+                    onValueChangeFinished = {
+                        isSeeking = false
+                        controller.seekTo(seekPosition.toLong())
+                    },
+                    valueRange = 0f..durationMs.toFloat(),
+                    colors = playerSliderColors(),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = Spacing.sm)
+                )
 
-            Text(
-                text = formatDuration(state.durationMs / 1000),
-                color = PlayerForeground,
-                style = MaterialTheme.typography.bodySmall
-            )
+                Text(
+                    text = formatDuration(state.durationMs / 1000),
+                    color = PlayerForeground,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
 
         Row(
@@ -151,7 +166,8 @@ fun PlayerControls(
             TextButton(
                 onClick = {
                     controller.seekTo((state.positionMs - SKIP_STEP_MS).coerceAtLeast(0L))
-                }
+                },
+                enabled = !state.live
             ) {
                 Text("-10s", color = PlayerForeground)
             }
@@ -184,7 +200,8 @@ fun PlayerControls(
                     controller.seekTo(
                         (state.positionMs + SKIP_STEP_MS).coerceAtMost(state.durationMs)
                     )
-                }
+                },
+                enabled = !state.live
             ) {
                 Text("+10s", color = PlayerForeground)
             }
@@ -259,6 +276,31 @@ fun PlayerControls(
                 color = PlayerError
             )
         }
+    }
+}
+
+/**
+ * A small red badge that marks the playback as a live stream.
+ */
+@Composable
+private fun LiveBadge(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(Color(0xFFFF3B30), MaterialTheme.shapes.small)
+        )
+        Text(
+            text = "LIVE",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFFFF3B30),
+            modifier = Modifier.padding(start = Spacing.sm)
+        )
     }
 }
 

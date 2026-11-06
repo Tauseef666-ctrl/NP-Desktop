@@ -16,6 +16,7 @@ import kotlinx.serialization.json.Json
 import net.newpipe.Constants
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.theme.currentService
+import net.newpipe.app.ui.AndroidDeviceForm
 
 /**
  * Entry point for compose-related UI components on Android
@@ -24,6 +25,7 @@ class ComposeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        AndroidDeviceForm.detect(this)
 
         setContent {
             App(
