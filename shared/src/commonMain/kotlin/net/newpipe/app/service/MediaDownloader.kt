@@ -18,11 +18,13 @@ expect class MediaDownloader() {
      *
      * @param fileName the preferred file name, including the extension
      * @param onProgress receives the progress between 0 and 1
+     * @param onBytes receives the copied bytes and the total size in bytes when known
      */
     suspend fun download(
         url: String,
         fileName: String,
-        onProgress: (Float) -> Unit = {}
+        onProgress: (Float) -> Unit,
+        onBytes: (copied: Long, total: Long) -> Unit
     ): String
 
     /**

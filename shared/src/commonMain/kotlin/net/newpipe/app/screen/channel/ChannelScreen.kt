@@ -212,12 +212,15 @@ private fun ChannelContent(
 
         when (tab) {
             ChannelTab.HOME -> {
-                if (videos.isEmpty() && details.description.isNullOrBlank()) {
+                val hasHomeContent = videos.isNotEmpty() ||
+                    details.items.isNotEmpty() ||
+                    !details.description.isNullOrBlank()
+                if (!hasHomeContent) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         ChannelEmptyState("No channel content available yet.")
                     }
                 } else {
-                    val featured = videos.firstOrNull()
+                    val featured = videos.firstOrNull() ?: details.items.firstOrNull()
                     if (featured != null) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             Text(
@@ -267,12 +270,13 @@ private fun ChannelContent(
             }
 
             ChannelTab.VIDEOS -> {
-                if (videos.isEmpty()) {
+                val videoItems = if (videos.isNotEmpty()) videos else details.items
+                if (videoItems.isEmpty()) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         ChannelEmptyState("No videos available.")
                     }
                 } else {
-                    items(videos, key = { "video-${it.url}" }) { item ->
+                    items(videoItems, key = { "video-${it.url}" }) { item ->
                         Box(modifier = Modifier.padding(horizontal = Spacing.xs)) {
                             ContentCard(item = item, onClick = { onOpenItem(item) })
                         }
@@ -283,7 +287,14 @@ private fun ChannelContent(
             ChannelTab.PLAYLISTS -> {
                 if (details.playlists.isEmpty()) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
-                        ChannelEmptyState("No playlists available.")
+                        val hasOtherItems = details.items.isNotEmpty() || videos.isNotEmpty()
+                        ChannelEmptyState(
+                            if (hasOtherItems) {
+                                "No channel playlists were found for this channel."
+                            } else {
+                                "No playlists available."
+                            }
+                        )
                     }
                 } else {
                     items(details.playlists, key = { "playlist-${it.url}" }) { item ->
@@ -368,9 +379,8 @@ private fun ChannelIdentity(
                 )
                 val subscriberText = details.subscriberCount?.let {
                     "${formatSubscriberCount(it)} subscribers"
-                }
-                val meta = listOfNotNull(subscriberText, "$videoCount videos")
-                    .joinToString(" \u00B7 ")
+                } ?: "Subscribers unavailable"
+                val meta = "$subscriberText \u00B7 $videoCount videos"
                 Text(
                     text = meta,
                     style = MaterialTheme.typography.bodyMedium,

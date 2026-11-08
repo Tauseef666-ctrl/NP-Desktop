@@ -45,6 +45,12 @@ class SearchViewModel(
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
 
+    private val _suggestions = MutableStateFlow<List<String>>(emptyList())
+    val suggestions = _suggestions.asStateFlow()
+
+    private val _selectedSuggestionIndex = MutableStateFlow(-1)
+    val selectedSuggestionIndex = _selectedSuggestionIndex.asStateFlow()
+
     private val _filter = MutableStateFlow<String?>(null)
     val filter = _filter.asStateFlow()
 
@@ -64,7 +70,9 @@ class SearchViewModel(
     val hasMore = _hasMore.asStateFlow()
 
     private var searchJob: Job? = null
+    private var suggestionJob: Job? = null
     private var searchGeneration = 0
+    private var suggestionGeneration = 0
     private var nextPage = 0
 
     init {
@@ -96,6 +104,72 @@ class SearchViewModel(
     }
 
     /**
+     * Updates the query and loads search-as-you-type suggestions.
+     */
+    fun updateQuery(query: String) {
+        _query.value = query
+        if (query.isBlank()) {
+            clearSuggestions()
+            suggestionJob?.cancel()
+        }
+        search(query)
+        loadSuggestions(query)
+    }
+
+    /**
+     * Clears suggestion dropdown state without affecting current search results.
+     */
+    fun clearSuggestions() {
+        suggestionJob?.cancel()
+        _suggestions.value = emptyList()
+        _selectedSuggestionIndex.value = -1
+    }
+
+    /**
+     * Moves keyboard selection through visible suggestions.
+     */
+    fun moveSuggestionSelection(delta: Int): Boolean {
+        val suggestions = _suggestions.value
+        if (suggestions.isEmpty()) return false
+        val current = _selectedSuggestionIndex.value
+        val next = if (current < 0) {
+            if (delta > 0) 0 else suggestions.lastIndex
+        } else {
+            (current + delta).coerceIn(0, suggestions.lastIndex)
+        }
+        _selectedSuggestionIndex.value = next
+        return true
+    }
+
+    /**
+     * Sets suggestion highlight (e.g. mouse hover).
+     */
+    fun highlightSuggestion(index: Int) {
+        if (index in _suggestions.value.indices) {
+            _selectedSuggestionIndex.value = index
+        }
+    }
+
+    /**
+     * Completes the field with [value] without running a search; keeps dropdown closed.
+     */
+    fun completeSuggestion(value: String) {
+        searchJob?.cancel()
+        suggestionJob?.cancel()
+        _query.value = value
+        clearSuggestions()
+    }
+
+    /**
+     * Runs the highlighted suggestion, or the current query when none is highlighted.
+     */
+    fun submitSuggestionOrQuery() {
+        val index = _selectedSuggestionIndex.value
+        val selected = _suggestions.value.getOrNull(index)
+        search(selected ?: _query.value, debounce = false)
+    }
+
+    /**
      * Runs a new search and replaces the current results.
      *
      * When [debounce] is `true` the request is delayed briefly so that typing a query does not
@@ -112,6 +186,7 @@ class SearchViewModel(
             _error.value = null
             _loading.value = false
             _hasMore.value = false
+            clearSuggestions()
             return
         }
 
@@ -123,6 +198,9 @@ class SearchViewModel(
         searchJob = viewModelScope.launch {
             try {
                 if (debounce) delay(SEARCH_DEBOUNCE_MILLIS)
+                if (!debounce) {
+                    clearSuggestions()
+                }
                 val result = repository.search(
                     SearchRequest(
                         query = query,
@@ -137,6 +215,7 @@ class SearchViewModel(
                 nextPage = 1
                 if (!debounce && result.isNotEmpty()) {
                     searchHistory.record(query)
+                    clearSuggestions()
                 }
             } catch (exception: CancellationException) {
                 // A newer search replaced this one; it owns the state from here on.
@@ -150,6 +229,32 @@ class SearchViewModel(
                 if (generation == searchGeneration) {
                     _loading.value = false
                 }
+            }
+        }
+    }
+
+    private fun loadSuggestions(query: String) {
+        suggestionJob?.cancel()
+        val generation = ++suggestionGeneration
+        val term = query.trim()
+        if (term.length < 2) {
+            clearSuggestions()
+            return
+        }
+        suggestionJob = viewModelScope.launch {
+            try {
+                delay(SUGGESTION_DEBOUNCE_MILLIS)
+                val suggestions = repository.suggest(term)
+                if (generation != suggestionGeneration) return@launch
+                if (_query.value.trim() != term) return@launch
+                _suggestions.value = suggestions
+                _selectedSuggestionIndex.value = -1
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                if (generation != suggestionGeneration) return@launch
+                Logger.w(messageString = "Search suggestions failed", throwable = exception)
+                clearSuggestions()
             }
         }
     }
@@ -208,5 +313,6 @@ class SearchViewModel(
         /** YouTube, the default service of NewPipe. */
         const val DEFAULT_SERVICE_ID = 0
         private const val SEARCH_DEBOUNCE_MILLIS = 300L
+        private const val SUGGESTION_DEBOUNCE_MILLIS = 250L
     }
 }

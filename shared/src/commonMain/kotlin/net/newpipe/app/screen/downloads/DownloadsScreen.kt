@@ -257,27 +257,7 @@ fun DownloadsScreen(
 
         activeDownloads.forEach { active ->
             item(key = "active-${active.id}") {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    shape = RoundedCornerShape(Radius.md)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(Spacing.sm),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-                    ) {
-                        Text(
-                            text = "${active.title} \u00B7 ${active.label}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        LinearProgressIndicator(
-                            progress = { active.progress },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
+                ActiveDownloadRow(active)
             }
         }
 
@@ -299,7 +279,7 @@ fun DownloadsScreen(
                 DownloadRow(
                     download = download,
                     selected = download.id == selected?.id,
-                    activeProgress = activeById[download.id]?.progress,
+                    active = activeById[download.id],
                     onOpen = {
                         selected = download
                         playDownloaded(download, controller)
@@ -308,6 +288,83 @@ fun DownloadsScreen(
                 )
             }
         }
+    }
+}
+
+/**
+ * A download that is currently running: title, progress bar and the live statement of the
+ * transferred bytes, the network speed and the estimated time to completion.
+ */
+@Composable
+private fun ActiveDownloadRow(active: DownloadManager.Active) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = RoundedCornerShape(Radius.md)
+    ) {
+        Column(
+            modifier = Modifier.padding(Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+        ) {
+            Text(
+                text = "${active.title} \u00B7 ${active.label}",
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            LinearProgressIndicator(
+                progress = { active.progress.coerceIn(0f, 1f) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = downloadStatus(active),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/**
+ * Builds the live status line of a download: transferred bytes, network speed and the
+ * estimated time to completion, or the merging notice while ffmpeg combines the files.
+ */
+private fun downloadStatus(active: DownloadManager.Active): String {
+    if (active.merging) {
+        return "Merging video and audio\u2026"
+    }
+    val details = mutableListOf<String>()
+    if (active.totalBytes > 0L) {
+        details.add("${formatBytes(active.downloadedBytes)} of ${formatBytes(active.totalBytes)}")
+    }
+    if (active.speedBytesPerSec > 0L) {
+        details.add("${formatBytes(active.speedBytesPerSec)}/s")
+    }
+    active.etaSeconds?.let { eta ->
+        if (eta > 0L) details.add("${formatDurationSeconds(eta)} left")
+    }
+    return if (details.isEmpty()) "Starting\u2026" else details.joinToString(" \u00B7 ")
+}
+
+private fun formatBytes(bytes: Long): String {
+    val kb = 1024.0
+    val mb = kb * 1024.0
+    val gb = mb * 1024.0
+    return when {
+        bytes >= gb -> "${(bytes / gb * 10).toInt() / 10.0} GB"
+        bytes >= mb -> "${(bytes / mb * 10).toInt() / 10.0} MB"
+        bytes >= kb -> "${(bytes / kb * 10).toInt() / 10.0} KB"
+        else -> "$bytes B"
+    }
+}
+
+private fun formatDurationSeconds(seconds: Long): String {
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    return when {
+        hours > 0 -> "${hours}h ${minutes % 60}m"
+        minutes > 0 -> "${minutes}m ${seconds % 60}s"
+        else -> "${seconds}s"
     }
 }
 
@@ -355,7 +412,7 @@ private fun DownloadsEmptyState() {
 private fun DownloadRow(
     download: DownloadedVideo,
     selected: Boolean,
-    activeProgress: Float?,
+    active: DownloadManager.Active?,
     onOpen: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -411,10 +468,17 @@ private fun DownloadRow(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                if (activeProgress != null) {
+                if (active != null) {
                     LinearProgressIndicator(
-                        progress = { activeProgress.coerceIn(0f, 1f) },
+                        progress = { active.progress.coerceIn(0f, 1f) },
                         modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = downloadStatus(active),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

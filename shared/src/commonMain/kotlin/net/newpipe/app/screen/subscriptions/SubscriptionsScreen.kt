@@ -100,6 +100,7 @@ fun SubscriptionsScreen(
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
+    var channelSort by rememberSaveable { mutableIntStateOf(0) }
     var feed by remember { mutableStateOf<List<ContentItem>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -186,12 +187,41 @@ fun SubscriptionsScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
+                    val visibleChannels = remember(channels, channelSort) {
+                        when (channelSort) {
+                            1 -> channels.sortedBy { it.name.lowercase() }
+                            else -> channels
+                        }
+                    }
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(Spacing.lg),
                         verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
-                        listItems(channels, key = { it.url }) { channel ->
+                        item(key = "channels-sort") {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Sort",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                FilterChip(
+                                    selected = channelSort == 0,
+                                    onClick = { channelSort = 0 },
+                                    label = { Text("Recent") }
+                                )
+                                FilterChip(
+                                    selected = channelSort == 1,
+                                    onClick = { channelSort = 1 },
+                                    label = { Text("Name") }
+                                )
+                            }
+                        }
+                        listItems(visibleChannels, key = { it.url }) { channel ->
                             SubscriptionRow(
                                 channel = channel,
                                 onClick = {

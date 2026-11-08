@@ -91,6 +91,11 @@ interface ContentRepository {
     suspend fun playlist(serviceId: Int, url: String): PlaylistDetails
 
     /**
+     * Suggests completions for a search query. Returns an empty list when unsupported.
+     */
+    suspend fun suggest(query: String): List<String>
+
+    /**
      * Resolves an arbitrary URL to the content it points at.
      */
     suspend fun resolveUrl(url: String): ResolvedContent

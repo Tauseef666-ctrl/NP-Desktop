@@ -56,6 +56,8 @@ class AndroidContentRepository : ContentRepository {
     override suspend fun playlist(serviceId: Int, url: String): net.newpipe.app.model.PlaylistDetails =
         throw unsupported()
 
+    override suspend fun suggest(query: String): List<String> = emptyList()
+
     override suspend fun resolveUrl(url: String): net.newpipe.app.model.ResolvedContent =
         throw unsupported()
 

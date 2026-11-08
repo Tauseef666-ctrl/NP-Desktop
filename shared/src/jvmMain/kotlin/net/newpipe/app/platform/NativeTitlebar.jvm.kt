@@ -38,30 +38,32 @@ actual fun applyDarkTitlebar(windowTitle: String): Boolean {
     if (windowTitle.isBlank()) return false
     return runCatching {
         val user32 = Native.load("user32", User32Lib::class.java)
-        val dwm = Native.load("dwmapi", DwmLib::class.java)
         val hwnd = user32.FindWindowA(null, windowTitle) ?: return false
-
-        // The immersive dark mode flag drives the classic Win10/11 dark chrome; the explicit
-        // caption/border colors make sure the frame reads black. Errors from older Windows
-        // builds are ignored on purpose - the flag is enough there.
-        dwm.DwmSetWindowAttribute(
-            hwnd,
-            DWMWA_USE_IMMERSIVE_DARK_MODE,
-            IntByReference(1),
-            4
-        )
-        dwm.DwmSetWindowAttribute(
-            hwnd,
-            DWMWA_CAPTION_COLOR,
-            IntByReference(APP_CAPTION_COLOR),
-            4
-        )
-        dwm.DwmSetWindowAttribute(
-            hwnd,
-            DWMWA_BORDER_COLOR,
-            IntByReference(APP_CAPTION_COLOR),
-            4
-        )
-        true
+        applyDarkChromeToHwnd(hwnd)
     }.getOrDefault(false)
+}
+
+/**
+ * Applies the dark title bar treatment directly to an AWT window. Unlike [applyDarkTitlebar]
+ * the window does not need to be found by title, which fails for titles that are not plain
+ * ASCII (for example the popup player whose title carries the video name).
+ *
+ * @return whether the treatment was applied (never throws)
+ */
+fun applyDarkTitlebarToWindow(awtWindow: java.awt.Window): Boolean = runCatching {
+    val hwnd = Native.getWindowPointer(awtWindow) ?: return false
+    applyDarkChromeToHwnd(hwnd)
+}.getOrDefault(false)
+
+/**
+ * The immersive dark mode flag drives the classic Win10/11 dark chrome; the explicit
+ * caption/border colors make sure the frame reads black. Errors from older Windows builds
+ * are ignored on purpose - the flag is enough there.
+ */
+private fun applyDarkChromeToHwnd(hwnd: Pointer?): Boolean {
+    val dwm = Native.load("dwmapi", DwmLib::class.java)
+    dwm.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, IntByReference(1), 4)
+    dwm.DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, IntByReference(APP_CAPTION_COLOR), 4)
+    dwm.DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, IntByReference(APP_CAPTION_COLOR), 4)
+    return true
 }

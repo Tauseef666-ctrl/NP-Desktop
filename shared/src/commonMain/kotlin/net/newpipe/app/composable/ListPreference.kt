@@ -69,8 +69,20 @@ fun ListPreference(
         modifier = modifier
             .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .clickable(enabled = enabled) { showDialog = true },
-        headlineContent = { Text(text = title) },
-        supportingContent = effectiveSummary?.let { text -> { Text(text = text) } }
+        headlineContent = {
+            Text(
+                text = title,
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+            )
+        },
+        supportingContent = effectiveSummary?.let { text ->
+            {
+                Text(
+                    text = text,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     )
 
     if (showDialog) {
@@ -95,7 +107,11 @@ fun ListPreference(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(selected = entry.value == selectedValue, onClick = null)
-                            Text(text = entry.title, modifier = Modifier.padding(start = 16.dp))
+                            Text(
+                                text = entry.title,
+                                modifier = Modifier.padding(start = 16.dp),
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }

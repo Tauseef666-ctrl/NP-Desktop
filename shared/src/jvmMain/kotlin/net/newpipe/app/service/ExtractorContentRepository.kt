@@ -37,6 +37,7 @@ import org.schabi.newpipe.extractor.search.SearchInfo
 import org.schabi.newpipe.extractor.stream.StreamInfo
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import org.schabi.newpipe.extractor.stream.StreamType
+import org.schabi.newpipe.extractor.suggestion.SuggestionExtractor
 
 /**
  * A [ContentRepository] backed by the real NewPipe extraction engine.
@@ -333,6 +334,33 @@ class ExtractorContentRepository(
             }
         }
 
+    override suspend fun suggest(query: String): List<String> = withContext(Dispatchers.IO) {
+        val term = query.trim()
+        if (term.isBlank()) return@withContext emptyList()
+        guard {
+            val service = serviceForId(DEFAULT_SUGGEST_SERVICE_ID)
+            val suggestions = runCatching {
+                service.suggestionExtractor?.suggestionList(term)?.mapNotNull { it?.trim() }
+                    ?.filter { it.isNotBlank() }
+                    ?: emptyList()
+            }.getOrElse { exception ->
+                Logger.w(messageString = "Search suggestions failed", throwable = exception)
+                emptyList()
+            }
+            buildList {
+                add(term)
+                suggestions.forEach { suggestion ->
+                    if (!equalsIgnoreCase(suggestion, term) && none { equalsIgnoreCase(it, suggestion) }) {
+                        add(suggestion)
+                    }
+                }
+            }.take(MAX_SUGGESTIONS)
+        }
+    }
+
+    private fun equalsIgnoreCase(left: String, right: String): Boolean =
+        left.equals(right, ignoreCase = true)
+
     private fun extractPlaylist(serviceId: Int, url: String): PlaylistDetails {
         val service = serviceForId(serviceId)
         val info = PlaylistInfo.getInfo(service, url)
@@ -545,6 +573,12 @@ private const val TRENDING_FALLBACK_QUERY = "trending"
 
 /** The extractor content filter of the trending fallback: videos only. */
 private const val TRENDING_FALLBACK_FILTER = "videos"
+
+/** The default service used for suggestions when no service-specific API is wired. */
+private const val DEFAULT_SUGGEST_SERVICE_ID = 0
+
+/** Maximum number of suggestions returned, including the typed query. */
+private const val MAX_SUGGESTIONS = 8
 
 /**
  * The pause before the details of a stream are fetched again when YouTube answers the

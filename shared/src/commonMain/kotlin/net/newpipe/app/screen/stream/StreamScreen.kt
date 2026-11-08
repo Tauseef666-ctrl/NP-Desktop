@@ -572,7 +572,9 @@ private fun startDownload(
         try {
             val path = downloader.download(
                 url = target.url,
-                fileName = "${details.title}.$extension"
+                fileName = "${details.title}.$extension",
+                onProgress = {},
+                onBytes = { _, _ -> }
             )
             val audioPath = if (target.isVideoOnly) {
                 details.audioStreams
@@ -581,7 +583,9 @@ private fun startDownload(
                         runCatching {
                             downloader.download(
                                 url = audio.url,
-                                fileName = "${details.title}.m4a"
+                                fileName = "${details.title}.m4a",
+                                onProgress = {},
+                                onBytes = { _, _ -> }
                             )
                         }.getOrNull()
                     }

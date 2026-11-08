@@ -26,7 +26,8 @@ actual class MediaDownloader actual constructor() {
     actual suspend fun download(
         url: String,
         fileName: String,
-        onProgress: (Float) -> Unit
+        onProgress: (Float) -> Unit,
+        onBytes: (copied: Long, total: Long) -> Unit
     ): String = withContext(Dispatchers.IO) {
         val directory = File(DownloadLocation.resolve())
         if (!directory.exists() && !directory.mkdirs()) {
@@ -65,6 +66,7 @@ actual class MediaDownloader actual constructor() {
                         copied += read
                         if (total > 0) {
                             onProgress((copied.toFloat() / total.toFloat()).coerceIn(0f, 1f))
+                            onBytes(copied, total)
                         }
                     }
                 }

@@ -27,12 +27,10 @@ espresso = "3.7.0"
 exoplayer = "2.19.1"
 fragment = "1.9.1"
 groupie = "2.10.1"
+jave = "3.5.0"
 jsoup = "1.23.2"
 junit = "4.13.2"
 junit-ext = "1.3.0"
-# JAVE2 ships static ffmpeg binaries; the desktop uses them to merge a video-only
-# stream and its audio file into a single video file.
-jave = "3.5.0"
 kermit = "2.2.0"
 koin = "4.2.2"
 koin-plugin = "1.2.1"
@@ -77,15 +75,15 @@ swiperefreshlayout = "1.2.0"
 # This works thanks to JitPack: https://jitpack.io/
 teamnewpipe-filepicker = "5.0.0"
 teamnewpipe-nanojson = "e9d656ddb49a412a5a0a5d5ef20ca7ef09549996"
-# VLCJ is the Java binding of libVLC. It requires VLC 4.0 or newer as of 4.8, but the
-# vlcj-natives 4.8.3 bindings are compatible with the stable libVLC 3.0.21 release.
-vlcj = "4.11.0"
 # WORKAROUND: if you get errors with the NewPipeExtractor dependency, replace `v0.XX.Y` with
 # the corresponding commit hash, since JitPack sometimes deletes artifacts.
 # If there’s already a git hash, just add more of it to the end (or remove a letter)
 # to cause jitpack to regenerate the artifact.
 teamnewpipe-newpipe-extractor = "2f7d9da4ce82248637fdd3f8025086bd345f7fc2"
 viewpager2 = "1.1.0"
+# VLCJ is the Java binding of libVLC. It requires VLC 4.0 or newer as of 4.8, but the
+# vlcj-natives 4.8.3 bindings are compatible with the stable libVLC 3.0.21 release.
+vlcj = "4.11.0"
 webkit = "1.15.0" # New versions require minSdk 24
 work = "2.11.2" # New versions require minSdk 24
 
@@ -140,6 +138,7 @@ google-exoplayer-smoothstreaming = { module = "com.google.android.exoplayer:exop
 google-exoplayer-ui = { module = "com.google.android.exoplayer:exoplayer-ui", version.ref = "exoplayer" }
 jakewharton-phoenix = { module = "com.jakewharton:process-phoenix", version.ref = "phoenix" }
 jakewharton-rxbinding = { module = "com.jakewharton.rxbinding4:rxbinding", version.ref = "rxbinding" }
+jave-all-deps = { module = "ws.schild:jave-all-deps", version.ref = "jave" }
 jetbrains-compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "multiplatform" }
 jetbrains-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
 jetbrains-compose-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "multiplatform" }
@@ -155,7 +154,6 @@ jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lif
 jetbrains-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit = { module = "junit:junit", version.ref = "junit" }
-jave-all-deps = { module = "ws.schild:jave-all-deps", version.ref = "jave" }
 koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin" }
 koin-compose-navigation3 = { module = "io.insert-koin:koin-compose-navigation3", version.ref = "koin" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }

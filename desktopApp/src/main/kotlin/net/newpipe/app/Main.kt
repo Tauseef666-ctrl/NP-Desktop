@@ -7,6 +7,7 @@ package net.newpipe.app
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -15,9 +16,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import androidx.compose.ui.input.key.Key
@@ -32,6 +37,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.newpipe.app.composable.VideoPlayer
 import net.newpipe.app.navigation.Destination
+import net.newpipe.app.platform.PopupWindowBounds
+import net.newpipe.app.platform.applyDarkTitlebarToWindow
+import net.newpipe.app.platform.loadPopupWindowBounds
+import net.newpipe.app.platform.savePopupWindowBounds
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.PopupPlayer
 import net.newpipe.app.service.createPlaybackController
@@ -110,7 +119,7 @@ fun main() = application {
             val awt = window
             windowIcon?.let { awt.setIconImage(it) }
             // Black window chrome on Windows so the title bar matches the app's dark design.
-            net.newpipe.app.platform.applyDarkTitlebar(awt.title)
+            applyDarkTitlebarToWindow(awt)
         }
         val readyController = controller
         if (readyController == null) {
@@ -143,21 +152,45 @@ fun main() = application {
     val popup by PopupPlayer.state.collectAsState()
 
     popup?.let { state ->
+        val popupState = remember { popupWindowState() }
         Window(
             onCloseRequest = {
+                persistPopupWindowState(popupState)
                 PopupPlayer.close()
                 controller?.clear()
             },
             title = state.title.ifEmpty { "NP Desktop" },
-            state = rememberWindowState(width = 720.dp, height = 480.dp),
+            state = popupState,
             alwaysOnTop = true,
         ) {
+            val popupAwt = window
             SideEffect {
-                val awt = window
-                windowIcon?.let { awt.setIconImage(it) }
-                // The popup title bar carries the running video name; keep it black too so the
-                // whole match-window set matches the dark look.
-                net.newpipe.app.platform.applyDarkTitlebar(awt.title)
+                windowIcon?.let { popupAwt.setIconImage(it) }
+                // The popup title bar carries the running video name; apply the dark chrome
+                // directly on the window so unicode titles cannot break the lookup.
+                applyDarkTitlebarToWindow(popupAwt)
+            }
+            // The title changes with every video; make sure the black chrome survives that.
+            LaunchedEffect(state.title) {
+                applyDarkTitlebarToWindow(popupAwt)
+                kotlinx.coroutines.delay(400)
+                applyDarkTitlebarToWindow(popupAwt)
+            }
+            // Remember where the user leaves the popup: the geometry is written into the
+            // desktop settings (throttled while dragging, final write when the window closes).
+            DisposableEffect(popupAwt) {
+                val lastSaved = longArrayOf(0L)
+                val listener = object : java.awt.event.ComponentAdapter() {
+                    override fun componentMoved(event: java.awt.event.ComponentEvent) {
+                        saveThrottled(popupState, lastSaved)
+                    }
+
+                    override fun componentResized(event: java.awt.event.ComponentEvent) {
+                        saveThrottled(popupState, lastSaved)
+                    }
+                }
+                popupAwt.addComponentListener(listener)
+                onDispose { popupAwt.removeComponentListener(listener) }
             }
             val readyController = controller
             if (readyController == null) {
@@ -182,6 +215,67 @@ fun main() = application {
                 }
             }
         }
+    }
+}
+
+/**
+ * A window state for the popup player built from the geometry the user last left the window at,
+ * so the next popup opens on the same place with the same size.
+ */
+private fun popupWindowState(): WindowState {
+    val bounds = loadPopupWindowBounds()
+    val onScreen = bounds?.hasPosition == true && bounds.x >= -10_000f && bounds.y >= -10_000f &&
+        runCatching {
+            val screen = java.awt.Toolkit.getDefaultToolkit().screenSize
+            bounds.x < screen.width - 80f && bounds.y < screen.height - 80f
+        }.getOrDefault(false)
+    return WindowState(
+        placement = if (bounds?.maximized == true) {
+            WindowPlacement.Maximized
+        } else {
+            WindowPlacement.Floating
+        },
+        position = if (onScreen && bounds != null) {
+            WindowPosition(Dp(bounds.x), Dp(bounds.y))
+        } else {
+            WindowPosition.PlatformDefault
+        },
+        size = DpSize(
+            Dp(bounds?.width?.takeIf { it > 80f } ?: 720f),
+            Dp(bounds?.height?.takeIf { it > 60f } ?: 480f)
+        )
+    )
+}
+
+/**
+ * Writes the current geometry of the popup window state into the desktop settings.
+ */
+private fun persistPopupWindowState(state: WindowState) {
+    runCatching {
+        val size = state.size
+        val position = state.position
+        savePopupWindowBounds(
+            PopupWindowBounds(
+                x = if (position.isSpecified) position.x.value else 0f,
+                y = if (position.isSpecified) position.y.value else 0f,
+                width = size.width.value,
+                height = size.height.value,
+                maximized = state.placement == WindowPlacement.Maximized,
+                hasPosition = position.isSpecified
+            )
+        )
+    }
+}
+
+/**
+ * Throttled geometry saver for the popup window: at most one write per second while the user
+ * moves or resizes, so dragging stays smooth while every resting position is stored.
+ */
+private fun saveThrottled(state: WindowState, lastSaved: LongArray) {
+    val now = System.currentTimeMillis()
+    if (now - lastSaved[0] >= 800L) {
+        lastSaved[0] = now
+        persistPopupWindowState(state)
     }
 }
 

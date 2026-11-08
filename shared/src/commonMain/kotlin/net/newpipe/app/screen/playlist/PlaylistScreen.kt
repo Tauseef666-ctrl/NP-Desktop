@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,7 +51,9 @@ import net.newpipe.app.model.SavedPlaylist
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.screen.search.Message
+import net.newpipe.app.screen.stream.StreamIntents
 import net.newpipe.app.service.PlaylistRepository
+import net.newpipe.app.service.QueueRepository
 import net.newpipe.app.ui.Radius
 import net.newpipe.app.ui.Spacing
 import net.newpipe.app.viewmodel.playlist.PlaylistViewModel
@@ -143,7 +146,8 @@ fun PlaylistScreen(
 private fun LocalPlaylistScreen(
     playlistId: Long,
     navigator: Navigator,
-    repository: PlaylistRepository
+    repository: PlaylistRepository,
+    queueRepository: QueueRepository = koinInject()
 ) {
     val playlists by repository.playlists.collectAsState()
     val playlist = playlists.firstOrNull { it.id == playlistId }
@@ -172,7 +176,10 @@ private fun LocalPlaylistScreen(
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 item(key = "header") {
-                    LocalPlaylistHeader(playlist)
+                    LocalPlaylistHeader(
+                        playlist = playlist,
+                        onPlayAll = { queueAllAndPlay(playlist, queueRepository, navigator) }
+                    )
                 }
                 if (playlist.items.isEmpty()) {
                     item(key = "empty") {
@@ -200,19 +207,35 @@ private fun LocalPlaylistScreen(
 }
 
 @Composable
-private fun LocalPlaylistHeader(playlist: SavedPlaylist) {
+private fun LocalPlaylistHeader(
+    playlist: SavedPlaylist,
+    onPlayAll: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
-        Text(
-            text = playlist.name,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = playlist.name,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "${playlist.items.size} videos",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (playlist.items.isNotEmpty()) {
+            TextButton(onClick = onPlayAll) {
+                Text("Play all")
+            }
+        }
         Surface(
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             shape = RoundedCornerShape(Radius.lg)
@@ -225,6 +248,20 @@ private fun LocalPlaylistHeader(playlist: SavedPlaylist) {
             )
         }
     }
+}
+
+private fun queueAllAndPlay(
+    playlist: SavedPlaylist,
+    queueRepository: QueueRepository,
+    navigator: Navigator
+) {
+    queueRepository.clear()
+    playlist.items.forEach { queueRepository.add(it) }
+    playlist.items.firstOrNull()?.let { first ->
+        StreamIntents.request(first.url, StreamIntents.Action.PLAY)
+        navigator.navigateTo(Destination.Stream(first.serviceId, first.url))
+    }
+    queueRepository.startWatching()
 }
 
 @Composable

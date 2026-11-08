@@ -13,7 +13,8 @@ actual class MediaDownloader actual constructor() {
     actual suspend fun download(
         url: String,
         fileName: String,
-        onProgress: (Float) -> Unit
+        onProgress: (Float) -> Unit,
+        onBytes: (copied: Long, total: Long) -> Unit
     ): String = error("Downloads are not supported on this platform yet")
 
     actual suspend fun merge(

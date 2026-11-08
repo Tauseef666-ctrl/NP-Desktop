@@ -358,13 +358,41 @@ class HomeViewModel(
         val watched = watchHistory.items.value
         val watchedUrls = watched.map { it.url }.toSet()
 
-        feedPool = (feedChannelItems + feedSearchItems + _items.value)
+        // Content related to what the user actually watches and searches leads the feed; the
+        // generic kiosk only fills the remainder, so the home feed keeps following the user
+        // instead of drifting into unrelated trending content.
+        val related = (feedChannelItems + feedSearchItems)
             .filter { it.type == ContentType.STREAM && it.url !in watchedUrls }
             .distinctBy { it.url }
+        val relatedUrls = related.map { it.url }.toSet()
+        val generic = _items.value
+            .filter { it.type == ContentType.STREAM && it.url !in watchedUrls }
+            .filterNot { it.url in relatedUrls }
+            .distinctBy { it.url }
 
-        _feed.value = (watched.take(RECENT_WATCHED) + feedPool.shuffled())
+        feedPool = (related + generic).distinctBy { it.url }
+        val recommendations = if (related.isNullOrEmpty()) {
+            generic.shuffled()
+        } else {
+            related.shuffled() + generic.shuffled()
+        }
+        _feed.value = (watched.take(RECENT_WATCHED) + recommendations)
             .distinctBy { it.url }
             .take(FEED_LIMIT)
+    }
+
+    /**
+     * Refreshes the home feed like the YouTube homepage: the recommendations of the channel the
+     * user watched last, the results of the recorded searches and the current kiosk are fetched
+     * again and the feed is rebuilt from the fresh data.
+     */
+    fun refreshFeed() {
+        feedChannelUrl = null
+        feedSearchKey = null
+        feedChannelItems = emptyList()
+        feedSearchItems = emptyList()
+        feedPool = emptyList()
+        rebuildFeed()
     }
 
     /**

@@ -5,6 +5,11 @@
 
 package net.newpipe.app.screen.search
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,10 +19,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.itemsIndexed as lazyItemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,6 +33,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +44,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import net.newpipe.app.composable.ContentCard
@@ -44,6 +57,8 @@ import net.newpipe.app.model.ContentItem
 import net.newpipe.app.model.ContentType
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
+import net.newpipe.app.ui.Glass
+import net.newpipe.app.ui.Radius
 import net.newpipe.app.ui.Spacing
 import net.newpipe.app.ui.trackTextFieldFocus
 import net.newpipe.app.viewmodel.search.SearchViewModel
@@ -58,6 +73,8 @@ fun SearchScreen(
     val services by viewModel.services.collectAsState()
     val serviceId by viewModel.serviceId.collectAsState()
     val query by viewModel.query.collectAsState()
+    val suggestions by viewModel.suggestions.collectAsState()
+    val selectedSuggestionIndex by viewModel.selectedSuggestionIndex.collectAsState()
     val filters by viewModel.filters.collectAsState()
     val selectedFilter by viewModel.filter.collectAsState()
     val items by viewModel.items.collectAsState()
@@ -97,12 +114,46 @@ fun SearchScreen(
         ) {
             OutlinedTextField(
                 value = query,
-                onValueChange = { viewModel.search(it) },
+                onValueChange = { viewModel.updateQuery(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                     .focusRequester(focusRequester)
-                    .trackTextFieldFocus(),
+                    .trackTextFieldFocus()
+                    .onPreviewKeyEvent { event ->
+                        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                        val dropdownVisible = suggestions.isNotEmpty() && query.isNotBlank() && !loading
+                        when (event.key) {
+                            Key.DirectionDown -> dropdownVisible && viewModel.moveSuggestionSelection(1)
+                            Key.DirectionUp -> dropdownVisible && viewModel.moveSuggestionSelection(-1)
+                            Key.Enter, Key.NumPadEnter -> {
+                                if (dropdownVisible && selectedSuggestionIndex >= 0) {
+                                    viewModel.submitSuggestionOrQuery()
+                                    true
+                                } else {
+                                    viewModel.search(query, debounce = false)
+                                    true
+                                }
+                            }
+                            Key.Tab -> {
+                                if (dropdownVisible) {
+                                    val selected = suggestions.getOrNull(selectedSuggestionIndex)
+                                        ?: suggestions.firstOrNull()
+                                    if (selected != null) {
+                                        viewModel.completeSuggestion(selected)
+                                        true
+                                    } else false
+                                } else false
+                            }
+                            Key.Escape -> {
+                                if (dropdownVisible) {
+                                    viewModel.clearSuggestions()
+                                    true
+                                } else false
+                            }
+                            else -> false
+                        }
+                    },
                 placeholder = {
                     Text(
                         text = "Search",
@@ -112,9 +163,55 @@ fun SearchScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(
-                    onSearch = { viewModel.search(query, debounce = false) }
+                    onSearch = { viewModel.submitSuggestionOrQuery() }
                 )
             )
+
+            if (suggestions.isNotEmpty() && query.isNotBlank() && !loading) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.md),
+                    color = Glass.color(0.9f),
+                    border = Glass.borderStroke(),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(Radius.md)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(vertical = Spacing.xs)
+                    ) {
+                        lazyItemsIndexed(suggestions, key = { _, suggestion -> suggestion }) { index, suggestion ->
+                            val interactionSource = remember { MutableInteractionSource() }
+                            val hovered by interactionSource.collectIsHoveredAsState()
+                            LaunchedEffect(hovered) {
+                                if (hovered) viewModel.highlightSuggestion(index)
+                            }
+                            val selected = index == selectedSuggestionIndex
+                            Text(
+                                text = suggestion,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (selected) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .hoverable(interactionSource)
+                                    .background(
+                                        if (selected) {
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
+                                        } else {
+                                            androidx.compose.ui.graphics.Color.Transparent
+                                        }
+                                    )
+                                    .clickable { viewModel.search(suggestion, debounce = false) }
+                                    .padding(horizontal = Spacing.md, vertical = Spacing.sm)
+                            )
+                        }
+                    }
+                }
+            }
 
             Row(
                 modifier = Modifier

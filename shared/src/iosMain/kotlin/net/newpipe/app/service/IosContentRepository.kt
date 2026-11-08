@@ -53,6 +53,8 @@ class IosContentRepository : ContentRepository {
 
     override suspend fun playlist(serviceId: Int, url: String): PlaylistDetails = throw unsupported()
 
+    override suspend fun suggest(query: String): List<String> = emptyList()
+
     override suspend fun resolveUrl(url: String): ResolvedContent = throw unsupported()
 
     override fun availableSearchFilters(serviceId: Int): List<String> = emptyList()

@@ -47,10 +47,28 @@ fun PreferenceRow(
         modifier = modifier
             .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .clickable(enabled = enabled, onClick = onClick),
-        headlineContent = { Text(text = title) },
-        supportingContent = summary?.let { text -> { Text(text = text) } },
+        headlineContent = {
+            Text(
+                text = title,
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+            )
+        },
+        supportingContent = summary?.let { text ->
+            {
+                Text(
+                    text = text,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
         leadingContent = icon?.let { painter ->
-            { Icon(painter = painter, contentDescription = null) }
+            {
+                Icon(
+                    painter = painter,
+                    contentDescription = null,
+                    tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     )
 }

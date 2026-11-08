@@ -57,8 +57,20 @@ fun SwitchPreference(
                     role = Role.Switch,
                     onValueChange = onCheckedChange
                 ),
-            headlineContent = { Text(text = title) },
-            supportingContent = summary?.let { text -> { Text(text = text) } }
+            headlineContent = {
+                Text(
+                    text = title,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+                )
+            },
+            supportingContent = summary?.let { text ->
+                {
+                    Text(
+                        text = text,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         )
         Switch(
             modifier = Modifier

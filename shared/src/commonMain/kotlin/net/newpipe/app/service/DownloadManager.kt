@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import net.newpipe.app.model.ContentItem
 import net.newpipe.app.model.MediaStream
 import kotlin.random.Random
+import kotlin.time.TimeSource
 
 /**
  * Runs the downloads of the application and reports their progress.
@@ -34,7 +35,12 @@ object DownloadManager {
         val id: String,
         val title: String,
         val label: String,
-        val progress: Float
+        val progress: Float,
+        val downloadedBytes: Long = 0L,
+        val totalBytes: Long = 0L,
+        val speedBytesPerSec: Long = 0L,
+        val etaSeconds: Long? = null,
+        val merging: Boolean = false
     )
 
     /**
@@ -102,6 +108,7 @@ object DownloadManager {
             audio?.let { add(PlannedFile(it.url, audioFileNameFor(title, it), true)) }
         }
 
+        val speed = SpeedTracker()
         val id = "download-${Random.nextLong()}-${Random.nextInt()}"
         _active.update { current -> current + Active(id, title, label, 0f) }
 
@@ -111,12 +118,18 @@ object DownloadManager {
 
             try {
                 files.forEachIndexed { index, file ->
+                    speed.startFile()
                     val path = downloader.download(
                         url = file.url,
                         fileName = file.fileName,
                         onProgress = { fraction ->
                             val overall = (index + fraction) / files.size
                             setActive(id, progress = overall.coerceIn(0f, 1f))
+                            applySpeed(id, speed)
+                        },
+                        onBytes = { copied, total ->
+                            speed.observe(total)
+                            speed.sample(copied)
                         }
                     )
                     paths += path
@@ -136,7 +149,7 @@ object DownloadManager {
             }
 
             if (failure == null && mergeOutputName != null) {
-                setActive(id, progress = 1f)
+                setActive(id, progress = 1f, merging = true)
                 downloader.merge(
                     videoPath = paths.getOrNull(0) ?: "",
                     audioPath = paths.getOrNull(1) ?: "",
@@ -177,10 +190,100 @@ object DownloadManager {
         }
     }
 
-    private fun setActive(id: String, progress: Float) {
+    private fun setActive(id: String, progress: Float, merging: Boolean = false) {
         _active.update { current ->
-            current.map { if (it.id == id) it.copy(progress = progress) else it }
+            current.map { if (it.id == id) it.copy(progress = progress, merging = merging) else it }
         }
+    }
+
+    private fun applySpeed(id: String, tracker: SpeedTracker) {
+        _active.update { current ->
+            current.map { active ->
+                if (active.id != id) {
+                    active
+                } else {
+                    active.copy(
+                        downloadedBytes = tracker.downloadedBytes,
+                        totalBytes = tracker.totalKnownBytes,
+                        speedBytesPerSec = tracker.speedBytesPerSec,
+                        etaSeconds = tracker.etaSeconds
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Accumulates the byte level statistics of one download: how many bytes are already on
+     * disk, how fast they arrive (an exponential moving average over the last samples) and how
+     * long the download is likely to take.
+     */
+    private class SpeedTracker {
+
+        private var baseBytes = 0L        // bytes of the files finished before the current one
+        private var fileTotal = 0L        // size of the current file when the server reports it
+        private var downloaded = 0L       // bytes across all files at the last sample
+        private var lastBytes = 0L
+        private var lastMark: TimeSource.Monotonic.ValueTimeMark? = null
+        private var emaBytesPerSec = 0L
+        private var counted = 0L          // samples accumulated into the moving average
+
+        /**
+         * Call once before each file of the download starts: the size of the previous file
+         * becomes part of the base bytes.
+         */
+        fun startFile() {
+            baseBytes += fileTotal
+            fileTotal = 0L
+            lastBytes = 0L
+            lastMark = null
+        }
+
+        /** Remembers the size of the current file, reported with the first bytes. */
+        fun observe(total: Long) {
+            if (fileTotal == 0L) fileTotal = total
+        }
+
+        /**
+         * Registers the copied bytes of the current file. The moving average is refreshed at
+         * most twice per second so that noisy per-buffer samples do not flicker.
+         */
+        fun sample(copied: Long) {
+            downloaded = baseBytes + copied
+            val now = TimeSource.Monotonic.markNow()
+            val mark = lastMark
+            if (mark == null) {
+                lastMark = now
+                lastBytes = downloaded
+                return
+            }
+            val elapsedMs = mark.elapsedNow().inWholeMilliseconds
+            if (elapsedMs < 500) return
+            val delta = downloaded - lastBytes
+            if (delta <= 0L) return
+            val instantaneous = delta * 1000L / elapsedMs
+            val carrier = if (counted < 4L) counted + 1L else 4L
+            emaBytesPerSec = (emaBytesPerSec * (carrier - 1L) + instantaneous) / carrier
+            counted = carrier
+            lastMark = now
+            lastBytes = downloaded
+        }
+
+        val downloadedBytes: Long get() = downloaded
+
+        /** Bytes of the files whose size is known; files not started are still unknown. */
+        val totalKnownBytes: Long get() = baseBytes + fileTotal
+
+        val speedBytesPerSec: Long get() = emaBytesPerSec
+
+        val etaSeconds: Long?
+            get() {
+                val speed = emaBytesPerSec
+                if (speed <= 0L) return null
+                val remaining = totalKnownBytes - downloaded
+                if (remaining <= 0L) return 0L
+                return remaining / speed
+            }
     }
 
     /**
