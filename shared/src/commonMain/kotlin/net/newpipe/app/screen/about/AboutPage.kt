@@ -6,7 +6,6 @@
 package net.newpipe.app.screen.about
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,13 +19,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
@@ -37,7 +35,6 @@ import net.newpipe.app.model.Link
 import net.newpipe.app.platform.ShareHandler
 import net.newpipe.app.preview.ThemePreviewProvider
 import net.newpipe.app.theme.iconTVDPI
-import net.newpipe.app.theme.logoBackground
 import net.newpipe.app.theme.spaceLarge
 import net.newpipe.app.theme.spaceXSmall
 import net.newpipe.app.theme.spaceXXSmall
@@ -90,27 +87,28 @@ fun AboutPageContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
-                    modifier = Modifier
-                        .requiredSize(iconTVDPI)
-                        .clip(CircleShape)
-                        .background(color = logoBackground),
+                    modifier = Modifier.requiredSize(iconTVDPI),
                     painter = painterResource(Res.drawable.ic_np_desktop_logo),
-                    contentDescription = "NP Desktop"
+                    contentDescription = "NP Desktop logo"
                 )
-                Spacer(modifier = Modifier.height(spaceXSmall))
+                Spacer(modifier = Modifier.height(spaceXSmall * 3))
                 Text(
                     text = "NP Desktop",
                     style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = BuildConfig.VERSION_NAME,
                     style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = spaceLarge),
                     text = "Libre lightweight streaming on Windows, Android TV and Android.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }

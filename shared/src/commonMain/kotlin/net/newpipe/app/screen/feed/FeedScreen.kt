@@ -131,10 +131,11 @@ fun FeedScreen(
             )
         }
     ) { paddingValues ->
+        // Children apply the full scaffold padding themselves (single source of truth);
+        // adding a second top padding here would paint an empty band below the top bar.
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = paddingValues.calculateTopPadding())
         ) {
             // The body of the section follows below.
 

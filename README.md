@@ -31,6 +31,7 @@
 
 - **Windows Desktop UI** – Custom modern shell, side rail navigation, resizable window, proper fullscreen/immersive modes
 - **Keyboard Shortcuts** – YouTube-like shortcuts for playback, volume, captions, speed, seeking and more
+- **Full keyboard reference** – see [doc/KEYBOARD-SHORTCUTS.md](doc/KEYBOARD-SHORTCUTS.md)
 - **Web Session Sign-in** – Optional in-app browser sign-in unlocks your YouTube subscriptions and account feed
 - **Right-click Everywhere** – A single glass context menu covers feeds, search results, channel pages, history, playlists and the player
 - **Queue & Watch Later** – Add anything to the queue or watch later from any surface, with a miniplayer to keep watching while browsing

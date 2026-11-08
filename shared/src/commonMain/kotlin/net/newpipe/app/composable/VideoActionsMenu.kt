@@ -51,6 +51,7 @@ import net.newpipe.app.service.PlaylistRepository
 import net.newpipe.app.ui.Spacing
 import org.koin.compose.koinInject
 import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.ic_account
 import newpipe.shared.generated.resources.ic_cloud_download
 import newpipe.shared.generated.resources.ic_headset
 import newpipe.shared.generated.resources.ic_history
@@ -172,7 +173,8 @@ fun VideoActionsMenu(
                                 Triple(Res.drawable.ic_history, "Watch later", { val playlistId = playlistRepository.ensurePlaylist("Watch later"); playlistRepository.toggle(playlistId, item); onDismiss() })
                             ),
                             listOf(
-                                Triple(Res.drawable.ic_skip_next, "Add to queue", { queueRepository.add(item); onDismiss() })
+                                Triple(Res.drawable.ic_skip_next, "Add to queue", { queueRepository.add(item); onDismiss() }),
+                                Triple(Res.drawable.ic_account, "View channel", { item.uploaderUrl?.let { url -> navigator.navigateTo(Destination.Channel(item.serviceId, url)) }; onDismiss() })
                             )
                             ).forEach { row ->
                             Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {

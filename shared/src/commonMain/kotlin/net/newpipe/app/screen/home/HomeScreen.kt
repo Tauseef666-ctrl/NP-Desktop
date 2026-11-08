@@ -37,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -297,6 +298,8 @@ fun HomeScreen(
 
 /**
  * The heading of a feed or kiosk section, optionally with an action on the right.
+ * Wrapped in the same glass lining the sidebar uses, so every section title reads as
+ * its own framed block.
  */
 @Composable
 private fun SectionHeader(
@@ -305,29 +308,39 @@ private fun SectionHeader(
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null
 ) {
-    Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = Spacing.sm),
-        verticalAlignment = Alignment.CenterVertically
+        color = net.newpipe.app.ui.Glass.color(0.55f),
+        border = net.newpipe.app.ui.Glass.borderStroke(),
+        shape = RectangleShape
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium
-            )
-            if (subtitle != null) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
                 )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-        }
 
-        if (actionLabel != null && onAction != null) {
-            TextButton(onClick = onAction) {
-                Text(actionLabel)
+            if (actionLabel != null && onAction != null) {
+                TextButton(onClick = onAction) {
+                    Text(actionLabel)
+                }
             }
         }
     }
