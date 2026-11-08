@@ -13,9 +13,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +35,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -550,11 +555,19 @@ private fun NavigationRailItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
+    val focused by interactionSource.collectIsFocusedAsState()
+    val bringIntoView = remember { BringIntoViewRequester() }
+
+    // Television focus: the row is scrolled into view before it is highlighted, so the visible
+    // focus indicator is never clipped.
+    LaunchedEffect(focused) {
+        if (focused) bringIntoView.bringIntoView()
+    }
 
     val background by animateColorAsState(
         targetValue = when {
             selected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-            hovered -> MaterialTheme.colorScheme.surfaceContainerHighest
+            hovered || focused -> MaterialTheme.colorScheme.surfaceContainerHighest
             else -> Color.Transparent
         },
         animationSpec = tween(durationMillis = Motion.fast),
@@ -562,10 +575,10 @@ private fun NavigationRailItem(
     )
 
     val contentColor by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
+        targetValue = when {
+            selected -> MaterialTheme.colorScheme.primary
+            hovered || focused -> MaterialTheme.colorScheme.onSurface
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
         },
         animationSpec = tween(durationMillis = Motion.fast),
         label = "navigation-item-content"
@@ -574,10 +587,23 @@ private fun NavigationRailItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .bringIntoViewRequester(bringIntoView)
             .height(Layout.navigationItemHeight)
             .clip(RoundedCornerShape(Radius.md))
             .background(background)
+            .then(
+                if (focused) {
+                    Modifier.border(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        shape = RoundedCornerShape(Radius.md)
+                    )
+                } else {
+                    Modifier
+                }
+            )
             .hoverable(interactionSource)
+            .focusable(interactionSource = interactionSource)
             .clickable(onClick = onClick)
             .padding(horizontal = if (expanded) Spacing.sm else 0.dp),
         horizontalArrangement = if (expanded) Arrangement.Start else Arrangement.Center,

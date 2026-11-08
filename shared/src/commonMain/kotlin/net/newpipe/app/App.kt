@@ -15,8 +15,10 @@ import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.NavDisplay
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.navigation.navModule
+import net.newpipe.app.service.DownloadRepository
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.QueueRepository
+import net.newpipe.app.service.synchronizeDownloadLibrary
 import net.newpipe.app.shell.ModernShell
 import net.newpipe.app.theme.AppTheme
 import net.newpipe.app.ui.PlayerShortcuts
@@ -65,6 +67,14 @@ fun App(
                     navigator.navigateTo(Destination.Stream(item.serviceId, item.url))
                 }
                 queueRepository.startWatching()
+            }
+
+            // Recognise the videos previous sessions already downloaded: every media file of the
+            // download folder that is not registered yet becomes a downloads entry, so the
+            // library survives reinstalls and version upgrades.
+            val downloads: DownloadRepository = koinInject()
+            LaunchedEffect(downloads) {
+                synchronizeDownloadLibrary(downloads)
             }
 
             PlayerShortcuts {
