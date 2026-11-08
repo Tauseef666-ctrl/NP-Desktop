@@ -25,6 +25,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items as listItems
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -49,7 +51,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -69,6 +73,8 @@ import net.newpipe.app.screen.search.Message
 import net.newpipe.app.service.ContentRepository
 import net.newpipe.app.service.SearchRequest
 import net.newpipe.app.service.SubscriptionRepository
+import net.newpipe.app.ui.Glass
+import net.newpipe.app.ui.Radius
 import net.newpipe.app.ui.Spacing
 import net.newpipe.app.ui.trackTextFieldFocus
 import newpipe.shared.generated.resources.Res
@@ -97,6 +103,7 @@ fun SubscriptionsScreen(
     var feed by remember { mutableStateOf<List<ContentItem>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var pendingUnsubscribe by remember { mutableStateOf<SubscribedChannel?>(null) }
 
     LaunchedEffect(channels) {
         if (channels.isEmpty()) {
@@ -192,7 +199,7 @@ fun SubscriptionsScreen(
                                         Destination.Channel(channel.serviceId, channel.url)
                                     )
                                 },
-                                onRemove = { subscriptionRepository.remove(channel.url) }
+                                onRemove = { pendingUnsubscribe = channel }
                             )
                         }
                     }
@@ -228,21 +235,10 @@ fun SubscriptionsScreen(
                     verticalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
-                        Column {
-                            Text(
-                                text = "Latest from your channels",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = if (loading) {
-                                    "Updating\u2026"
-                                } else {
-                                    "${channels.size} channels"
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        SubscriptionSectionHeader(
+                            title = "Latest from your channels",
+                            subtitle = if (loading) "Updating\u2026" else "${channels.size} channels"
+                        )
                     }
 
                     items(feed, key = { it.url }) { item ->
@@ -261,6 +257,39 @@ fun SubscriptionsScreen(
     }
 }
 
+@Composable
+private fun SubscriptionSectionHeader(
+    title: String,
+    subtitle: String
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = Spacing.sm),
+        color = Glass.color(0.55f),
+        border = Glass.borderStroke(),
+        shape = RectangleShape
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.md, vertical = Spacing.sm)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
 /**
  * A single row of the channel list, with a button to remove the subscription.
  */
@@ -271,12 +300,12 @@ private fun SubscriptionRow(
     onRemove: () -> Unit
 ) {
     Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onClick)
+            .clip(RoundedCornerShape(Radius.md))
+            .clickable(onClick = onClick),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = RoundedCornerShape(Radius.md)
     ) {
         Row(
             modifier = Modifier.padding(Spacing.md),
@@ -285,7 +314,7 @@ private fun SubscriptionRow(
             if (channel.avatarUrl != null) {
                 AsyncImage(
                     model = channel.avatarUrl,
-                    contentDescription = null,
+                    contentDescription = channel.name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(44.dp)
@@ -315,6 +344,7 @@ private fun SubscriptionRow(
                 Text(
                     text = channel.name,
                     style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -330,7 +360,8 @@ private fun SubscriptionRow(
             IconButton(onClick = onRemove) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_close),
-                    contentDescription = "Remove subscription"
+                    contentDescription = "Unsubscribe",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

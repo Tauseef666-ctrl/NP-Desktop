@@ -95,6 +95,19 @@ class PlaylistRepository(
     }
 
     /**
+     * Renames the playlist. Names that are blank after trimming are ignored.
+     */
+    fun rename(playlistId: Long, name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        val updated = _playlists.value.map { playlist ->
+            if (playlist.id == playlistId) playlist.copy(name = trimmed) else playlist
+        }
+        _playlists.value = updated
+        persist(updated)
+    }
+
+    /**
      * Deletes the whole playlist.
      */
     fun delete(playlistId: Long) {
@@ -102,6 +115,7 @@ class PlaylistRepository(
         _playlists.value = updated
         persist(updated)
     }
+
 
     private fun load(): List<SavedPlaylist> {
         val stored = settings.getStringOrNull(KEY) ?: return emptyList()

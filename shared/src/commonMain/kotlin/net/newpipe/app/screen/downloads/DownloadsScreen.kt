@@ -21,12 +21,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,10 +47,13 @@ import androidx.compose.ui.unit.dp
 import net.newpipe.app.composable.ContentThumbnail
 import net.newpipe.app.composable.VideoPlayer
 import net.newpipe.app.model.DownloadedVideo
+import net.newpipe.app.platform.openInFileBrowser
+import net.newpipe.app.service.DownloadLocation
 import net.newpipe.app.service.DownloadManager
 import net.newpipe.app.service.DownloadRepository
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.PlaybackRequest
+import net.newpipe.app.ui.Glass
 import net.newpipe.app.ui.PlayerUiState
 import net.newpipe.app.ui.Radius
 import net.newpipe.app.ui.Spacing
@@ -71,8 +80,10 @@ fun DownloadsScreen(
     val audioOnly by playerUiState.audioOnly.collectAsState()
     val activeDownloads by DownloadManager.active.collectAsState()
     var selected by remember { mutableStateOf<DownloadedVideo?>(null) }
+    var sortBy by remember { mutableStateOf(DownloadSort.RECENT) }
+    var sortExpanded by remember { mutableStateOf(false) }
     val activeById = activeDownloads.associateBy { it.id }
-
+    val sortedDownloads = remember(downloads, sortBy) { sortDownloads(downloads, sortBy) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -89,11 +100,13 @@ fun DownloadsScreen(
                     text = "Downloads",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
                 if (downloads.isNotEmpty()) {
                     Surface(
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        color = Glass.color(0.6f),
+                        border = Glass.borderStroke(),
                         shape = RoundedCornerShape(Radius.lg)
                     ) {
                         Text(
@@ -110,10 +123,53 @@ fun DownloadsScreen(
             }
         }
 
+        item(key = "toolbar") {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                ExposedDropdownMenuBox(
+                    expanded = sortExpanded,
+                    onExpandedChange = { sortExpanded = it },
+                    modifier = Modifier.width(180.dp)
+                ) {
+                    OutlinedTextField(
+                        value = sortBy.label,
+                        onValueChange = {},
+                        readOnly = true,
+                        singleLine = true,
+                        label = { Text("Sort") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(sortExpanded) },
+                        modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = sortExpanded,
+                        onDismissRequest = { sortExpanded = false }
+                    ) {
+                        DownloadSort.entries.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.label) },
+                                onClick = {
+                                    sortBy = option
+                                    sortExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = { openInFileBrowser(DownloadLocation.resolve()) }) {
+                    Text("Open folder")
+                }
+            }
+        }
+
         item(key = "legacy-hint") {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                color = Glass.color(0.55f),
+                border = Glass.borderStroke(),
                 shape = RoundedCornerShape(Radius.lg)
             ) {
                 Text(
@@ -239,7 +295,7 @@ fun DownloadsScreen(
                 )
             }
         } else {
-            items(downloads, key = { it.id }) { download ->
+            items(sortedDownloads, key = { it.id }) { download ->
                 DownloadRow(
                     download = download,
                     selected = download.id == selected?.id,
@@ -408,4 +464,19 @@ private fun playDownloaded(
 
 private fun fileExtension(path: String?): String {
     return path?.substringAfterLast('.')?.uppercase() ?: ""
+}
+
+private enum class DownloadSort(val label: String) {
+    RECENT("Recent"),
+    TITLE("Title"),
+    QUALITY("Quality")
+}
+
+private fun sortDownloads(
+    downloads: List<DownloadedVideo>,
+    sort: DownloadSort
+): List<DownloadedVideo> = when (sort) {
+    DownloadSort.RECENT -> downloads
+    DownloadSort.TITLE -> downloads.sortedBy { it.item.title.lowercase() }
+    DownloadSort.QUALITY -> downloads.sortedByDescending { it.quality }
 }

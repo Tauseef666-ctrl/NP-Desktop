@@ -8,53 +8,48 @@ package net.newpipe.app.screen.search
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import net.newpipe.app.ui.trackTextFieldFocus
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import net.newpipe.app.composable.ContentListItem
+import net.newpipe.app.composable.ContentCard
 import net.newpipe.app.composable.TopAppBar
 import net.newpipe.app.model.ContentItem
 import net.newpipe.app.model.ContentType
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
+import net.newpipe.app.ui.Spacing
+import net.newpipe.app.ui.trackTextFieldFocus
 import net.newpipe.app.viewmodel.search.SearchViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-/**
- * The search screen, which is the entry point of the application.
- */
 @Composable
 fun SearchScreen(
     navigator: Navigator = koinInject(),
@@ -70,7 +65,7 @@ fun SearchScreen(
     val error by viewModel.error.collectAsState()
     val hasMore by viewModel.hasMore.collectAsState()
 
-    val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
     val focusRequester = remember { FocusRequester() }
 
     // The search field is focused right after the screen opens, so the user can type immediately
@@ -81,9 +76,10 @@ fun SearchScreen(
     }
 
     // Load the next page when the user scrolls to the end of the list
-    LaunchedEffect(listState, items.size, hasMore) {
+    LaunchedEffect(gridState, items.size, hasMore) {
         if (!hasMore || loading) return@LaunchedEffect
-        val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return@LaunchedEffect
+        val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+            ?: return@LaunchedEffect
         if (lastVisible >= items.size - 3) {
             viewModel.loadMore()
         }
@@ -104,29 +100,31 @@ fun SearchScreen(
                 onValueChange = { viewModel.search(it) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                     .focusRequester(focusRequester)
                     .trackTextFieldFocus(),
                 placeholder = { Text("Search") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { viewModel.search(query, debounce = false) })
+                keyboardActions = KeyboardActions(
+                    onSearch = { viewModel.search(query, debounce = false) }
+                )
             )
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = Spacing.md),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
-                ServiceSelector(
-                    serviceName = services.firstOrNull { it.id == serviceId }?.name ?: "Service",
-                    serviceNames = services.map { it.name },
-                    onSelect = { name ->
-                        services.firstOrNull { it.name == name }?.let { viewModel.selectService(it.id) }
-                    }
-                )
+                services.forEach { service ->
+                    FilterChip(
+                        selected = service.id == serviceId,
+                        onClick = { viewModel.selectService(service.id) },
+                        label = { Text(service.name) }
+                    )
+                }
 
                 if (filters.isNotEmpty()) {
                     FilterChip(
@@ -144,7 +142,7 @@ fun SearchScreen(
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(top = Spacing.sm))
 
             when {
                 error != null -> Message(
@@ -168,12 +166,16 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                else -> LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize()
+                else -> LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 280.dp),
+                    state = gridState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(Spacing.lg),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
                     items(items, key = { it.url }) { item ->
-                        ContentListItem(
+                        ContentCard(
                             item = item,
                             onClick = { navigateToItem(item, navigator) }
                         )
@@ -184,7 +186,7 @@ fun SearchScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp),
+                                    .padding(Spacing.md),
                                 contentAlignment = Alignment.Center
                             ) {
                                 CircularProgressIndicator(modifier = Modifier.size(28.dp))
@@ -209,38 +211,6 @@ private fun navigateToItem(item: ContentItem, navigator: Navigator) {
 }
 
 /**
- * A dropdown to select the service to search on.
- */
-@Composable
-private fun ServiceSelector(
-    serviceName: String,
-    serviceNames: List<String>,
-    onSelect: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        TextButton(onClick = { expanded = true }) {
-            Text(text = serviceName)
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            serviceNames.forEach { name ->
-                DropdownMenuItem(
-                    text = { Text(name) },
-                    onClick = {
-                        expanded = false
-                        onSelect(name)
-                    }
-                )
-            }
-        }
-    }
-}
-
-/**
  * A centred message, used for the empty and error states.
  */
 @Composable
@@ -249,7 +219,7 @@ internal fun Message(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier.padding(24.dp),
+        modifier = modifier.padding(Spacing.xl),
         contentAlignment = Alignment.Center
     ) {
         Text(

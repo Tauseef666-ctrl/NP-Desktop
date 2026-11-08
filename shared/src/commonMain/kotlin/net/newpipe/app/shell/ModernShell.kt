@@ -31,8 +31,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -86,6 +89,8 @@ import newpipe.shared.generated.resources.ic_np_desktop_logo
 import newpipe.shared.generated.resources.ic_language
 import newpipe.shared.generated.resources.ic_search
 import newpipe.shared.generated.resources.ic_settings_backup_restore
+import newpipe.shared.generated.resources.ic_playlist_add
+import newpipe.shared.generated.resources.ic_playlist_play
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
@@ -102,39 +107,66 @@ private data class ShellEntry(
     val icon: DrawableResource
 )
 
-private val shellEntries = listOf(
-    ShellEntry(Destination.Home, "Home", Res.drawable.ic_home),
-    ShellEntry(
-        Destination.Feed("Trending", "Trending"),
-        "Trending",
-        Res.drawable.ic_trending_up
+private data class ShellSection(
+    val label: String,
+    val entries: List<ShellEntry>
+)
+
+private val shellSections = listOf(
+    ShellSection(
+        label = "Discover",
+        entries = listOf(
+            ShellEntry(Destination.Home, "Home", Res.drawable.ic_home),
+            ShellEntry(
+                Destination.Feed("Trending", "Trending"),
+                "Trending",
+                Res.drawable.ic_trending_up
+            ),
+            ShellEntry(Destination.Feed("live", "Live"), "Live", Res.drawable.ic_live_tv),
+            ShellEntry(
+                Destination.Feed("trending_gaming", "Gaming"),
+                "Gaming",
+                Res.drawable.ic_sports_esports
+            ),
+            ShellEntry(
+                Destination.Feed("trending_music", "Music"),
+                "Music",
+                Res.drawable.ic_music_note
+            ),
+            ShellEntry(
+                Destination.Feed("trending_movies_and_shows", "Movies"),
+                "Movies",
+                Res.drawable.ic_movie
+            ),
+            ShellEntry(
+                Destination.Feed("trending_podcasts_episodes", "Podcasts"),
+                "Podcasts",
+                Res.drawable.ic_podcasts
+            )
+        )
     ),
-    ShellEntry(Destination.Feed("live", "Live"), "Live", Res.drawable.ic_live_tv),
-    ShellEntry(
-        Destination.Feed("trending_gaming", "Gaming"),
-        "Gaming",
-        Res.drawable.ic_sports_esports
+    ShellSection(
+        label = "Library",
+        entries = listOf(
+            ShellEntry(Destination.Subscriptions, "Feed", Res.drawable.ic_subscriptions),
+            ShellEntry(Destination.History, "History", Res.drawable.ic_history),
+            ShellEntry(Destination.Downloads, "Downloads", Res.drawable.ic_file_download)
+        )
     ),
-    ShellEntry(
-        Destination.Feed("trending_music", "Music"),
-        "Music",
-        Res.drawable.ic_music_note
+    ShellSection(
+        label = "Playlists",
+        entries = listOf(
+            ShellEntry(Destination.LocalPlaylists, "Playlists", Res.drawable.ic_playlist_play),
+            ShellEntry(Destination.SavedPlaylists, "Saved playlists", Res.drawable.ic_playlist_add)
+        )
     ),
-    ShellEntry(
-        Destination.Feed("trending_movies_and_shows", "Movies"),
-        "Movies",
-        Res.drawable.ic_movie
-    ),
-    ShellEntry(
-        Destination.Feed("trending_podcasts_episodes", "Podcasts"),
-        "Podcasts",
-        Res.drawable.ic_podcasts
-    ),
-        ShellEntry(Destination.Subscriptions, "Feed", Res.drawable.ic_subscriptions),
-        ShellEntry(Destination.History, "History", Res.drawable.ic_history),
-        ShellEntry(Destination.Downloads, "Downloads", Res.drawable.ic_file_download),
-    ShellEntry(Destination.Settings, "Settings", Res.drawable.ic_settings_backup_restore),
-    ShellEntry(Destination.About, "About", Res.drawable.ic_language)
+    ShellSection(
+        label = "More",
+        entries = listOf(
+            ShellEntry(Destination.Settings, "Settings", Res.drawable.ic_settings_backup_restore),
+            ShellEntry(Destination.About, "About", Res.drawable.ic_language)
+        )
+    )
 )
 
 /**
@@ -432,13 +464,14 @@ private fun NavigationRail(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = Spacing.sm, vertical = Spacing.md),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                .padding(horizontal = Spacing.sm, vertical = Spacing.sm)
         ) {
+            // The compact column below scrolls so every section stays reachable even on short
+            // windows; the brand row stays fixed.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(Layout.toolbarHeight)
+                    .height(40.dp)
                     .padding(horizontal = Spacing.sm),
                 horizontalArrangement = if (expanded) {
                     Arrangement.Start
@@ -449,7 +482,7 @@ private fun NavigationRail(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(24.dp)
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_np_desktop_logo),
@@ -462,8 +495,8 @@ private fun NavigationRail(
                 if (expanded) {
                     Text(
                         text = "NP Desktop",
-                        modifier = Modifier.padding(start = Spacing.md),
-                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(start = Spacing.sm),
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1
@@ -471,15 +504,44 @@ private fun NavigationRail(
                 }
             }
 
-            Spacer(modifier = Modifier.height(Spacing.sm))
+            Spacer(modifier = Modifier.height(Spacing.xs))
 
-            shellEntries.forEach { entry ->
-                NavigationRailItem(
-                    entry = entry,
-                    selected = entry.destination == currentDestination,
-                    expanded = expanded,
-                    onClick = { onNavigate(entry.destination) }
-                )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+            ) {
+                shellSections.forEach { section ->
+                    if (expanded) {
+                        Text(
+                            text = section.label,
+                            modifier = Modifier.padding(
+                                start = Spacing.sm,
+                                top = Spacing.xs,
+                                bottom = 2.dp
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    } else if (section != shellSections.first()) {
+                        // A thin separator keeps the collapsed rail readable between the groups.
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = Spacing.xs),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+                    section.entries.forEach { entry ->
+                        NavigationRailItem(
+                            entry = entry,
+                            selected = entry.destination == currentDestination,
+                            expanded = expanded,
+                            onClick = { onNavigate(entry.destination) }
+                        )
+                    }
+                }
             }
         }
     }
@@ -523,7 +585,7 @@ private fun NavigationRailItem(
             .background(background)
             .hoverable(interactionSource)
             .clickable(onClick = onClick)
-            .padding(horizontal = if (expanded) Spacing.md else 0.dp),
+            .padding(horizontal = if (expanded) Spacing.sm else 0.dp),
         horizontalArrangement = if (expanded) Arrangement.Start else Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -531,14 +593,14 @@ private fun NavigationRailItem(
             painter = painterResource(entry.icon),
             contentDescription = entry.label,
             tint = contentColor,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(18.dp)
         )
 
         if (expanded) {
             Text(
                 text = entry.label,
-                modifier = Modifier.padding(start = Spacing.md),
-                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(start = Spacing.sm),
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 color = contentColor,
                 maxLines = 1

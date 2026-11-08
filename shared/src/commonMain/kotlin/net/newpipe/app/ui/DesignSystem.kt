@@ -30,7 +30,7 @@ object Layout {
     val navRailExpanded = 240.dp
     val toolbarHeight = 56.dp
     val playerMinHeight = 200.dp
-    val navigationItemHeight = 44.dp
+    val navigationItemHeight = 34.dp
     val contentMaxWidth = 1600.dp
 }
 

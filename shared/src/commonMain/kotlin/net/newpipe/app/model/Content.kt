@@ -106,7 +106,8 @@ data class ChannelDetails(
     val bannerUrl: String? = null,
     val description: String? = null,
     val subscriberCount: Long? = null,
-    val items: List<ContentItem> = emptyList()
+    val items: List<ContentItem> = emptyList(),
+    val playlists: List<ContentItem> = emptyList()
 )
 
 /**

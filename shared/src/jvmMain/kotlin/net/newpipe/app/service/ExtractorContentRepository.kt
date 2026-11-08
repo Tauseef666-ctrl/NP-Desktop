@@ -289,10 +289,10 @@ class ExtractorContentRepository(
     private fun extractChannel(serviceId: Int, url: String): ChannelDetails {
         val service = serviceForId(serviceId)
         val info = ChannelInfo.getInfo(service, url)
-        val items = info.tabs.asSequence()
+        val tabItems = info.tabs.asSequence()
             .mapNotNull { tab ->
                 try {
-                    ChannelTabInfo.getInfo(service, tab).relatedItems
+                    tab to ChannelTabInfo.getInfo(service, tab).relatedItems
                 } catch (exception: Exception) {
                     Logger.w(
                         messageString = "A channel tab could not be loaded",
@@ -301,8 +301,17 @@ class ExtractorContentRepository(
                     null
                 }
             }
-            .firstOrNull { it.isNotEmpty() }
+            .toList()
+        val items = tabItems
+            .firstOrNull { (_, relatedItems) -> relatedItems.isNotEmpty() }
+            ?.second
             ?.mapNotNull { it.toContentItem() }
+            ?: emptyList()
+        val playlists = tabItems
+            .firstOrNull { (tab, _) -> tab.id.orEmpty().contains("playlist", ignoreCase = true) }
+            ?.second
+            ?.mapNotNull { it.toContentItem() }
+            ?.filter { it.type == ContentType.PLAYLIST }
             ?: emptyList()
         return ChannelDetails(
             serviceId = serviceId,
@@ -312,7 +321,8 @@ class ExtractorContentRepository(
             bannerUrl = info.banners.bestImageUrl(),
             description = info.description,
             subscriberCount = info.subscriberCount.takeIf { it >= 0 },
-            items = items
+            items = items,
+            playlists = playlists
         )
     }
 

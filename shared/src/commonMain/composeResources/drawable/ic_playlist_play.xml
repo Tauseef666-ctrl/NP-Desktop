@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 NewPipe e.V. <https://newpipe-ev.de>
+  ~ SPDX-License-Identifier: GPL-3.0-or-later
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M3,5h13v2h-13z"
+        android:fillColor="#FF000000" />
+    <path
+        android:pathData="M3,10h13v2h-13z"
+        android:fillColor="#FF000000" />
+    <path
+        android:pathData="M3,15h9v2h-9z"
+        android:fillColor="#FF000000" />
+    <path
+        android:pathData="M15,12l7,4l-7,4z"
+        android:fillColor="#FF000000" />
+</vector>

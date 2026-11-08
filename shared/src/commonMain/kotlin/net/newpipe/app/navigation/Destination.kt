@@ -103,4 +103,17 @@ sealed interface Destination : NavKey {
      */
     @Serializable
     data class Playlist(val serviceId: Int, val url: String) : Destination
+
+    /**
+     * The user's local playlists.
+     */
+    @Serializable
+    data object LocalPlaylists : Destination
+
+    /**
+     * The saved playlists section: quick browsing over the playlists that saved videos live in.
+     */
+    @Serializable
+    data object SavedPlaylists : Destination
 }
+

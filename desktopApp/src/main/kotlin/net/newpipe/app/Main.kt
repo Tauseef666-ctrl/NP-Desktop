@@ -109,6 +109,8 @@ fun main() = application {
         SideEffect {
             val awt = window
             windowIcon?.let { awt.setIconImage(it) }
+            // Black window chrome on Windows so the title bar matches the app's dark design.
+            net.newpipe.app.platform.applyDarkTitlebar(awt.title)
         }
         val readyController = controller
         if (readyController == null) {
@@ -153,6 +155,9 @@ fun main() = application {
             SideEffect {
                 val awt = window
                 windowIcon?.let { awt.setIconImage(it) }
+                // The popup title bar carries the running video name; keep it black too so the
+                // whole match-window set matches the dark look.
+                net.newpipe.app.platform.applyDarkTitlebar(awt.title)
             }
             val readyController = controller
             if (readyController == null) {
