@@ -14,7 +14,6 @@ import net.newpipe.app.screen.feed.FeedScreen
 import net.newpipe.app.screen.home.HomeScreen
 import net.newpipe.app.screen.playlist.PlaylistScreen
 import net.newpipe.app.screen.playlist.PlaylistsScreen
-import net.newpipe.app.screen.playlist.SavedPlaylistsScreen
 import net.newpipe.app.screen.search.SearchScreen
 import net.newpipe.app.screen.settings.AccountSettingsScreen
 import net.newpipe.app.screen.settings.AppearanceSettingsScreen
@@ -125,12 +124,6 @@ fun navModule() = module {
     navigation<Destination.LocalPlaylists> {
         PlaylistsScreen()
     }
-
-    navigation<Destination.SavedPlaylists> {
-        SavedPlaylistsScreen()
-    }
-
-
 }
 
 /**

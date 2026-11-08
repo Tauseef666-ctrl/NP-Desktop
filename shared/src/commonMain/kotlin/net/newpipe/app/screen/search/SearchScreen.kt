@@ -103,7 +103,12 @@ fun SearchScreen(
                     .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                     .focusRequester(focusRequester)
                     .trackTextFieldFocus(),
-                placeholder = { Text("Search") },
+                placeholder = {
+                    Text(
+                        text = "Search",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(
@@ -151,10 +156,12 @@ fun SearchScreen(
                 )
 
                 items.isEmpty() && loading -> Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(Spacing.lg),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
 
                 items.isEmpty() -> Message(

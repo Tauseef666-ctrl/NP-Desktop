@@ -150,14 +150,8 @@ private val shellSections = listOf(
         entries = listOf(
             ShellEntry(Destination.Subscriptions, "Feed", Res.drawable.ic_subscriptions),
             ShellEntry(Destination.History, "History", Res.drawable.ic_history),
-            ShellEntry(Destination.Downloads, "Downloads", Res.drawable.ic_file_download)
-        )
-    ),
-    ShellSection(
-        label = "Playlists",
-        entries = listOf(
-            ShellEntry(Destination.LocalPlaylists, "Playlists", Res.drawable.ic_playlist_play),
-            ShellEntry(Destination.SavedPlaylists, "Saved playlists", Res.drawable.ic_playlist_add)
+            ShellEntry(Destination.Downloads, "Downloads", Res.drawable.ic_file_download),
+            ShellEntry(Destination.LocalPlaylists, "Playlists", Res.drawable.ic_playlist_play)
         )
     ),
     ShellSection(

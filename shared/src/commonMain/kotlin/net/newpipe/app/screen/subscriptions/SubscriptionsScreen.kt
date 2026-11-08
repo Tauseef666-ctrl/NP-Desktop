@@ -255,6 +255,29 @@ fun SubscriptionsScreen(
             }
         }
     }
+    val toUnsubscribe = pendingUnsubscribe
+    if (toUnsubscribe != null) {
+        AlertDialog(
+            onDismissRequest = { pendingUnsubscribe = null },
+            title = { Text("Unsubscribe") },
+            text = { Text("Unsubscribe from \"${toUnsubscribe.name}\"?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        subscriptionRepository.remove(toUnsubscribe.url)
+                        pendingUnsubscribe = null
+                    }
+                ) {
+                    Text("Unsubscribe")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingUnsubscribe = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -344,6 +367,7 @@ private fun SubscriptionRow(
                 Text(
                     text = channel.name,
                     style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -354,6 +378,12 @@ private fun SubscriptionRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Open channel",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = Spacing.xs)
                 )
             }
 

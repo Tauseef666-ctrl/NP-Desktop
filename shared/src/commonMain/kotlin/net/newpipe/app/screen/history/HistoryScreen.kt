@@ -259,7 +259,7 @@ private fun HistoryRow(
                     text = buildString {
                         append(item.uploader ?: "Unknown")
                         item.viewCount?.let { append(" \u00B7 "); append(formatViews(it)) }
-                        item.uploadDate?.takeIf { it.isNotBlank() }?.let {
+                        historyDateLabel(item.uploadDate)?.let {
                             append(" \u00B7 ")
                             append(it)
                         }
