@@ -75,6 +75,9 @@ class SearchViewModel(
     private var suggestionGeneration = 0
     private var nextPage = 0
 
+    /** Whether the suggestion highlight came from the keyboard (hover highlights do not count). */
+    private var keyboardSelected = false
+
     init {
         val services = serviceRegistry.services()
         _services.value = services
@@ -105,14 +108,24 @@ class SearchViewModel(
 
     /**
      * Updates the query and loads search-as-you-type suggestions.
+     *
+     * The full search intentionally does NOT run while typing: a request per keystroke hammers
+     * the service, gets rate limited and produced empty first results. Results load when the
+     * query is submitted or a suggestion is picked.
      */
     fun updateQuery(query: String) {
         _query.value = query
         if (query.isBlank()) {
+            searchJob?.cancel()
+            _items.value = emptyList()
+            _error.value = null
+            _loading.value = false
+            _hasMore.value = false
             clearSuggestions()
             suggestionJob?.cancel()
+            return
         }
-        search(query)
+        keyboardSelected = false
         loadSuggestions(query)
     }
 
@@ -138,6 +151,7 @@ class SearchViewModel(
             (current + delta).coerceIn(0, suggestions.lastIndex)
         }
         _selectedSuggestionIndex.value = next
+        keyboardSelected = true
         return true
     }
 
@@ -162,10 +176,13 @@ class SearchViewModel(
 
     /**
      * Runs the highlighted suggestion, or the current query when none is highlighted.
+     *
+     * A highlight that was only placed by mouse hover does not hijack the submit: the typed
+     * query wins unless the user moved through the suggestions with the keyboard.
      */
     fun submitSuggestionOrQuery() {
         val index = _selectedSuggestionIndex.value
-        val selected = _suggestions.value.getOrNull(index)
+        val selected = if (keyboardSelected) _suggestions.value.getOrNull(index) else null
         search(selected ?: _query.value, debounce = false)
     }
 
@@ -178,6 +195,7 @@ class SearchViewModel(
      */
     fun search(query: String, debounce: Boolean = true) {
         _query.value = query
+        keyboardSelected = false
         searchJob?.cancel()
         val generation = ++searchGeneration
 

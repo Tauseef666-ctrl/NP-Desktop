@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -28,6 +29,10 @@ import androidx.compose.foundation.lazy.itemsIndexed as lazyItemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +44,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -84,6 +91,8 @@ fun SearchScreen(
 
     val gridState = rememberLazyGridState()
     val focusRequester = remember { FocusRequester() }
+    var serviceMenuOpen by remember { mutableStateOf(false) }
+    var filterMenuOpen by remember { mutableStateOf(false) }
 
     // The search field is focused right after the screen opens, so the user can type immediately
     // without clicking into the field first.
@@ -220,26 +229,76 @@ fun SearchScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
-                services.forEach { service ->
-                    FilterChip(
-                        selected = service.id == serviceId,
-                        onClick = { viewModel.selectService(service.id) },
-                        label = { Text(service.name) }
+                // Services and content filters as compact menus instead of long chip rows: every
+                // service (YouTube, SoundCloud, media.ccc.de, PeerTube, Bandcamp) stays switchable
+                // without flooding the screen.
+                val activeService = services.firstOrNull { it.id == serviceId }
+                ExposedDropdownMenuBox(
+                    expanded = serviceMenuOpen,
+                    onExpandedChange = { serviceMenuOpen = it },
+                    modifier = Modifier.width(150.dp)
+                ) {
+                    OutlinedTextField(
+                        value = activeService?.name ?: "YouTube",
+                        onValueChange = {},
+                        readOnly = true,
+                        singleLine = true,
+                        label = { Text("Service") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(serviceMenuOpen) },
+                        modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     )
+                    ExposedDropdownMenu(
+                        expanded = serviceMenuOpen,
+                        onDismissRequest = { serviceMenuOpen = false }
+                    ) {
+                        services.forEach { service ->
+                            DropdownMenuItem(
+                                text = { Text(service.name) },
+                                onClick = {
+                                    serviceMenuOpen = false
+                                    viewModel.selectService(service.id)
+                                }
+                            )
+                        }
+                    }
                 }
 
                 if (filters.isNotEmpty()) {
-                    FilterChip(
-                        selected = selectedFilter == null,
-                        onClick = { viewModel.selectFilter(null) },
-                        label = { Text("All") }
-                    )
-                    filters.forEach { filter ->
-                        FilterChip(
-                            selected = selectedFilter == filter,
-                            onClick = { viewModel.selectFilter(filter) },
-                            label = { Text(filter.replaceFirstChar { it.uppercase() }) }
+                    ExposedDropdownMenuBox(
+                        expanded = filterMenuOpen,
+                        onExpandedChange = { filterMenuOpen = it },
+                        modifier = Modifier.width(170.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = selectedFilter?.replaceFirstChar { it.uppercase() } ?: "All",
+                            onValueChange = {},
+                            readOnly = true,
+                            singleLine = true,
+                            label = { Text("Filter") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(filterMenuOpen) },
+                            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                         )
+                        ExposedDropdownMenu(
+                            expanded = filterMenuOpen,
+                            onDismissRequest = { filterMenuOpen = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("All") },
+                                onClick = {
+                                    filterMenuOpen = false
+                                    viewModel.selectFilter(null)
+                                }
+                            )
+                            filters.forEach { filter ->
+                                DropdownMenuItem(
+                                    text = { Text(filter.replaceFirstChar { it.uppercase() }) },
+                                    onClick = {
+                                        filterMenuOpen = false
+                                        viewModel.selectFilter(filter)
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }

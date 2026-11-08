@@ -19,6 +19,8 @@ dependencies {
     implementation(libs.jetbrains.coroutines.swing)
     implementation(libs.jetbrains.compose.preview)
 
+    implementation(libs.coil.compose)
+
     // Keep the material3 artifacts aligned with the shared module
     implementation(libs.jetbrains.compose.material3)
 }

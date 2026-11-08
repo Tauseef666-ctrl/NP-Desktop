@@ -382,8 +382,14 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     companion object {
         /**
          * The arguments libVLC is started with.
+         *
+         * `network-caching` is cut from the 5s default to 1.2s so the first frame appears much
+         * earlier. Hardware accelerated decoding stays off on purpose: the frames are delivered
+         * on CPU buffers for Compose rendering, and forcing GPU decode through that pipeline
+         * can end in a black picture depending on the driver.
          */
         private val LIBRARY_ARGUMENTS = arrayOf(
+            "--network-caching=1200",
             "--no-video-title-show",
             "--no-media-library",
             "--no-stats"

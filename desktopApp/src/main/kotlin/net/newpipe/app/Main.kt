@@ -31,7 +31,13 @@ import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
+import coil3.disk.DiskCache
+import coil3.disk.directory
+import coil3.memory.MemoryCache
 import net.newpipe.app.ui.PlayerShortcutDispatcher
+import java.io.File
 import net.newpipe.app.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,7 +56,26 @@ import javax.imageio.ImageIO
 /**
  * Entry point for compose-related UI components on Desktop
  */
-fun main() = application {
+fun main() {
+    // A generous image cache: thumbnails are served from memory on revisit and from disk after
+    // a restart, so scrolling through the feed or reopening the app no longer refetches every
+    // picture.
+    val cacheRoot = File(System.getenv("APPDATA") ?: System.getProperty("user.home"), "NP-Desktop")
+    val memory = MemoryCache.Builder()
+        .maxSizeBytes(Runtime.getRuntime().maxMemory() / 4)
+        .build()
+    val disk = DiskCache.Builder()
+        .directory(File(cacheRoot, "image-cache"))
+        .maxSizeBytes(256L * 1024 * 1024)
+        .build()
+    application {
+    // A generous image cache serves thumbnails from memory on revisit and from disk after a
+    // restart, so scrolling through the feed or reopening the app no longer refetches every
+    // picture.
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context).memoryCache(memory).diskCache(disk).build()
+    }
+
     // Compose `Painter` window icons are converted to an AWT window icon through a painter
     // boundary that draws with fixed insets, which throws for small icon sizes. A plain AWT
     // image is applied to the underlying windows instead.
@@ -216,6 +241,7 @@ fun main() = application {
             }
         }
     }
+}
 }
 
 /**

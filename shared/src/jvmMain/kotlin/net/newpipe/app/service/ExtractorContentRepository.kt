@@ -10,6 +10,7 @@ import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import net.newpipe.app.model.ChannelDetails
 import net.newpipe.app.model.ContentItem
@@ -80,9 +81,21 @@ class ExtractorContentRepository(
                 return@guard rawSearch(request)
             }
             searchCache.getOrFetch(
-                CacheKey(request.serviceId, request.query + "|" + (request.filter ?: ""))
-            ) { rawSearch(request) }
+                CacheKey(request.serviceId, request.query + "|" + (request.filter ?: "")),
+                storeIf = { it.isNotEmpty() }
+            ) { rawSearchWithRetry(request) }
         }
+    }
+
+    /**
+     * The first search of a fresh session sometimes comes back empty while the service still
+     * negotiates its consent cookie; one quiet retry covers that without caching the emptiness.
+     */
+    private suspend fun rawSearchWithRetry(request: SearchRequest): List<ContentItem> {
+        val first = rawSearch(request)
+        if (first.isNotEmpty() || request.page != 0) return first
+        delay(400)
+        return rawSearch(request)
     }
 
     private suspend fun rawSearch(request: SearchRequest): List<ContentItem> = withContext(Dispatchers.IO) {
@@ -533,8 +546,14 @@ internal class ResultsCache<K : Any, V : Any>(
 
     /**
      * Serves [key] from the cache, or fetches it once through [fetch] and stores the result.
+     * Results that [storeIf] rejects are returned but not remembered, so a transient empty
+     * response cannot shadow the real content for the cache lifetime.
      */
-    suspend fun getOrFetch(key: K, fetch: suspend () -> V): V {
+    suspend fun getOrFetch(
+        key: K,
+        storeIf: (V) -> Boolean = { true },
+        fetch: suspend () -> V
+    ): V {
         getOrNull(key)?.let { return it }
 
         val pending = inFlight[key] ?: CompletableDeferred<V>()
@@ -544,11 +563,13 @@ internal class ResultsCache<K : Any, V : Any>(
 
         try {
             val value = fetch()
-            synchronized(entries) {
-                entries.remove(key)
-                entries[key] = Entry(value, System.currentTimeMillis())
-                while (entries.size > maxSize) {
-                    entries.remove(entries.keys.first())
+            if (storeIf(value)) {
+                synchronized(entries) {
+                    entries.remove(key)
+                    entries[key] = Entry(value, System.currentTimeMillis())
+                    while (entries.size > maxSize) {
+                        entries.remove(entries.keys.first())
+                    }
                 }
             }
             pending.complete(value)

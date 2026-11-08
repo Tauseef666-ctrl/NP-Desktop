@@ -58,18 +58,30 @@ actual class MediaDownloader actual constructor() {
 
             connection.inputStream.use { input ->
                 partial.outputStream().buffered().use { output ->
-                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                    val buffer = ByteArray(DOWNLOAD_BUFFER_SIZE)
+                    var lastReport = 0L
                     while (true) {
                         val read = input.read(buffer)
                         if (read < 0) break
                         output.write(buffer, 0, read)
                         copied += read
                         if (total > 0) {
-                            onProgress((copied.toFloat() / total.toFloat()).coerceIn(0f, 1f))
-                            onBytes(copied, total)
+                            // Reporting swarm-proof: one snapshot per interval instead of one per
+                            // buffer read, so the user interface does not recompose thousands of
+                            // times during a download. The final state is always reported.
+                            val now = System.currentTimeMillis()
+                            if (now - lastReport >= REPORT_INTERVAL_MS) {
+                                lastReport = now
+                                onProgress((copied.toFloat() / total.toFloat()).coerceIn(0f, 1f))
+                                onBytes(copied, total)
+                            }
                         }
                     }
                 }
+            }
+            if (total > 0) {
+                onProgress(1f)
+                onBytes(copied, total)
             }
 
             if (!partial.renameTo(target)) {
@@ -164,6 +176,11 @@ actual class MediaDownloader actual constructor() {
         }.onFailure { failure ->
             Logger.w(messageString = "The merge failed", throwable = failure)
         }.getOrNull()
+    }
+
+    private companion object {
+        private const val DOWNLOAD_BUFFER_SIZE = 64 * 1024
+        private const val REPORT_INTERVAL_MS = 250L
     }
 
     /**
