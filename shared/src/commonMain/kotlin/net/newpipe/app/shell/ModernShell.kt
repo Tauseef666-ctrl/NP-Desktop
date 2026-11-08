@@ -50,9 +50,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import co.touchlab.kermit.Logger
 import kotlinx.coroutines.delay
+import net.newpipe.app.model.ContentItem
+import net.newpipe.app.model.ContentType
+import net.newpipe.app.model.StreamDetails
 import net.newpipe.app.navigation.Destination
+import net.newpipe.app.screen.stream.DownloadDialog
+import net.newpipe.app.screen.stream.StreamIntents
+import net.newpipe.app.service.ContentRepository
 import net.newpipe.app.service.PlaybackController
+import net.newpipe.app.service.DownloadRepository
+import net.newpipe.app.service.MediaDownloader
 import net.newpipe.app.service.PopupPlayer
 import net.newpipe.app.ui.Breakpoints
 import net.newpipe.app.ui.Layout
@@ -148,6 +157,9 @@ fun ModernShell(
     immersive: Boolean = false,
     controller: PlaybackController = koinInject(),
     playerUiState: PlayerUiState = koinInject(),
+    contentRepository: ContentRepository = koinInject(),
+    downloader: MediaDownloader = koinInject(),
+    downloadRepository: DownloadRepository = koinInject(),
     content: @Composable () -> Unit
 ) {
     val edgeInteraction = remember { MutableInteractionSource() }
@@ -237,7 +249,7 @@ fun ModernShell(
                     onExpand = {
                         val state = controller.state.value
                         if (state.webUrl.isNotEmpty()) {
-                            playerUiState.setFullscreen(true)
+                            if (!tv) playerUiState.setFullscreen(true)
                             onNavigate(Destination.Stream(state.serviceId, state.webUrl))
                         }
                     },
@@ -245,6 +257,75 @@ fun ModernShell(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .zIndex(2f)
+                )
+            }
+
+            // The download options for a download requested directly on a video card: the stream
+            // details are loaded first, the dialog opens without the watch page ever being shown.
+            val pendingDownload by StreamIntents.pendingDownload.collectAsState()
+            var downloadOptions by remember { mutableStateOf<StreamDetails?>(null) }
+            LaunchedEffect(pendingDownload) {
+                val request = pendingDownload ?: return@LaunchedEffect
+                runCatching {
+                    contentRepository.streamDetails(request.serviceId, request.url)
+                }.onSuccess { details ->
+                    downloadOptions = details
+                }.onFailure { failure ->
+                    Logger.w(
+                        messageString = "The download options could not be loaded",
+                        throwable = failure
+                    )
+                }
+                StreamIntents.consumeDownload()
+            }
+
+            if (pendingDownload != null && downloadOptions == null) {
+                Surface(
+                    shape = RoundedCornerShape(Radius.lg),
+                    color = Glass.color(0.95f),
+                    border = Glass.borderStroke(),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .zIndex(4f)
+                ) {
+                    Text(
+                        text = "Preparing the download\u2026",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(Spacing.lg)
+                    )
+                }
+            }
+
+            downloadOptions?.let { details ->
+                DownloadDialog(
+                    details = details,
+                    item = ContentItem(
+                        serviceId = details.serviceId,
+                        url = details.url,
+                        title = details.title,
+                        type = ContentType.STREAM,
+                        uploader = details.uploader,
+                        uploaderUrl = details.uploaderUrl,
+                        thumbnailUrl = details.thumbnailUrl,
+                        durationSeconds = details.durationSeconds
+                    ),
+                    downloader = downloader,
+                    repository = downloadRepository,
+                    onResult = { result ->
+                        result.fold(
+                            onSuccess = { path ->
+                                Logger.i(messageString = "The download finished: $path")
+                            },
+                            onFailure = { failure ->
+                                Logger.w(
+                                    messageString = "The download failed",
+                                    throwable = failure
+                                )
+                            }
+                        )
+                    },
+                    onDismiss = { downloadOptions = null }
                 )
             }
 
@@ -344,7 +425,7 @@ private fun NavigationRail(
 ) {
     Surface(
         modifier = modifier.hoverable(interactionSource),
-        color = net.newpipe.app.ui.Glass.color(0.9f),
+        color = net.newpipe.app.ui.Glass.color(0.98f),
         shadowElevation = 8.dp,
         border = net.newpipe.app.ui.Glass.borderStroke()
     ) {
@@ -384,6 +465,7 @@ private fun NavigationRail(
                         modifier = Modifier.padding(start = Spacing.md),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1
                     )
                 }

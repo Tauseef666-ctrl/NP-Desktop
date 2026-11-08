@@ -189,7 +189,7 @@ class ExtractorContentRepository(
                     cursors.add(extractor.getPage(previous).nextPage)
                 }
                 val token = cursors.getOrNull(pageIndex - 1) ?: return@guard emptyList()
-                val page = token?.let { extractor.getPage(it) } ?: return@guard emptyList()
+                val page = extractor.getPage(token) ?: return@guard emptyList()
                 page.items.mapNotNull { it.toContentItem() }
             }
         }
@@ -222,14 +222,14 @@ class ExtractorContentRepository(
                 .mapNotNull { it.toMediaStream() },
             audioStreams = info.audioStreams.mapNotNull { it.toMediaStream() },
             subtitles = info.subtitles.mapNotNull {
-                val url = it.url ?: return@mapNotNull null
+                val url = @Suppress("DEPRECATION") it.url ?: return@mapNotNull null
                 SubtitleTrack(
                     url = url,
                     name = it.name ?: it.displayLanguageName.orEmpty(),
                     languageTag = it.languageTag
                 )
             },
-            relatedItems = info.relatedStreams.mapNotNull { it.toContentItem() }
+            relatedItems = @Suppress("DEPRECATION") info.relatedStreams.mapNotNull { it.toContentItem() }
         )
     }
 
@@ -608,14 +608,14 @@ internal fun InfoItem.toContentItem(): ContentItem? {
  * Converts an extraction engine video stream into a [MediaStream].
  */
 private fun org.schabi.newpipe.extractor.stream.VideoStream.toMediaStream(): MediaStream? {
-    val streamUrl = url ?: return null
+    val streamUrl = @Suppress("DEPRECATION") url ?: return null
     return MediaStream(
         url = streamUrl,
         formatId = itag.toString(),
-        quality = resolution,
+        quality = @Suppress("DEPRECATION") resolution,
         codec = codec.orEmpty(),
         bitrate = bitrate,
-        isVideoOnly = isVideoOnly,
+        isVideoOnly = @Suppress("DEPRECATION") isVideoOnly,
         width = width.takeIf { it > 0 },
         height = height.takeIf { it > 0 },
         fps = fps.takeIf { it > 0 }
@@ -626,7 +626,7 @@ private fun org.schabi.newpipe.extractor.stream.VideoStream.toMediaStream(): Med
  * Converts an extraction engine audio stream into a [MediaStream].
  */
 private fun org.schabi.newpipe.extractor.stream.AudioStream.toMediaStream(): MediaStream? {
-    val streamUrl = url ?: return null
+    val streamUrl = @Suppress("DEPRECATION") url ?: return null
     return MediaStream(
         url = streamUrl,
         formatId = itag.toString(),

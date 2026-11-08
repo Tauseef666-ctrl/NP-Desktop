@@ -75,26 +75,35 @@ object DownloadManager {
         repository: DownloadRepository,
         onResult: (Result<String>) -> Unit = {}
     ) {
-        val files = buildList {
-            stream?.let { add(PlannedFile(it.url, fileNameFor(title, it), false)) }
-            audio?.let { add(PlannedFile(it.url, audioFileNameFor(title, it), true)) }
-        }
-        if (files.isEmpty()) {
+        if (stream == null && audio == null) {
             onResult(Result.failure(IllegalStateException("Nothing to download")))
             return
         }
 
+        // A video only stream together with audio: both files are downloaded first and then
+        // merged into a single playable video file by the platform.
+        val merging = stream != null && audio != null
+        val mergeOutputName = if (merging) {
+            "${title}.${mergedContainerFor(stream!!, audio!!)}"
+        } else {
+            null
+        }
+
+        val files = buildList {
+            stream?.let {
+                val videoName = if (merging) {
+                    // The "(video)" file is only an intermediate and is removed after the merge
+                    "$title (video).${videoContainerFor(it)}"
+                } else {
+                    fileNameFor(title, it)
+                }
+                add(PlannedFile(it.url, videoName, false))
+            }
+            audio?.let { add(PlannedFile(it.url, audioFileNameFor(title, it), true)) }
+        }
+
         val id = "download-${Random.nextLong()}-${Random.nextInt()}"
         _active.update { current -> current + Active(id, title, label, 0f) }
-
-        val audioPathForRepository: (List<String>) -> String? = { paths ->
-            if (stream == null) {
-                null
-            } else {
-                // The separate audio file is the one downloaded after the video stream.
-                paths.getOrNull(1)
-            }
-        }
 
         jobs[id] = scope.launch {
             var error: Throwable? = null
@@ -116,30 +125,53 @@ object DownloadManager {
                 error = exception
             }
 
+            val failure = error
+            var mainPath = paths.getOrNull(0)
+            // Without a merge the registered entry points to the separate audio file, so both
+            // files stay reachable in the downloads section.
+            var registeredAudioPath: String? = if (stream != null && audio != null) {
+                paths.getOrNull(1)
+            } else {
+                null
+            }
+
+            if (failure == null && mergeOutputName != null) {
+                setActive(id, progress = 1f)
+                downloader.merge(
+                    videoPath = paths.getOrNull(0) ?: "",
+                    audioPath = paths.getOrNull(1) ?: "",
+                    outputName = mergeOutputName
+                )?.let { mergedPath ->
+                    // The single file replaces the two intermediate files
+                    mainPath = mergedPath
+                    registeredAudioPath = null
+                }
+            }
+
             _active.update { current -> current.filterNot { it.id == id } }
             jobs.remove(id)
 
-            val failure = error
-            val mainPath = paths.getOrNull(0)
             when {
                 failure != null && mainPath == null -> {
                     Logger.w(messageString = "The download of '$title' failed", throwable = failure)
                     onResult(Result.failure(failure))
                 }
 
+                mainPath == null -> {
+                    onResult(Result.failure(IllegalStateException("Nothing was downloaded")))
+                }
+
                 else -> {
-                    if (mainPath != null) {
-                        val quality = stream?.quality ?: audio?.quality ?: ""
-                        val formatId = stream?.formatId ?: audio?.formatId ?: ""
-                        repository.add(
-                            item = item,
-                            filePath = mainPath,
-                            quality = quality,
-                            formatId = formatId,
-                            audioFilePath = audioPathForRepository(paths)
-                        )
-                    }
-                    onResult(Result.success(mainPath ?: ""))
+                    val quality = stream?.quality ?: audio?.quality ?: ""
+                    val formatId = stream?.formatId ?: audio?.formatId ?: ""
+                    repository.add(
+                        item = item,
+                        filePath = mainPath,
+                        quality = quality,
+                        formatId = formatId,
+                        audioFilePath = registeredAudioPath
+                    )
+                    onResult(Result.success(mainPath))
                 }
             }
         }
@@ -188,6 +220,21 @@ object DownloadManager {
             codec.contains("opus") || codec.contains("vorbis") -> "webm"
             streamFormatIsWebm(audio) -> "webm"
             else -> "m4a"
+        }
+    }
+
+    /**
+     * Chooses the container of the merged file that combines a video only stream and its audio
+     * file: matching pairs stay in their native container, everything else goes into the
+     * matroska container which accepts every codec combination.
+     */
+    fun mergedContainerFor(video: MediaStream, audio: MediaStream): String {
+        val video = videoContainerFor(video)
+        val audio = audioContainerFor(audio)
+        return when {
+            video == "mp4" && audio == "m4a" -> "mp4"
+            video == "webm" && audio == "webm" -> "webm"
+            else -> "mkv"
         }
     }
 

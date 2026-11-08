@@ -24,4 +24,17 @@ expect class MediaDownloader() {
         fileName: String,
         onProgress: (Float) -> Unit = {}
     ): String
+
+    /**
+     * Merges a video only file and an audio file into a single playable video file inside the
+     * downloads folder. The two source files are removed after a successful merge.
+     *
+     * @param outputName the preferred name of the merged file, including the extension
+     * @return the absolute path of the merged file, or `null` when the platform cannot merge
+     */
+    suspend fun merge(
+        videoPath: String,
+        audioPath: String,
+        outputName: String
+    ): String?
 }

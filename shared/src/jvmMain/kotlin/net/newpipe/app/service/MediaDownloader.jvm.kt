@@ -8,12 +8,18 @@ package net.newpipe.app.service
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ws.schild.jave.process.ffmpeg.DefaultFFMPEGLocator
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
+import java.util.concurrent.TimeUnit
 
 /**
- * Downloads media streams with `HttpURLConnection` into `Videos/NewPipe` of the user home.
+ * Downloads media streams with `HttpURLConnection` into the chosen download folder.
+ *
+ * A video only stream and its audio file are merged into a single playable file with the static
+ * ffmpeg binary that ships with JAVE2: the streams are copied without a re-encode, so the merge
+ * only takes a few seconds.
  */
 actual class MediaDownloader actual constructor() {
 
@@ -22,7 +28,7 @@ actual class MediaDownloader actual constructor() {
         fileName: String,
         onProgress: (Float) -> Unit
     ): String = withContext(Dispatchers.IO) {
-        val directory = File(System.getProperty("user.home"), "Videos${File.separator}NewPipe")
+        val directory = File(DownloadLocation.resolve())
         if (!directory.exists() && !directory.mkdirs()) {
             error("The downloads folder could not be created: ${directory.absolutePath}")
         }
@@ -89,6 +95,73 @@ actual class MediaDownloader actual constructor() {
             .trim()
             .trimEnd('.')
         return if (cleaned.isEmpty()) "video" else cleaned
+    }
+
+    actual suspend fun merge(
+        videoPath: String,
+        audioPath: String,
+        outputName: String
+    ): String? = withContext(Dispatchers.IO) {
+        runCatching {
+            val directory = File(DownloadLocation.resolve())
+            if (!directory.exists() && !directory.mkdirs()) {
+                return@runCatching null
+            }
+
+            val video = File(videoPath)
+            val audio = File(audioPath)
+            if (!video.exists() || !audio.exists()) {
+                return@runCatching null
+            }
+
+            val target = uniqueFile(directory, sanitize(outputName))
+            val faststart = target.name.endsWith(".mp4")
+            val command = mutableListOf(
+                DefaultFFMPEGLocator().getExecutablePath(),
+                "-nostdin",
+                "-y",
+                "-hide_banner",
+                "-loglevel", "error",
+                "-i", video.absolutePath,
+                "-i", audio.absolutePath,
+                "-c", "copy"
+            )
+            // The mp4 index is moved to the front, so the file starts playing at once
+            if (faststart) {
+                command += listOf("-movflags", "+faststart")
+            }
+            command += target.absolutePath
+
+            Logger.i(messageString = "Merging into ${target.absolutePath}")
+
+            val process = ProcessBuilder(command).redirectErrorStream(true).start()
+            // Reading the output before waiting for the exit avoids a pipe full of stream
+            // blocking the process
+            val output = process.inputStream.bufferedReader().readText()
+            val exited = process.waitFor(180, TimeUnit.SECONDS)
+            if (!exited) {
+                process.destroyForcibly()
+                Logger.w(messageString = "The merge did not finish in time")
+                target.delete()
+                return@runCatching null
+            }
+
+            val success = process.exitValue() == 0 && target.exists() && target.length() > 0L
+            if (!success) {
+                Logger.w(
+                    messageString = "The merge failed with exit ${process.exitValue()}: $output"
+                )
+                target.delete()
+                return@runCatching null
+            }
+
+            video.delete()
+            audio.delete()
+            Logger.i(messageString = "Merged video and audio into ${target.absolutePath}")
+            target.absolutePath
+        }.onFailure { failure ->
+            Logger.w(messageString = "The merge failed", throwable = failure)
+        }.getOrNull()
     }
 
     /**

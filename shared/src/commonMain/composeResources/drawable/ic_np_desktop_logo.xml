@@ -9,9 +9,6 @@
     android:viewportWidth="100"
     android:viewportHeight="100">
     <path
-        android:pathData="M0,0H100V100H0Z"
-        android:fillColor="#0F0F0F" />
-    <path
         android:pathData="M32,20H68V28H54V80H46V28H32Z"
         android:fillColor="#FF0000" />
     <path

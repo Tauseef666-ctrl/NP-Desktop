@@ -38,3 +38,7 @@ node_modules/
 *.exe
 checksums-all.txt
 desktopApp/src/main/resources/vlc-runtime.zip
+
+# Handoff task lists for the second AI session (not part of the repository)
+TODO-SECOND-AI.md
+TV-DPAD-AUDIT.md

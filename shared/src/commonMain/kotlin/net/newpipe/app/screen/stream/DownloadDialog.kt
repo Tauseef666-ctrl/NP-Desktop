@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
@@ -30,7 +29,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -44,6 +45,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import net.newpipe.app.model.MediaStream
 import net.newpipe.app.model.StreamDetails
+import net.newpipe.app.service.DownloadLocation
 import net.newpipe.app.service.DownloadManager
 import net.newpipe.app.service.DownloadRepository
 import net.newpipe.app.service.MediaDownloader
@@ -71,13 +73,10 @@ fun DownloadDialog(
     onResult: (Result<String>) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val muxedStreams = details.videoStreams
-        .filterNot { it.isVideoOnly }
-        .distinctBy { it.quality }
-        .sortedByDescending { it.height ?: it.bitrate }
-
-    val videoOnlyStreams = details.videoStreams
-        .filter { it.isVideoOnly }
+    // One video quality list: muxed streams already contain the audio, video only streams are
+    // merged with the best audio file after the download, so every option is a single file
+    // with sound.
+    val videoStreams = details.videoStreams
         .distinctBy { it.quality }
         .sortedByDescending { it.height ?: it.bitrate }
 
@@ -85,21 +84,20 @@ fun DownloadDialog(
         .distinctBy { it.audioTrackName ?: it.quality }
         .sortedByDescending { it.bitrate }
 
-    val supportsVideo = muxedStreams.isNotEmpty() || videoOnlyStreams.isNotEmpty()
+    val supportsVideo = videoStreams.isNotEmpty()
     val supportsAudio = audioStreams.isNotEmpty()
 
     var audioOnly by remember { mutableStateOf(!supportsVideo && supportsAudio) }
 
-    var muxedSelection by remember {
-        mutableStateOf(muxedStreams.firstOrNull())
-    }
-    var videoOnlySelection by remember {
-        mutableStateOf(videoOnlyStreams.firstOrNull())
+    var videoSelection by remember {
+        mutableStateOf(videoStreams.firstOrNull())
     }
     var audioSelection by remember {
         mutableStateOf(audioStreams.firstOrNull())
     }
-    var separateAudio by remember { mutableStateOf(true) }
+
+    val dialogScope = rememberCoroutineScope()
+    var location by remember { mutableStateOf(DownloadLocation.resolve()) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -108,7 +106,10 @@ fun DownloadDialog(
         Surface(
             modifier = Modifier.widthIn(min = 420.dp, max = 520.dp),
             shape = DOWNLOAD_SHAPE,
-            color = net.newpipe.app.ui.Glass.color(0.92f),
+            color = net.newpipe.app.ui.Glass.color(0.99f),
+            // The glass color is translucent, so contentColorFor returns unspecified and the
+            // texts fall back to raw black: pin the content color explicitly
+            contentColor = MaterialTheme.colorScheme.onSurface,
             tonalElevation = 0.dp,
             shadowElevation = 24.dp,
             border = net.newpipe.app.ui.Glass.borderStroke()
@@ -123,7 +124,8 @@ fun DownloadDialog(
                 Text(
                     text = "Download",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = details.title,
@@ -159,7 +161,8 @@ fun DownloadDialog(
                 Box(
                     modifier = Modifier
                         .padding(top = Spacing.md)
-                        .heightIn(max = 320.dp)
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
                     when {
                         audioOnly || !supportsVideo -> {
@@ -167,6 +170,7 @@ fun DownloadDialog(
                                 InfoLine("No audio stream is available for this video")
                             } else {
                                 QualityList(
+                                    title = "Audio quality",
                                     entries = audioStreams.map { stream ->
                                         QualityEntry(
                                             key = stream.url,
@@ -183,56 +187,59 @@ fun DownloadDialog(
                             }
                         }
 
-                        muxedStreams.isNotEmpty() -> {
+                        else -> {
                             QualityList(
-                                entries = muxedStreams.map { stream ->
+                                title = "Video quality",
+                                entries = videoStreams.map { stream ->
                                     QualityEntry(
                                         key = stream.url,
                                         title = videoLabel(stream),
-                                        subtitle = videoSubtitle(stream)
+                                        subtitle = videoSubtitle(stream, supportsAudio)
                                     )
                                 },
-                                selectedKey = muxedSelection?.url,
+                                selectedKey = videoSelection?.url,
                                 onSelect = { selection ->
-                                    muxedSelection =
-                                        muxedStreams.firstOrNull { it.url == selection }
+                                    videoSelection =
+                                        videoStreams.firstOrNull { it.url == selection }
                                 }
                             )
                         }
+                    }
+                }
 
-                        else -> {
-                            Column {
-                                QualityList(
-                                    entries = videoOnlyStreams.map { stream ->
-                                        QualityEntry(
-                                            key = stream.url,
-                                            title = videoLabel(stream),
-                                            subtitle = videoSubtitle(stream)
-                                        )
-                                    },
-                                    selectedKey = videoOnlySelection?.url,
-                                    onSelect = { selection ->
-                                        videoOnlySelection =
-                                            videoOnlyStreams.firstOrNull { it.url == selection }
-                                    }
-                                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Spacing.md)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Save to",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = location,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
 
-                                if (audioStreams.isNotEmpty()) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(top = Spacing.xs)
-                                    ) {
-                                        Checkbox(
-                                            checked = separateAudio,
-                                            onCheckedChange = { separateAudio = it }
-                                        )
-                                        Text(
-                                            text = "Include audio (separate file)",
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    }
+                    if (DownloadLocation.pickerSupported) {
+                        TextButton(onClick = {
+                            dialogScope.launch {
+                                if (DownloadLocation.choose()) {
+                                    location = DownloadLocation.resolve()
                                 }
                             }
+                        }) {
+                            Text(
+                                text = "Change\u2026",
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
@@ -244,7 +251,10 @@ fun DownloadDialog(
                     horizontalArrangement = Arrangement.spacedBy(Spacing.md, Alignment.End)
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(
+                            text = "Cancel",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
 
                     val start: (() -> Unit)? = when {
@@ -252,16 +262,18 @@ fun DownloadDialog(
                             { downloadAudioOnly(stream, item, downloader, repository, onResult) }
                         }
 
-                        muxedStreams.isNotEmpty() -> muxedSelection?.let { stream ->
-                            { downloadMuxed(stream, item, downloader, repository, onResult) }
-                        }
-
-                        else -> videoOnlySelection?.let { video ->
+                        else -> videoSelection?.let { video ->
                             {
-                                downloadSeparated(
+                                // The best audio track is merged into the video; a muxed
+                                // stream already contains its own audio
+                                val audio = if (video.isVideoOnly && supportsAudio) {
+                                    audioStreams.maxByOrNull { it.bitrate }
+                                } else {
+                                    null
+                                }
+                                downloadVideo(
                                     video = video,
-                                    audio = if (separateAudio) audioSelection else null,
-                                    audioStreams = audioStreams,
+                                    audio = audio,
                                     item = item,
                                     downloader = downloader,
                                     repository = repository,
@@ -279,8 +291,7 @@ fun DownloadDialog(
                         enabled = start != null
                     ) {
                         Text("Start download")
-                    }
-                }
+                    }                }
             }
         }
     }
@@ -323,14 +334,21 @@ private fun TypeChip(
 
 @Composable
 private fun QualityList(
+    title: String,
     entries: List<QualityEntry>,
     selectedKey: String?,
     onSelect: (String) -> Unit
 ) {
     Column(
-        modifier = Modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(Spacing.xs)
     ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
         entries.forEach { entry ->
             val selected = entry.key == selectedKey
             Row(
@@ -348,6 +366,7 @@ private fun QualityList(
                     Text(
                         text = entry.title,
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
                     )
                     Text(
@@ -373,10 +392,10 @@ private fun InfoLine(text: String) {
 
 private fun videoLabel(stream: MediaStream): String = stream.quality.ifEmpty { "Video" }
 
-private fun videoSubtitle(stream: MediaStream): String = buildString {
+private fun videoSubtitle(stream: MediaStream, audioAvailable: Boolean): String = buildString {
     append(containerLabel(DownloadManager.videoContainerFor(stream)))
     stream.fps?.takeIf { it > 30 }?.let { append(" \u00B7 ${it}fps") }
-    if (stream.isVideoOnly) {
+    if (!audioAvailable) {
         append(" \u00B7 without audio")
     }
 }
@@ -395,48 +414,24 @@ private fun containerLabel(extension: String) = when (extension) {
     else -> extension.uppercase()
 }
 
-private fun downloadMuxed(
-    stream: MediaStream,
-    item: ContentItem,
-    downloader: MediaDownloader,
-    repository: DownloadRepository,
-    onResult: (Result<String>) -> Unit
-) {
-    DownloadManager.start(
-        item = item,
-        title = item.title,
-        label = "${stream.quality} \u00B7 ${DownloadManager.videoContainerFor(stream)}",
-        stream = stream,
-        audio = null,
-        downloader = downloader,
-        repository = repository,
-        onResult = onResult
-    )
-}
-
-private fun downloadSeparated(
+private fun downloadVideo(
     video: MediaStream,
     audio: MediaStream?,
-    audioStreams: List<MediaStream>,
     item: ContentItem,
     downloader: MediaDownloader,
     repository: DownloadRepository,
     onResult: (Result<String>) -> Unit
 ) {
-    val audioStream = audio ?: audioStreams.maxByOrNull { it.bitrate }
+    val label = when {
+        audio != null -> "${video.quality} \u00B7 ${DownloadManager.mergedContainerFor(video, audio)}"
+        else -> "${video.quality} \u00B7 ${DownloadManager.videoContainerFor(video)}"
+    }
     DownloadManager.start(
         item = item,
         title = item.title,
-        label = buildList {
-            add("${video.quality} \u00B7 ${DownloadManager.videoContainerFor(video)}")
-            if (audioStream != null) {
-                add("audio \u00B7 ${DownloadManager.audioContainerFor(audioStream)}")
-            } else {
-                add("without audio")
-            }
-        }.joinToString(" + "),
+        label = label,
         stream = video,
-        audio = audioStream,
+        audio = audio,
         downloader = downloader,
         repository = repository,
         onResult = onResult

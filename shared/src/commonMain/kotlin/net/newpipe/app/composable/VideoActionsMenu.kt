@@ -167,7 +167,7 @@ fun VideoActionsMenu(
                                 Triple(Res.drawable.ic_headset, "Background play", { StreamIntents.request(item.url, StreamIntents.Action.BACKGROUND); navigator.navigateTo(Destination.Stream(item.serviceId, item.url)); onDismiss() })
                             ),
                             listOf(
-                                Triple(Res.drawable.ic_cloud_download, "Download", { StreamIntents.request(item.url, StreamIntents.Action.DOWNLOAD); navigator.navigateTo(Destination.Stream(item.serviceId, item.url)); onDismiss() }),
+                                Triple(Res.drawable.ic_cloud_download, "Download", { StreamIntents.requestDownload(item); onDismiss() }),
                                 Triple(Res.drawable.ic_playlist_add, "Save to playlist", { saveToPlaylist = true }),
                                 Triple(Res.drawable.ic_history, "Watch later", { val playlistId = playlistRepository.ensurePlaylist("Watch later"); playlistRepository.toggle(playlistId, item); onDismiss() })
                             ),

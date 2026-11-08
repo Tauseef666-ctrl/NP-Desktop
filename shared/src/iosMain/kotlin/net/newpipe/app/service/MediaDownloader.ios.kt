@@ -15,4 +15,10 @@ actual class MediaDownloader actual constructor() {
         fileName: String,
         onProgress: (Float) -> Unit
     ): String = error("Downloads are not supported on this platform yet")
+
+    actual suspend fun merge(
+        videoPath: String,
+        audioPath: String,
+        outputName: String
+    ): String? = null
 }

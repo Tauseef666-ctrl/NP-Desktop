@@ -5,6 +5,11 @@
 
 package net.newpipe.app.screen.stream
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import net.newpipe.app.model.ContentItem
+
 /**
  * An action requested outside of the watch page, for example from the right-click menu on a video
  * card. The watch page picks the intent up after it has loaded the stream details and applies the
@@ -21,6 +26,14 @@ object StreamIntents {
     @Volatile
     private var pendingAction: Action? = null
 
+    private val _pendingDownload = MutableStateFlow<ContentItem?>(null)
+
+    /**
+     * A download requested directly on a video card, without opening the watch page. The shell
+     * picks it up, loads the stream details and opens the download options dialog.
+     */
+    val pendingDownload: StateFlow<ContentItem?> = _pendingDownload.asStateFlow()
+
     /**
      * Asks the watch page to carry out the action on the stream with the given url after it has
      * loaded the details.
@@ -28,6 +41,20 @@ object StreamIntents {
     fun request(url: String, action: Action) {
         pendingUrl = url
         pendingAction = action
+    }
+
+    /**
+     * Requests the download options dialog for the video without opening the watch page.
+     */
+    fun requestDownload(item: ContentItem) {
+        _pendingDownload.value = item
+    }
+
+    /**
+     * Marks the download request as handled.
+     */
+    fun consumeDownload() {
+        _pendingDownload.value = null
     }
 
     /**

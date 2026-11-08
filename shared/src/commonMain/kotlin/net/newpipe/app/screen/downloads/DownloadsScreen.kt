@@ -71,6 +71,8 @@ fun DownloadsScreen(
     val audioOnly by playerUiState.audioOnly.collectAsState()
     val activeDownloads by DownloadManager.active.collectAsState()
     var selected by remember { mutableStateOf<DownloadedVideo?>(null) }
+    val activeById = activeDownloads.associateBy { it.id }
+
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -105,6 +107,21 @@ fun DownloadsScreen(
                         )
                     }
                 }
+            }
+        }
+
+        item(key = "legacy-hint") {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = RoundedCornerShape(Radius.lg)
+            ) {
+                Text(
+                    text = "Downloads made in earlier versions may be video-only; re-download them for video with audio.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(Spacing.md)
+                )
             }
         }
 
@@ -208,15 +225,25 @@ fun DownloadsScreen(
             }
         }
 
-        if (downloads.isEmpty()) {
+        if (downloads.isEmpty() && activeDownloads.isEmpty()) {
             item(key = "empty") {
                 DownloadsEmptyState()
+            }
+        } else if (downloads.isEmpty() && activeDownloads.isNotEmpty()) {
+            item(key = "active-only-hint") {
+                Text(
+                    text = "Downloads will appear here when they finish.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = Spacing.sm)
+                )
             }
         } else {
             items(downloads, key = { it.id }) { download ->
                 DownloadRow(
                     download = download,
                     selected = download.id == selected?.id,
+                    activeProgress = activeById[download.id]?.progress,
                     onOpen = {
                         selected = download
                         playDownloaded(download, controller)
@@ -272,6 +299,7 @@ private fun DownloadsEmptyState() {
 private fun DownloadRow(
     download: DownloadedVideo,
     selected: Boolean,
+    activeProgress: Float?,
     onOpen: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -317,12 +345,22 @@ private fun DownloadRow(
                 )
 
                 Text(
-                    text = download.filePath,
+                    text = when (download.audioFilePath) {
+                        null -> download.filePath
+                        else -> "${fileExtension(download.filePath)} + ${fileExtension(download.audioFilePath)}"
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+
+                if (activeProgress != null) {
+                    LinearProgressIndicator(
+                        progress = { activeProgress.coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(Spacing.sm))
@@ -366,4 +404,8 @@ private fun playDownloaded(
             qualityLabel = download.quality
         )
     )
+}
+
+private fun fileExtension(path: String?): String {
+    return path?.substringAfterLast('.')?.uppercase() ?: ""
 }

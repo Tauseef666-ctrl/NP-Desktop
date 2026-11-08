@@ -95,6 +95,16 @@ The built installers will be available under `desktopApp/build/compose/binaries/
 ./gradlew.bat assembleRelease
 ```
 
+## Contributing
+
+Contributions are very welcome! The [CONTRIBUTING.md](CONTRIBUTING.md) guide covers:
+
+- the project architecture and which module to change for which target
+- how to build and run the desktop app, Android app and installers
+- code style, design tokens and the PR/issue workflow
+
+Start with `good first issue` labeled issues if you are new.
+
 ## License
 
 This project is licensed under the **GNU General Public License v3.0 or later**. See [LICENSE](LICENSE) for more details.

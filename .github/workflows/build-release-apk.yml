@@ -1,4 +1,4 @@
-name: "Build unsigned release APK on master"
+name: "Build unsigned release APK on main"
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: 'master'
+          ref: 'main'
 
       - uses: actions/setup-java@v5
         with:

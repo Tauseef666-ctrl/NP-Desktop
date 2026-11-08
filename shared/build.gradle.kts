@@ -145,6 +145,10 @@ kotlin {
 
             // libVLC bindings, used for the media playback of the desktop application
             implementation(libs.vlcj)
+
+            // Static ffmpeg binaries, used to merge a video-only stream and its audio file
+            // into a single playable video file
+            implementation(libs.jave.all.deps)
         }
         val androidDeviceTest by getting {
             dependencies {

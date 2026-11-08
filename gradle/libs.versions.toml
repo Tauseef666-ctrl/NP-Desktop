@@ -30,6 +30,9 @@ groupie = "2.10.1"
 jsoup = "1.23.2"
 junit = "4.13.2"
 junit-ext = "1.3.0"
+# JAVE2 ships static ffmpeg binaries; the desktop uses them to merge a video-only
+# stream and its audio file into a single video file.
+jave = "3.5.0"
 kermit = "2.2.0"
 koin = "4.2.2"
 koin-plugin = "1.2.1"
@@ -152,6 +155,7 @@ jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lif
 jetbrains-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit = { module = "junit:junit", version.ref = "junit" }
+jave-all-deps = { module = "ws.schild:jave-all-deps", version.ref = "jave" }
 koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin" }
 koin-compose-navigation3 = { module = "io.insert-koin:koin-compose-navigation3", version.ref = "koin" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }

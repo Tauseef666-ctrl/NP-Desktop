@@ -26,8 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -103,9 +103,9 @@ fun StreamScreen(
         onDispose {
             playerUiState.setImmersive(false)
             playerUiState.setFullscreen(false)
-            PopupPlayer.close()
-            // The playback keeps running: the shell shows it in the mini player while the user
-            // browses other sections, so the video is never terminated by navigation.
+            // The playback and the popup player keep running: the shell shows the video in the
+            // mini player (or keeps the popup window) while the user browses other sections, so
+            // navigation never terminates either of them.
         }
     }
 
