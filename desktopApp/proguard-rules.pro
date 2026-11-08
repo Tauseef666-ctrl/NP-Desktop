@@ -17,6 +17,8 @@
 -dontwarn libcore.io.Memory
 -dontwarn org.robolectric.Robolectric
 -dontwarn com.sun.awt.AWTUtilities
+# vlcj logs through slf4j 1.x; the 2.x static binder classes only exist optionally.
+-dontwarn org.slf4j.impl.**
 
 # Keep the behaviour identical to the unprocessed application.
 -dontshrink

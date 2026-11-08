@@ -130,6 +130,7 @@ fun HomeScreen(
                         shape = RoundedCornerShape(percent = 50),
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        border = net.newpipe.app.ui.Glass.borderStroke(),
                         modifier = Modifier
                             .height(HOME_SEARCH_HEIGHT)
                             .fillMaxWidth(0.72f)
@@ -243,7 +244,9 @@ fun HomeScreen(
                                 "Mixed from what you watched"
                             },
                             actionLabel = "Shuffle",
-                            onAction = viewModel::shuffleFeed
+                            onAction = viewModel::shuffleFeed,
+                            refreshLoading = feedLoading,
+                            onRefresh = viewModel::refreshFeed
                         )
                     }
 
@@ -306,7 +309,9 @@ private fun SectionHeader(
     title: String,
     subtitle: String? = null,
     actionLabel: String? = null,
-    onAction: (() -> Unit)? = null
+    onAction: (() -> Unit)? = null,
+    refreshLoading: Boolean = false,
+    onRefresh: (() -> Unit)? = null
 ) {
     Surface(
         modifier = Modifier
@@ -337,8 +342,24 @@ private fun SectionHeader(
                 }
             }
 
+            if (onRefresh != null) {
+                if (refreshLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(horizontal = Spacing.sm).size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    TextButton(
+                        onClick = onRefresh,
+                        enabled = !refreshLoading
+                    ) {
+                        Text("Refresh")
+                    }
+                }
+            }
+
             if (actionLabel != null && onAction != null) {
-                TextButton(onClick = onAction) {
+                TextButton(onClick = onAction, enabled = !refreshLoading) {
                     Text(actionLabel)
                 }
             }
