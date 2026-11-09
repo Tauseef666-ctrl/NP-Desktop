@@ -267,9 +267,9 @@ class ExtractorContentRepository(
     }
 
     /**
-     * True when the extraction failed with the playability error that "made for kids" videos give
-     * back through the engine's default visionOS client: `Got error UNPLAYABLE: "This video is not
-     * available"`. Only YouTube watch URLs are eligible, other services keep their exact errors.
+     * True when the extraction failed with the `UNPLAYABLE` playability status that "made for
+     * kids" videos (and other refused videos) give back through the engine's default visionOS
+     * client. Only YouTube watch urls are eligible, other services keep their exact errors.
      */
     private fun isKidsUnplayable(exception: Exception, url: String): Boolean {
         val isYouTubeWatch = url.contains("youtube.com/watch?v=") || url.contains("youtu.be/")
@@ -280,9 +280,11 @@ class ExtractorContentRepository(
         var hops = 0
         while (current != null && hops < 5) {
             val message = current.message.orEmpty()
-            if (message.contains("UNPLAYABLE") &&
-                message.contains("This video is not available")
-            ) {
+            // UNPLAYABLE arrives with varying sub-message wordings ("This video is not
+            // available", "This video is unavailable", ...). Any UNPLAYABLE on a YouTube watch
+            // url is worth replaying through the iOS player client; when that replay does not
+            // yield a playable response the original extraction error is rethrown.
+            if (message.contains("UNPLAYABLE")) {
                 return true
             }
             current = current.cause

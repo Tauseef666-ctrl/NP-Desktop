@@ -87,6 +87,9 @@ class HomeViewModel(
     /** One automatic re-run of the whole feed after a total failure per loading cycle. */
     private var feedAutoRetries = 0
 
+    /** Distinguishes the current feed build from cancelled stale ones in state teardown. */
+    private var feedGeneration = 0
+
     init {
         val services = serviceRegistry.services()
         _services.value = services
@@ -321,6 +324,7 @@ class HomeViewModel(
         }
 
         feedJob?.cancel()
+        val feedGenerationId = ++feedGeneration
         feedChannelUrl = channelUrl
         feedSearchKey = searchKey
         feedRelatedKey = relatedKey
@@ -391,8 +395,12 @@ class HomeViewModel(
                     feedAutoRetries = 0
                 }
             } finally {
-                // Whatever happens inside, the loading indicator never stays active.
-                _feedLoading.value = false
+                // Whatever happens inside, the loading indicator never stays active. A build
+                // that was just started (this one superseded) does not hide the newer one's
+                // state: only the current build may clear the flag.
+                if (feedGenerationId == feedGeneration) {
+                    _feedLoading.value = false
+                }
             }
             if (anySourceFailed && _feed.value.isEmpty() && feedAutoRetries < 1) {
                 // A momentary network drop ate every source: one automatic re-run rides it out,

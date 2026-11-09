@@ -91,6 +91,9 @@ class StreamViewModel(
             var retryNetwork = false
             try {
                 val details = repository.streamDetails(serviceId, url)
+                // A newer load call supersedes this attempt: applying the stale result would
+                // overwrite what the user is currently watching or waiting for.
+                if (loadedUrl != url || loadedServiceId != serviceId) return@launch
                 _details.value = details
                 val preferredResolution = settings.getString(
                     VideoAudioPreferences.KEY_DEFAULT_RESOLUTION,
@@ -112,7 +115,12 @@ class StreamViewModel(
                 details.uploaderUrl?.let { channelUrl ->
                     viewModelScope.launch {
                         try {
-                            _channel.value = repository.channel(details.serviceId, channelUrl)
+                            val channel = repository.channel(details.serviceId, channelUrl)
+                            // The stream the chip belongs to may itself have been superseded
+                            // while this side request was in flight.
+                            if (loadedUrl == url && loadedServiceId == serviceId) {
+                                _channel.value = channel
+                            }
                         } catch (exception: CancellationException) {
                             throw exception
                         } catch (exception: Exception) {
@@ -125,27 +133,38 @@ class StreamViewModel(
                 }
             } catch (exception: ContentException.Network) {
                 Logger.e(messageString = "Loading the stream failed (network)", throwable = exception)
-                if (autoRetries < 1) {
-                    autoRetries++
-                    retryNetwork = true
-                } else {
-                    _error.value = exception.message
+                if (loadedUrl == url && loadedServiceId == serviceId) {
+                    if (autoRetries < 1) {
+                        autoRetries++
+                        retryNetwork = true
+                    } else {
+                        _error.value = exception.message
+                    }
                 }
             } catch (exception: ContentException) {
                 Logger.e(messageString = "Loading the stream failed", throwable = exception)
-                _error.value = exception.message
+                if (loadedUrl == url && loadedServiceId == serviceId) {
+                    _error.value = exception.message
+                }
             } catch (exception: Exception) {
                 Logger.e(messageString = "Loading the stream failed", throwable = exception)
-                _error.value = exception.message
+                if (loadedUrl == url && loadedServiceId == serviceId) {
+                    _error.value = exception.message
+                }
             } finally {
-                if (!retryNetwork) {
+                // Only the attempt the ui is still waiting for clears the indicator: a
+                // superseded attempt must not hide the loading state of the newer one.
+                if (!retryNetwork && loadedUrl == url && loadedServiceId == serviceId) {
                     _loading.value = false
                 }
             }
             if (retryNetwork) {
-                // Rides out the momentary network drop and runs the whole attempt again.
+                // Rides out the momentary network drop and runs the whole attempt again, unless
+                // the user moved on to another video while this attempt was waiting.
                 delay(1_500)
-                startLoad(serviceId, url)
+                if (loadedUrl == url && loadedServiceId == serviceId) {
+                    startLoad(serviceId, url)
+                }
             }
         }
     }
