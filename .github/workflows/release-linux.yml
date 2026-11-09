@@ -63,7 +63,7 @@ jobs:
           hash=$(sha256sum "${{ steps.locate.outputs.DEB_PATH }}" | cut -d' ' -f1)
           checksumLine="$hash  ${{ steps.locate.outputs.DEB_NAME }}"
           echo "Checksum: $checksumLine"
-          echo "$checksumLine" > checksums-sha256.txt
+          echo "$checksumLine" > checksums-linux-sha256.txt
 
       - name: Upload Deb artifact
         uses: actions/upload-artifact@v4
@@ -71,7 +71,7 @@ jobs:
           name: desktop-linux-deb
           path: |
             ${{ steps.locate.outputs.DEB_PATH }}
-            checksums-sha256.txt
+            checksums-linux-sha256.txt
           retention-days: 7
 
       - name: Attach to GitHub Release
@@ -80,7 +80,7 @@ jobs:
           tag="${{ github.event.inputs.tag || github.ref_name }}"
           gh release upload "$tag" \
             "${{ steps.locate.outputs.DEB_PATH }}" \
-            checksums-sha256.txt \
+            checksums-linux-sha256.txt \
             --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

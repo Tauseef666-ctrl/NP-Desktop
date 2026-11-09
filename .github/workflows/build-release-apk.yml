@@ -1,7 +1,12 @@
-name: "Build unsigned release APK on main"
+name: "Build unsigned release APK (Android + Android TV) on a tag"
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and release (e.g. v0.25.5). APK is attached to this release.'
+        required: true
+        default: 'v0.25.5'
 
 jobs:
   release:
@@ -9,13 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: 'main'
+          ref: ${{ github.event.inputs.tag || 'main' }}
 
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
           cache: 'gradle'
+
+      - name: "Grant execute permission for gradlew"
+        run: chmod +x gradlew
 
       - name: "Build release APK"
         run: ./gradlew assembleRelease --stacktrace
@@ -31,8 +39,31 @@ jobs:
           # assume there is only one APK in that folder
           mv app/build/outputs/apk/release/*.apk "app/build/outputs/apk/release/NewPipe_v$VERSION_NAME.apk"
 
-      - name: "Upload APK"
+      - name: "Generate SHA-256 checksum"
+        run: |
+          apk=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          hash=$(sha256sum "$apk" | cut -d' ' -f1)
+          checksumLine="$hash  $(basename "$apk")"
+          echo "Checksum: $checksumLine"
+          echo "$checksumLine" > checksums-apk-sha256.txt
+
+      - name: "Upload APK artifact"
         uses: actions/upload-artifact@v7
         with:
           name: app
-          path: app/build/outputs/apk/release/*.apk
+          path: |
+            app/build/outputs/apk/release/*.apk
+            checksums-apk-sha256.txt
+
+      - name: "Attach to GitHub Release"
+        run: |
+          tag="${{ github.event.inputs.tag || 'main' }}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --title "NP Desktop $tag" --notes "Automated build for $tag" || true
+          fi
+          gh release upload "$tag" \
+            app/build/outputs/apk/release/*.apk \
+            checksums-apk-sha256.txt \
+            --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
