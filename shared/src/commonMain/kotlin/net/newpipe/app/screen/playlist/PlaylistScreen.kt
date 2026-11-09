@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -191,7 +192,8 @@ private fun LocalPlaylistScreen(
                         )
                     }
                 } else {
-                    items(playlist.items, key = { it.url }) { item ->
+                    // Positional key: a playlist may contain the same video twice.
+                    itemsIndexed(playlist.items, key = { index, item -> "$index-${item.url}" }) { _, item ->
                         VideoActionsMenuHost(item = item) {
                             PlaylistItemRow(
                                 item = item,
@@ -278,7 +280,7 @@ private fun RemotePlaylistBody(
         item(key = "header") {
             PlaylistHeader(details)
         }
-        items(details.items, key = { it.url }) { item ->
+        itemsIndexed(details.items, key = { index, item -> "details-$index-${item.url}" }) { _, item ->
             VideoActionsMenuHost(item = item) {
                 PlaylistItemRow(
                     item = item,

@@ -73,7 +73,9 @@ fun QueuePanel(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    itemsIndexed(queue, key = { _, item -> item.url }) { index, item ->
+                    // The queue may legally contain one video more than once, so the key must include the
+    // position: a bare url would collide and crash Compose with a duplicate lazy key.
+    itemsIndexed(queue, key = { index, item -> "queue-$index-${item.url}" }) { index, item ->
                         ListItem(
                             headlineContent = {
                                 Text(

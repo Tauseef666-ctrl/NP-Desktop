@@ -86,7 +86,7 @@ class StreamViewModel(
                 )
                 _selectedVideo.value = pickPreferredVideo(details, preferredResolution)
                 _selectedAudio.value = pickPreferredAudio(details, preferredAudioFormat)
-                _relatedItems.value = details.relatedItems
+                _relatedItems.value = details.relatedItems.distinctBy { it.url }
                 _hasMoreRelated.value = details.uploaderUrl != null
                 _loadingMoreRelated.value = false
 

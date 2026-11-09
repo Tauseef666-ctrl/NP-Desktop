@@ -228,8 +228,11 @@ class SearchViewModel(
                     )
                 )
                 if (generation != searchGeneration) return@launch
-                _items.value = result
-                _hasMore.value = result.isNotEmpty()
+                // The service repeats entries across pages; the results grid is keyed by url,
+                // so a repeated entry would crash Compose with a duplicate lazy key.
+                val deduped = result.distinctBy { it.url }
+                _items.value = deduped
+                _hasMore.value = deduped.isNotEmpty()
                 nextPage = 1
                 if (!debounce && result.isNotEmpty()) {
                     searchHistory.record(query)
@@ -265,7 +268,7 @@ class SearchViewModel(
                 val suggestions = repository.suggest(term)
                 if (generation != suggestionGeneration) return@launch
                 if (_query.value.trim() != term) return@launch
-                _suggestions.value = suggestions
+                _suggestions.value = suggestions.distinct()
                 _selectedSuggestionIndex.value = -1
             } catch (exception: CancellationException) {
                 throw exception
@@ -297,7 +300,9 @@ class SearchViewModel(
                     )
                 )
                 if (result.isNotEmpty()) {
-                    _items.value = _items.value + result
+                    // Same duplicate-key protection as the first page: the service repeats
+                    // entries across continuations, and the grid renders keyed by url.
+                    _items.value = (_items.value + result).distinctBy { it.url }
                     nextPage += 1
                 } else {
                     _hasMore.value = false

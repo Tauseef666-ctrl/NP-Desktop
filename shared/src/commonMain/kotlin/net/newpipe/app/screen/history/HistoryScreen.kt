@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -121,7 +122,10 @@ fun HistoryScreen(
                 item(key = "group-${group.title}") {
                     HistoryGroupHeader(group.title)
                 }
-                items(group.items, key = { "history-${group.title}-${it.url}" }) { item ->
+                itemsIndexed(
+                    group.items,
+                    key = { index, item -> "history-${group.title}-$index-${item.url}" }
+                ) { _, item ->
                     VideoActionsMenuHost(item = item) {
                         HistoryRow(
                             item = item,
