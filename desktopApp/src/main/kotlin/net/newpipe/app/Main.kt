@@ -201,9 +201,10 @@ fun main() {
         val popupState = remember { popupWindowState() }
         Window(
             onCloseRequest = {
+                // Closing the popup returns the video to the main player with the playback
+                // running: the shared controller keeps playing, only the extra window goes.
                 persistPopupWindowState(popupState)
                 PopupPlayer.close()
-                controller?.clear()
             },
             title = state.title.ifEmpty { "NP Desktop" },
             state = popupState,
@@ -254,8 +255,10 @@ fun main() {
                         onSelectVideo = state.onSelectVideo,
                         isPopupWindow = true,
                         onClose = {
+                            // Same as the window close button: the video returns to the main
+                            // player and the playback keeps running through the shared
+                            // controller.
                             PopupPlayer.close()
-                            readyController.clear()
                         }
                     )
                 }

@@ -137,6 +137,8 @@ kotlin {
         // into a source set that is shared between all JVM flavours.
         jvmMain.dependencies {
             implementation(libs.newpipe.extractor)
+            // The kids-content playback fallback parses InnerTube player responses directly.
+            implementation(libs.newpipe.nanojson)
             implementation(libs.squareup.okhttp)
             implementation(libs.squareup.okhttp.brotli)
 

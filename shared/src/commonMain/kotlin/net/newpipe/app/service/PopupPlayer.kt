@@ -13,7 +13,8 @@ import net.newpipe.app.model.MediaStream
  * The request to show the current video in a small always-on-top popup window.
  *
  * The popup is a separate desktop window, so the request lives outside of the composition. The
- * popup shares the playback controller with the main window: closing the popup stops the playback.
+ * popup shares the playback controller with the main window: closing the popup therefore returns
+ * the video to the main player and the playback keeps running there.
  */
 object PopupPlayer {
 

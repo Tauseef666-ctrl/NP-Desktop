@@ -6,6 +6,10 @@
 package net.newpipe.app.service
 
 import co.touchlab.kermit.Logger
+import com.grack.nanojson.JsonArray
+import com.grack.nanojson.JsonObject
+import com.grack.nanojson.JsonParser
+import com.grack.nanojson.JsonWriter
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CompletableDeferred
@@ -32,6 +36,9 @@ import org.schabi.newpipe.extractor.channel.tabs.ChannelTabInfo
 import org.schabi.newpipe.extractor.exceptions.ExtractionException
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException
 import org.schabi.newpipe.extractor.exceptions.SignInConfirmNotBotException
+import org.schabi.newpipe.extractor.localization.ContentCountry
+import org.schabi.newpipe.extractor.services.youtube.InnertubeClientRequestInfo
+import org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper
 import org.schabi.newpipe.extractor.playlist.PlaylistInfo
 import org.schabi.newpipe.extractor.playlist.PlaylistInfoItem
 import org.schabi.newpipe.extractor.search.SearchInfo
@@ -218,33 +225,305 @@ class ExtractorContentRepository(
 
     private fun extractStreamDetails(serviceId: Int, url: String): StreamDetails {
         val service = serviceForId(serviceId)
-        val info = withBotWallRetry(service, url)
+        return try {
+            val info = withBotWallRetry(service, url)
+            StreamDetails(
+                serviceId = serviceId,
+                url = info.url ?: url,
+                title = info.name.orEmpty(),
+                uploader = info.uploaderName.orEmpty(),
+                uploaderUrl = info.uploaderUrl,
+                uploaderAvatarUrl = info.uploaderAvatars.bestImageUrl(),
+                thumbnailUrl = info.thumbnails.bestImageUrl(),
+                description = info.description?.content,
+                durationSeconds = info.duration.takeIf { it > 0 },
+                viewCount = info.viewCount.takeIf { it >= 0 },
+                uploadDate = info.textualUploadDate,
+                liveNow = info.streamType == StreamType.LIVE_STREAM,
+                videoStreams = (info.videoStreams + info.videoOnlyStreams)
+                    .mapNotNull { it.toMediaStream() },
+                audioStreams = info.audioStreams.mapNotNull { it.toMediaStream() },
+                subtitles = info.subtitles.mapNotNull {
+                    val subtitleUrl = @Suppress("DEPRECATION") it.url ?: return@mapNotNull null
+                    SubtitleTrack(
+                        url = subtitleUrl,
+                        name = it.name ?: it.displayLanguageName.orEmpty(),
+                        languageTag = it.languageTag
+                    )
+                },
+                relatedItems =
+                    @Suppress("DEPRECATION") info.relatedStreams.mapNotNull { it.toContentItem() }
+            )
+        } catch (exception: Exception) {
+            // "Made for kids" videos answer the extraction engine's default visionOS client with
+            // UNPLAYABLE; YouTube still serves them through the iOS player client, which becomes
+            // the playback fallback of this repository.
+            if (isKidsUnplayable(exception, url)) {
+                kidsPlaybackFallback(serviceId, url, exception)
+            } else {
+                throw exception
+            }
+        }
+    }
+
+    /**
+     * True when the extraction failed with the playability error that "made for kids" videos give
+     * back through the engine's default visionOS client: `Got error UNPLAYABLE: "This video is not
+     * available"`. Only YouTube watch URLs are eligible, other services keep their exact errors.
+     */
+    private fun isKidsUnplayable(exception: Exception, url: String): Boolean {
+        val isYouTubeWatch = url.contains("youtube.com/watch?v=") || url.contains("youtu.be/")
+        if (!isYouTubeWatch) {
+            return false
+        }
+        var current: Throwable? = exception
+        var hops = 0
+        while (current != null && hops < 5) {
+            val message = current.message.orEmpty()
+            if (message.contains("UNPLAYABLE") &&
+                message.contains("This video is not available")
+            ) {
+                return true
+            }
+            current = current.cause
+            hops++
+        }
+        return false
+    }
+
+    /**
+     * Replays a blocked (usually "made for kids") YouTube video through the iOS player client,
+     * which is still served playable streaming URLs, and assembles the [StreamDetails] directly
+     * from the returned InnerTube player response. When the retry does not yield a playable
+     * response, the original extraction failure is rethrown so the user interface keeps its
+     * precise error message.
+     */
+    private fun kidsPlaybackFallback(
+        serviceId: Int,
+        url: String,
+        original: Exception
+    ): StreamDetails {
+        Logger.i(
+            messageString =
+                "YouTube denied the stream to the default client; retrying with the iOS player client"
+        )
+        val videoId = videoIdOfUrl(url) ?: throw original
+        val response = try {
+            iosPlayerResponse(videoId)
+        } catch (retry: Exception) {
+            throw original
+        }
+        val status = response.getObject("playabilityStatus")?.getString("status").orEmpty()
+        val videoDetails = response.getObject("videoDetails")
+        val streamingData = response.getObject("streamingData")
+        if (!status.equals("ok", ignoreCase = true) ||
+            videoDetails == null ||
+            streamingData == null
+        ) {
+            throw original
+        }
+
+        val videoStreams = ArrayList<MediaStream>()
+        val audioStreams = ArrayList<MediaStream>()
+        streamingData.getArray("formats")
+            ?.let { collectPlayerFormats(it, videoStreams, audioStreams) }
+        streamingData.getArray("adaptiveFormats")
+            ?.let { collectPlayerFormats(it, videoStreams, audioStreams) }
+        if (videoStreams.isEmpty() && audioStreams.isEmpty()) {
+            throw original
+        }
+
+        val micro = response.getObject("microformat")?.getObject("playerMicroformatRenderer")
+        val channelId = videoDetails.getString("channelId")
         return StreamDetails(
             serviceId = serviceId,
-            url = info.url ?: url,
-            title = info.name.orEmpty(),
-            uploader = info.uploaderName.orEmpty(),
-            uploaderUrl = info.uploaderUrl,
-            uploaderAvatarUrl = info.uploaderAvatars.bestImageUrl(),
-            thumbnailUrl = info.thumbnails.bestImageUrl(),
-            description = info.description?.content,
-            durationSeconds = info.duration.takeIf { it > 0 },
-            viewCount = info.viewCount.takeIf { it >= 0 },
-            uploadDate = info.textualUploadDate,
-            liveNow = info.streamType == StreamType.LIVE_STREAM,
-            videoStreams = (info.videoStreams + info.videoOnlyStreams)
-                .mapNotNull { it.toMediaStream() },
-            audioStreams = info.audioStreams.mapNotNull { it.toMediaStream() },
-            subtitles = info.subtitles.mapNotNull {
-                val url = @Suppress("DEPRECATION") it.url ?: return@mapNotNull null
-                SubtitleTrack(
-                    url = url,
-                    name = it.name ?: it.displayLanguageName.orEmpty(),
-                    languageTag = it.languageTag
-                )
-            },
-            relatedItems = @Suppress("DEPRECATION") info.relatedStreams.mapNotNull { it.toContentItem() }
+            url = url,
+            title = videoDetails.getString("title").orEmpty(),
+            uploader = videoDetails.getString("author").orEmpty(),
+            uploaderUrl = channelId?.let { "https://www.youtube.com/channel/$it" },
+            uploaderAvatarUrl = null,
+            thumbnailUrl = videoDetails.getObject("thumbnail")?.getArray("thumbnails")
+                ?.filterIsInstance<JsonObject>()
+                ?.maxByOrNull { (it.getNumber("width") as? Number)?.toInt() ?: 0 }
+                ?.getString("url"),
+            description = videoDetails.getString("shortDescription"),
+            durationSeconds = videoDetails.getString("lengthSeconds")?.toLongOrNull(),
+            viewCount = videoDetails.getString("viewCount")?.toLongOrNull()
+                ?: (micro?.getNumber("viewCount") as? Number)?.toLong(),
+            uploadDate = micro?.getString("uploadDate"),
+            liveNow = videoDetails.getBoolean("isLiveContent") ?: false,
+            videoStreams = videoStreams,
+            audioStreams = audioStreams,
+            subtitles = collectPlayerSubtitles(response)
         )
+    }
+
+    /**
+     * Requests the player response of [videoId] through the InnerTube endpoint while posing as
+     * the YouTube iOS app: the client version, the User-Agent and the `X-Youtube-*` headers have
+     * to match exactly, otherwise YouTube answers with "Precondition check failed".
+     */
+    private fun iosPlayerResponse(videoId: String): JsonObject {
+        val localization = NewPipe.getPreferredLocalization()
+        val contentCountry = NewPipe.getPreferredContentCountry()
+            ?: ContentCountry(java.util.Locale.getDefault().country.ifBlank { "US" })
+        val client = InnertubeClientRequestInfo.ofVisionOsClient().also {
+            it.clientInfo.clientName = "IOS"
+            it.clientInfo.clientVersion = IOS_FALLBACK_CLIENT_VERSION
+            it.clientInfo.clientId = "5"
+            it.clientInfo.clientScreen = "WATCH"
+            it.deviceInfo.platform = "MOBILE"
+            it.deviceInfo.deviceMake = "Apple"
+            it.deviceInfo.deviceModel = IOS_FALLBACK_DEVICE_MODEL
+            it.deviceInfo.osName = "iOS"
+            it.deviceInfo.osVersion = IOS_FALLBACK_OS_VERSION
+        }
+        if (client.clientInfo.visitorData == null) {
+            client.clientInfo.visitorData = YoutubeParsingHelper.getVisitorDataFromInnertube(
+                InnertubeClientRequestInfo.ofWebClient().also {
+                    it.clientInfo.clientVersion = YoutubeParsingHelper.getClientVersion()
+                },
+                localization,
+                contentCountry,
+                YoutubeParsingHelper.getYouTubeHeaders(),
+                "https://www.youtube.com/youtubei/v1/",
+                null,
+                false
+            )
+        }
+        val headers = mapOf<String, List<String>>(
+            "User-Agent" to listOf(
+                "com.google.ios.youtube/$IOS_FALLBACK_CLIENT_VERSION " +
+                    "($IOS_FALLBACK_DEVICE_MODEL; U; CPU iOS " +
+                    "${IOS_FALLBACK_OS_VERSION.substringBefore(".")} like Mac OS X)"
+            ),
+            "X-Youtube-Client-Name" to listOf("5"),
+            "X-Youtube-Client-Version" to listOf(IOS_FALLBACK_CLIENT_VERSION),
+            "X-Apple-Product-Model" to listOf(IOS_FALLBACK_DEVICE_MODEL),
+            "X-ios-bundle-identifier" to listOf("com.google.ios.youtube"),
+            "X-Goog-Api-Format-Version" to listOf("2")
+        )
+        val builder = YoutubeParsingHelper.prepareJsonBuilder(
+            localization, contentCountry, client, null
+        )
+        builder.value("videoId", videoId)
+            .value("contentCheckOk", true)
+            .value("racyCheckOk", true)
+        val body = JsonWriter.string(builder.done()).toByteArray(Charsets.UTF_8)
+        val response = NewPipe.getDownloader().postWithContentTypeJson(
+            "https://www.youtube.com/youtubei/v1/player?prettyPrint=false",
+            headers,
+            body,
+            localization
+        )
+        return JsonParser.`object`().from(
+            YoutubeParsingHelper.getValidJsonResponseBody(response)
+        )
+    }
+
+    /**
+     * Adds the playable formats of an InnerTube player response `formats`/`adaptiveFormats` array
+     * to the stream lists. The formats carry plain URLs, so no deciphering is needed; muxed
+     * formats that also contain audio come first because they are handed to the player directly.
+     */
+    private fun collectPlayerFormats(
+        formats: JsonArray,
+        videoStreams: MutableList<MediaStream>,
+        audioStreams: MutableList<MediaStream>
+    ) {
+        for (raw in formats) {
+            val format = raw as? JsonObject ?: continue
+            val streamUrl = format.getString("url") ?: continue
+            val mimeType = format.getString("mimeType").orEmpty()
+            val bitrate = (format.getNumber("bitrate") as? Number)?.toInt() ?: 0
+            val formatId = (format.getNumber("itag") as? Number)?.toInt()?.toString().orEmpty()
+            if (mimeType.startsWith("audio/")) {
+                val sampleRate = (format.getNumber("audioSampleRate") as? Number)?.toInt() ?: 0
+                val quality = format.getString("audioQuality")
+                    ?.removePrefix("AUDIO_QUALITY_")
+                    ?.lowercase()
+                    ?.replaceFirstChar { it.uppercase() }
+                    ?: sampleRate.takeIf { it > 0 }?.let { "${it / 1000} kHz" }
+                    ?: ""
+                audioStreams += MediaStream(
+                    url = streamUrl,
+                    formatId = formatId,
+                    quality = quality,
+                    codec = codecOf(mimeType),
+                    bitrate = bitrate,
+                    isVideoOnly = false
+                )
+                continue
+            }
+            val height = (format.getNumber("height") as? Number)?.toInt() ?: 0
+            videoStreams += MediaStream(
+                url = streamUrl,
+                formatId = formatId,
+                quality = format.getString("qualityLabel")
+                    ?: height.takeIf { it > 0 }?.let { "${it}p" }
+                    ?: "",
+                codec = codecOf(mimeType),
+                bitrate = bitrate,
+                // A video format that also contains an audio codec part is not video-only.
+                isVideoOnly = !mimeType.contains("audio"),
+                width = ((format.getNumber("width") as? Number)?.toInt() ?: 0)
+                    .takeIf { it > 0 },
+                height = height.takeIf { it > 0 },
+                fps = ((format.getNumber("fps") as? Number)?.toInt() ?: 0)
+                    .takeIf { it > 0 }
+            )
+        }
+    }
+
+    /**
+     * The caption tracks of an InnerTube player response, matching what the regular extraction
+     * delivers for subtitles.
+     */
+    private fun collectPlayerSubtitles(response: JsonObject): List<SubtitleTrack> {
+        val tracks = response.getObject("playerCaptionsTracklistRenderer")
+            ?.getArray("captionTracks") ?: return emptyList()
+        return tracks.filterIsInstance<JsonObject>().mapNotNull { track ->
+            val trackUrl = track.getString("baseUrl") ?: return@mapNotNull null
+            val name = track.getObject("name")
+            SubtitleTrack(
+                url = "$trackUrl&fmt=json3",
+                name = name?.getString("simpleText")
+                    ?: name?.getString("vName")
+                    ?: track.getString("languageCode").orEmpty(),
+                languageTag = track.getString("languageCode")
+            )
+        }
+    }
+
+    /** The codecs value of an InnerTube MIME type such as `video/mp4; codecs="avc1.640028"`. */
+    private fun codecOf(mimeType: String): String {
+        val marker = "codecs=\""
+        val start = mimeType.indexOf(marker)
+        if (start < 0) {
+            return ""
+        }
+        val end = mimeType.indexOf('"', start + marker.length)
+        if (end < 0) {
+            return ""
+        }
+        return mimeType.substring(start + marker.length, end)
+    }
+
+    /** The eleven character video id inside a YouTube watch / short / youtu.be URL. */
+    private fun videoIdOfUrl(url: String): String? {
+        for (pattern in listOf("v=", "/shorts/", "/embed/", "youtu.be/")) {
+            val index = url.indexOf(pattern)
+            if (index >= 0) {
+                val start = index + pattern.length
+                val end = url.indexOfAny(charArrayOf('&', '?', '/'), start)
+                    .let { if (it < 0) url.length else it }
+                val candidate = url.substring(start, end)
+                if (candidate.length == 11) {
+                    return candidate
+                }
+            }
+        }
+        return null
     }
 
     /**
@@ -606,6 +885,19 @@ private const val MAX_SUGGESTIONS = 8
  * "Sign in to confirm that you're not a bot" wall, which usually passes after a moment.
  */
 private const val BOT_WALL_RETRY_DELAY_MS = 2_500L
+
+/**
+ * The iOS YouTube app version the kids-content playback fallback presents: YouTube only
+ * serves playable streaming data to current client versions, and the version, User-Agent
+ * and headers have to match. When these stop working, refresh all three together.
+ */
+private const val IOS_FALLBACK_CLIENT_VERSION = "21.05.2"
+
+/** The device model the kids-content playback fallback presents alongside the client version. */
+private const val IOS_FALLBACK_DEVICE_MODEL = "iPhone16,2"
+
+/** The iOS version the kids-content playback fallback presents alongside the client version. */
+private const val IOS_FALLBACK_OS_VERSION = "18.6.2.23G80"
 
 /**
  * Turns a kiosk id such as `trending_music` into the label `Trending Music`.
