@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -62,6 +63,9 @@ class StreamViewModel(
     private var loadedUrl: String? = null
     private var loadedServiceId = -1
 
+    /** One automatic retry of a transient network failure per opened video. */
+    private var autoRetries = 0
+
     /**
      * Loads the stream details. Repeated calls with the same url are ignored.
      */
@@ -69,11 +73,22 @@ class StreamViewModel(
         if (loadedUrl == url && loadedServiceId == serviceId) return
         loadedUrl = url
         loadedServiceId = serviceId
+        autoRetries = 0
+        startLoad(serviceId, url)
+    }
+
+    /**
+     * Runs one load attempt for the current url. A momentary network drop would leave a dead
+     * error screen, so the first transient network failure runs the attempt once again
+     * automatically; everything else keeps the error together with the manual retry.
+     */
+    private fun startLoad(serviceId: Int, url: String) {
         _loading.value = true
         _error.value = null
         _channel.value = null
 
         viewModelScope.launch {
+            var retryNetwork = false
             try {
                 val details = repository.streamDetails(serviceId, url)
                 _details.value = details
@@ -108,6 +123,14 @@ class StreamViewModel(
                         }
                     }
                 }
+            } catch (exception: ContentException.Network) {
+                Logger.e(messageString = "Loading the stream failed (network)", throwable = exception)
+                if (autoRetries < 1) {
+                    autoRetries++
+                    retryNetwork = true
+                } else {
+                    _error.value = exception.message
+                }
             } catch (exception: ContentException) {
                 Logger.e(messageString = "Loading the stream failed", throwable = exception)
                 _error.value = exception.message
@@ -115,7 +138,14 @@ class StreamViewModel(
                 Logger.e(messageString = "Loading the stream failed", throwable = exception)
                 _error.value = exception.message
             } finally {
-                _loading.value = false
+                if (!retryNetwork) {
+                    _loading.value = false
+                }
+            }
+            if (retryNetwork) {
+                // Rides out the momentary network drop and runs the whole attempt again.
+                delay(1_500)
+                startLoad(serviceId, url)
             }
         }
     }

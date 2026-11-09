@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -82,6 +83,9 @@ class HomeViewModel(
     private var feedSearchItems: List<ContentItem> = emptyList()
     private var feedRelatedKey: String? = null
     private var feedRelatedOfWatched: List<ContentItem> = emptyList()
+
+    /** One automatic re-run of the whole feed after a total failure per loading cycle. */
+    private var feedAutoRetries = 0
 
     init {
         val services = serviceRegistry.services()
@@ -323,62 +327,82 @@ class HomeViewModel(
         _feedLoading.value = true
 
         feedJob = viewModelScope.launch {
-            // The recommendations that are related to what the user actually watched. The
-            // watch page of each recent video reports its own related streams, which is the
-            // strongest personal signal a feed can follow.
-            val relatedOfWatched = watched.take(RELATED_VIDEOS_PER_FEED).flatMap { entry ->
-                try {
-                    repository.streamDetails(entry.serviceId, entry.url).relatedItems.take(
-                        RELATED_ITEMS_PER_WATCHED
-                    )
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    Logger.w(
-                        messageString = "The related videos of '${entry.title}' could not be loaded",
-                        throwable = exception
-                    )
+            var anySourceFailed = false
+            try {
+                // The recommendations that are related to what the user actually watched. The
+                // watch page of each recent video reports its own related streams, which is the
+                // strongest personal signal a feed can follow.
+                val relatedOfWatched = watched.take(RELATED_VIDEOS_PER_FEED).flatMap { entry ->
+                    try {
+                        repository.streamDetails(entry.serviceId, entry.url).relatedItems.take(
+                            RELATED_ITEMS_PER_WATCHED
+                        )
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        Logger.w(
+                            messageString = "The related videos of '${entry.title}' could not be loaded",
+                            throwable = exception
+                        )
+                        anySourceFailed = true
+                        emptyList()
+                    }
+                }
+
+                val channelItems = if (channelUrl != null) {
+                    try {
+                        repository.channel(_serviceId.value, channelUrl).items
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        Logger.w(
+                            messageString = "The feed channel could not be loaded",
+                            throwable = exception
+                        )
+                        anySourceFailed = true
+                        emptyList()
+                    }
+                } else {
                     emptyList()
                 }
-            }
 
-            val channelItems = if (channelUrl != null) {
-                try {
-                    repository.channel(_serviceId.value, channelUrl).items
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    Logger.w(
-                        messageString = "The feed channel could not be loaded",
-                        throwable = exception
-                    )
-                    emptyList()
+                val searchItems = terms.flatMap { term ->
+                    try {
+                        repository.search(
+                            SearchRequest(query = term, serviceId = _serviceId.value)
+                        ).take(SEARCH_RESULTS_PER_TERM)
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        Logger.w(
+                            messageString = "The feed search '$term' could not be loaded",
+                            throwable = exception
+                        )
+                        anySourceFailed = true
+                        emptyList()
+                    }
                 }
-            } else {
-                emptyList()
-            }
 
-            val searchItems = terms.flatMap { term ->
-                try {
-                    repository.search(
-                        SearchRequest(query = term, serviceId = _serviceId.value)
-                    ).take(SEARCH_RESULTS_PER_TERM)
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    Logger.w(
-                        messageString = "The feed search '$term' could not be loaded",
-                        throwable = exception
-                    )
-                    emptyList()
+                feedRelatedOfWatched = relatedOfWatched
+                feedChannelItems = channelItems
+                feedSearchItems = searchItems
+                publishFeed()
+                if (_feed.value.isNotEmpty()) {
+                    feedAutoRetries = 0
+                }
+            } finally {
+                // Whatever happens inside, the loading indicator never stays active.
+                _feedLoading.value = false
+            }
+            if (anySourceFailed && _feed.value.isEmpty() && feedAutoRetries < 1) {
+                // A momentary network drop ate every source: one automatic re-run rides it out,
+                // persistent problems stay with the manual pull to refresh.
+                feedAutoRetries++
+                viewModelScope.launch {
+                    delay(5_000L)
+                    refreshFeed()
                 }
             }
-
-            feedRelatedOfWatched = relatedOfWatched
-            feedChannelItems = channelItems
-            feedSearchItems = searchItems
-            publishFeed()
-            _feedLoading.value = false
         }
     }
 
