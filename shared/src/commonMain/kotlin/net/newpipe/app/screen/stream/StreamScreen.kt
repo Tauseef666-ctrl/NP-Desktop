@@ -161,7 +161,7 @@ fun StreamScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
-                    onRetry = { viewModel.load(serviceId, url) },
+                    onRetry = { viewModel.retry() },
                     onSignIn = if (botWall) {
                         { navigator.navigateTo(Destination.AccountSettings) }
                     } else {
@@ -230,25 +230,33 @@ fun StreamScreen(
                     }
                 }
                 val openPopup: () -> Unit = {
-                    PopupPlayer.open(
-                        PopupPlayer.State(
-                            title = streamDetails.title,
-                            thumbnailUrl = streamDetails.thumbnailUrl,
-                            videoStreams = streamDetails.videoStreams,
-                            selectedVideo = selectedVideo,
-                            canPlay = selectedVideo != null,
-                            onPlay = {
-                                playStream(
-                                    details = streamDetails,
-                                    selectedVideoUrl = selectedVideo?.url,
-                                    selectedAudioUrl = selectedAudio?.url,
-                                    controller = playbackController,
-                                    watchHistory = watchHistory
-                                )
-                            },
-                            onSelectVideo = selectVideo
+                    val popupCurrent = PopupPlayer.state.value
+                    if (popupCurrent != null && popupCurrent.title == streamDetails.title) {
+                        // The same video already plays in the popup; pressing the button again
+                        // returns it to the main player: the window closes and the inline
+                        // surface shows the running playback again.
+                        PopupPlayer.close()
+                    } else {
+                        PopupPlayer.open(
+                            PopupPlayer.State(
+                                title = streamDetails.title,
+                                thumbnailUrl = streamDetails.thumbnailUrl,
+                                videoStreams = streamDetails.videoStreams,
+                                selectedVideo = selectedVideo,
+                                canPlay = selectedVideo != null,
+                                onPlay = {
+                                    playStream(
+                                        details = streamDetails,
+                                        selectedVideoUrl = selectedVideo?.url,
+                                        selectedAudioUrl = selectedAudio?.url,
+                                        controller = playbackController,
+                                        watchHistory = watchHistory
+                                    )
+                                },
+                               onSelectVideo = selectVideo
+                            )
                         )
-                    )
+                    }
                 }
                 PlayerShortcutHooks.togglePopup = {
                     if (PopupPlayer.state.value != null) {

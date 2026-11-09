@@ -60,14 +60,15 @@ class StreamViewModel(
     val hasMoreRelated = _hasMoreRelated.asStateFlow()
 
     private var loadedUrl: String? = null
+    private var loadedServiceId = -1
 
     /**
      * Loads the stream details. Repeated calls with the same url are ignored.
      */
     fun load(serviceId: Int, url: String) {
-        if (loadedUrl == url) return
+        if (loadedUrl == url && loadedServiceId == serviceId) return
         loadedUrl = url
-
+        loadedServiceId = serviceId
         _loading.value = true
         _error.value = null
         _channel.value = null
@@ -124,6 +125,22 @@ class StreamViewModel(
      */
     fun selectVideo(stream: MediaStream) {
         _selectedVideo.value = stream
+    }
+
+    /**
+     * Repeats the last load attempt after an error.
+     *
+     * A failed attempt has to run again through the network: without resetting the loaded url
+     * the retry button would silently return because `load` remembers every url it has seen.
+     */
+    fun retry() {
+        if (_loading.value) return
+        val url = loadedUrl ?: return
+        val serviceId = loadedServiceId
+        loadedUrl = null
+        _error.value = null
+        _details.value = null
+        load(serviceId, url)
     }
 
     /**

@@ -34,6 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,6 +58,7 @@ import net.newpipe.app.model.MediaStream
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.PopupPlayer
 import net.newpipe.app.ui.Motion
+import net.newpipe.app.ui.PlayerUiState
 import net.newpipe.app.ui.Spacing
 import newpipe.shared.generated.resources.Res
 import newpipe.shared.generated.resources.ic_headset
@@ -65,6 +67,7 @@ import newpipe.shared.generated.resources.ic_picture_in_picture
 import newpipe.shared.generated.resources.ic_play_arrow
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.koinInject
 
 /**
  * The video area of the player.
@@ -124,11 +127,30 @@ fun VideoPlayer(
     var controlsVisible by remember(hasMedia) { mutableStateOf(true) }
     var interactions by remember { mutableIntStateOf(0) }
     var aspect by remember { mutableStateOf(PlayerAspect.Fit) }
+    // The last position the pointer had when it last really moved. The video surface under a
+    // stationary cursor redraws with every frame, and the platform then replays Move events for
+    // the same position; comparing positions makes those fake moves identifiable.
+    var lastPointerPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
 
     LaunchedEffect(controlsVisible, interactions, state.playing, hasMedia) {
         if (hasMedia && controlsVisible && state.playing) {
             delay(CONTROLS_HIDE_DELAY_MS)
             controlsVisible = false
+        }
+    }
+
+    // The fullscreen player hides the mouse pointer together with the automatically hidden
+    // controls; the first real pointer movement brings both back.
+    val playerUiState: PlayerUiState = koinInject()
+    val hideCursor = immersive && !isPopupWindow && !displacedByPopup &&
+        hasMedia && state.playing && !controlsVisible
+    LaunchedEffect(hideCursor) {
+        playerUiState.setHideCursor(hideCursor)
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            // Never leave the pointer hidden when this player goes away.
+            playerUiState.setHideCursor(false)
         }
     }
 
@@ -157,9 +179,11 @@ fun VideoPlayer(
                     )
                 }
 
-            // Any pointer activity over the video brings the controls back and restarts the
-            // auto hide timer. The overlay is composed before the controls, so the controls
-            // always receive their clicks first.
+            // Any real pointer movement over the video brings the controls back and restarts
+            // the auto hide timer. The overlay is composed before the controls, so the controls
+            // always receive their clicks first. Replayed Move events for a stationary cursor
+            // must keep the timer running, otherwise the controls never hide over a playing
+            // video.
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -168,11 +192,28 @@ fun VideoPlayer(
                             while (true) {
                                 val event = awaitPointerEvent()
                                 when (event.type) {
-                                    PointerEventType.Move,
                                     PointerEventType.Press,
                                     PointerEventType.Enter -> {
+                                        lastPointerPosition =
+                                            event.changes.firstOrNull()?.let { Pair(it.position.x, it.position.y) }
                                         controlsVisible = true
                                         interactions++
+                                    }
+                                    PointerEventType.Move -> {
+                                        val changed = event.changes.firstOrNull()
+                                        val position = changed?.let { Pair(it.position.x, it.position.y) }
+                                        val last = lastPointerPosition
+                                        val moved = position != null && (
+                                            last == null ||
+                                                (position.first - last.first).let { it * it } +
+                                                (position.second - last.second).let { it * it } >
+                                                POINTER_MOVE_THRESHOLD_PX * POINTER_MOVE_THRESHOLD_PX
+                                            )
+                                        if (moved) {
+                                            lastPointerPosition = position
+                                            controlsVisible = true
+                                            interactions++
+                                        }
                                     }
                                 }
                             }
@@ -662,6 +703,13 @@ private const val SPEED_STEPS = SPEED_INTERVALS - 1
 private val PlayerForeground = Color(0xFFF5F5F5)
 
 /**
- * How long the controls stay visible without interaction while the playback is running.
+ * How long the controls (and, in fullscreen, the mouse pointer) stay visible without
+ * interaction while the playback is running.
  */
-private const val CONTROLS_HIDE_DELAY_MS = 3_500L
+private const val CONTROLS_HIDE_DELAY_MS = 3_000L
+
+/**
+ * The pointer distance in pixels that counts as a real movement; hover events replayed for a
+ * stationary cursor over a changing surface stay below this.
+ */
+private const val POINTER_MOVE_THRESHOLD_PX = 6f

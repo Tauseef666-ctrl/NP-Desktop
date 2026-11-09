@@ -281,6 +281,24 @@ class SearchViewModel(
     }
 
     /**
+     * Repeats the failed page load.
+     *
+     * When the first page itself failed the whole search runs again; when a continuation page
+     * failed the paging resumes from the page the error hit. Without `_hasMore` restore and
+     * the error clear, a single slow page response would strand the user forever.
+     */
+    fun retryPage() {
+        if (_loading.value) return
+        if (_items.value.isEmpty()) {
+            search(_query.value, debounce = false)
+            return
+        }
+        _error.value = null
+        _hasMore.value = true
+        loadMore()
+    }
+
+    /**
      * Loads the next page of the current search.
      */
     fun loadMore() {

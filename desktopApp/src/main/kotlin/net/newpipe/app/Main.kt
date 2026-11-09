@@ -37,6 +37,10 @@ import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
 import net.newpipe.app.ui.PlayerShortcutDispatcher
+import java.awt.Cursor
+import java.awt.Point
+import java.awt.Toolkit
+import java.awt.image.BufferedImage
 import java.io.File
 import net.newpipe.app.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
@@ -145,6 +149,23 @@ fun main() {
             windowIcon?.let { awt.setIconImage(it) }
             // Black window chrome on Windows so the title bar matches the app's dark design.
             applyDarkTitlebarToWindow(awt)
+        }
+        // The fullscreen player hides the mouse pointer with the controls after 3 seconds
+        // without movement. An invisible custom cursor does that; any real pointer movement
+        // flips the flag back and the normal cursor returns.
+        val hideCursor by playerUiState.hideCursor.collectAsState()
+        val blankCursor = remember {
+            runCatching {
+                val image = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
+                Toolkit.getDefaultToolkit().createCustomCursor(image, Point(0, 0), "NP hidden pointer")
+            }.getOrNull()
+        }
+        LaunchedEffect(hideCursor, blankCursor) {
+            val awt = window
+            awt.cursor = when {
+                hideCursor && blankCursor != null -> blankCursor
+                else -> Cursor.getDefaultCursor()
+            }
         }
         val readyController = controller
         if (readyController == null) {

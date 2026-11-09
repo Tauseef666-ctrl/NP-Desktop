@@ -78,10 +78,17 @@ private class PersistingFileSettings(
             FileOutputStream(temporary).use { stream ->
                 properties.store(stream, "NP-Desktop settings")
             }
-            temporary.renameTo(file).let { replaced ->
-                if (!replaced && !file.exists()) {
-                    temporary.copyTo(file, overwrite = true)
-                }
+            // `File.renameTo` refuses to replace an existing file on Windows, so with the old
+            // code every update after the first ever write went into the .tmp twin and was
+            // lost silently: the copy-equivalent fallback only ran while the real file was
+            // still missing. Removing the target explicitly first (with the overwrite copy as
+            // the second lane) makes the replacement work even when the file already exists.
+            val targetRemoved = if (file.exists()) file.delete() else true
+            if (!targetRemoved || !temporary.renameTo(file)) {
+                temporary.copyTo(file, overwrite = true)
+            }
+            if (temporary.exists()) {
+                temporary.delete()
             }
         }.onFailure { exception ->
             Logger.w(messageString = "The settings could not be stored", throwable = exception)

@@ -80,6 +80,8 @@ class HomeViewModel(
     private var feedChannelItems: List<ContentItem> = emptyList()
     private var feedSearchKey: String? = null
     private var feedSearchItems: List<ContentItem> = emptyList()
+    private var feedRelatedKey: String? = null
+    private var feedRelatedOfWatched: List<ContentItem> = emptyList()
 
     init {
         val services = serviceRegistry.services()
@@ -112,6 +114,8 @@ class HomeViewModel(
         feedChannelItems = emptyList()
         feedSearchKey = null
         feedSearchItems = emptyList()
+        feedRelatedKey = null
+        feedRelatedOfWatched = emptyList()
         kioskPage = 0
         _canLoadMore.value = true
         refreshKiosks()
@@ -298,13 +302,16 @@ class HomeViewModel(
         val channelUrl = watched.firstOrNull { !it.uploaderUrl.isNullOrBlank() }?.uploaderUrl
         val terms = searchHistory.queries.value.take(SEARCH_QUERY_LIMIT)
         val searchKey = terms.joinToString("|")
+        // The related videos of the most recent watched entries: as soon as the user watches
+        // something new this key changes and the feed pulls fresh recommendations for it.
+        val relatedKey = watched.take(RELATED_VIDEOS_PER_FEED).joinToString("|") { it.url }
 
         if (kioskItems.isEmpty() && watched.isEmpty()) {
             _feed.value = emptyList()
             return
         }
 
-        if (channelUrl == feedChannelUrl && searchKey == feedSearchKey) {
+        if (channelUrl == feedChannelUrl && searchKey == feedSearchKey && relatedKey == feedRelatedKey) {
             publishFeed()
             return
         }
@@ -312,9 +319,29 @@ class HomeViewModel(
         feedJob?.cancel()
         feedChannelUrl = channelUrl
         feedSearchKey = searchKey
+        feedRelatedKey = relatedKey
         _feedLoading.value = true
 
         feedJob = viewModelScope.launch {
+            // The recommendations that are related to what the user actually watched. The
+            // watch page of each recent video reports its own related streams, which is the
+            // strongest personal signal a feed can follow.
+            val relatedOfWatched = watched.take(RELATED_VIDEOS_PER_FEED).flatMap { entry ->
+                try {
+                    repository.streamDetails(entry.serviceId, entry.url).relatedItems.take(
+                        RELATED_ITEMS_PER_WATCHED
+                    )
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    Logger.w(
+                        messageString = "The related videos of '${entry.title}' could not be loaded",
+                        throwable = exception
+                    )
+                    emptyList()
+                }
+            }
+
             val channelItems = if (channelUrl != null) {
                 try {
                     repository.channel(_serviceId.value, channelUrl).items
@@ -347,6 +374,7 @@ class HomeViewModel(
                 }
             }
 
+            feedRelatedOfWatched = relatedOfWatched
             feedChannelItems = channelItems
             feedSearchItems = searchItems
             publishFeed()
@@ -361,7 +389,7 @@ class HomeViewModel(
         // Content related to what the user actually watches and searches leads the feed; the
         // generic kiosk only fills the remainder, so the home feed keeps following the user
         // instead of drifting into unrelated trending content.
-        val related = (feedChannelItems + feedSearchItems)
+        val related = (feedRelatedOfWatched + feedChannelItems + feedSearchItems)
             .filter { it.type == ContentType.STREAM && it.url !in watchedUrls }
             .distinctBy { it.url }
         val relatedUrls = related.map { it.url }.toSet()
@@ -391,6 +419,8 @@ class HomeViewModel(
         feedSearchKey = null
         feedChannelItems = emptyList()
         feedSearchItems = emptyList()
+        feedRelatedKey = null
+        feedRelatedOfWatched = emptyList()
         feedPool = emptyList()
         rebuildFeed()
     }
@@ -422,6 +452,12 @@ class HomeViewModel(
 
         /** How many recently watched streams are pinned to the front of the feed. */
         private const val RECENT_WATCHED = 4
+
+        /** How many of the most recent watched videos feed on their related streams. */
+        private const val RELATED_VIDEOS_PER_FEED = 3
+
+        /** How many related streams are taken per watched video for the personal pool. */
+        private const val RELATED_ITEMS_PER_WATCHED = 10
 
         /** How many recent search terms personalise the feed. */
         private const val SEARCH_QUERY_LIMIT = 3

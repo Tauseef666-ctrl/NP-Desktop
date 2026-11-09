@@ -86,4 +86,20 @@ class PlayerUiState {
     fun toggleAudioOnly() {
         _audioOnly.value = !_audioOnly.value
     }
+
+    private val _hideCursor = MutableStateFlow(false)
+
+    /**
+     * Whether the mouse pointer should currently be hidden over the playing video. The desktop
+     * fullscreen player hides the cursor together with the automatically hidden controls and
+     * shows both again at the first real pointer movement.
+     */
+    val hideCursor = _hideCursor.asStateFlow()
+
+    /**
+     * Shows or hides the mouse pointer over the fullscreen player.
+     */
+    fun setHideCursor(value: Boolean) {
+        _hideCursor.value = value
+    }
 }

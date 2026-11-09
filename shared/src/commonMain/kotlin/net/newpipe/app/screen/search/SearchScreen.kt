@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -40,6 +41,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -306,7 +308,11 @@ fun SearchScreen(
             HorizontalDivider(modifier = Modifier.padding(top = Spacing.sm))
 
             when {
-                error != null -> Message(
+                // A failed page while results are already on the screen must keep the grid
+                // visible: replacing it with an error message made the user lose everything
+                // when a single continuation was slow or failed. The inline retry row at the
+                // end of the grid covers that case below.
+                error != null && items.isEmpty() -> Message(
                     text = error!!,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -344,6 +350,15 @@ fun SearchScreen(
                         )
                     }
 
+                    if (error != null) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            SearchRetryRow(
+                                message = error!!,
+                                onRetry = { viewModel.retryPage() }
+                            )
+                        }
+                    }
+
                     if (loading) {
                         item {
                             Box(
@@ -365,8 +380,7 @@ fun SearchScreen(
 /**
  * Navigates to the screen that matches the type of the item.
  */
-private fun navigateToItem(item: ContentItem, navigator: Navigator) {
-    when (item.type) {
+private fun navigateToItem(item: ContentItem, navigator: Navigator) {    when (item.type) {
         ContentType.STREAM -> navigator.navigateTo(Destination.Stream(item.serviceId, item.url))
         ContentType.CHANNEL -> navigator.navigateTo(Destination.Channel(item.serviceId, item.url))
         ContentType.PLAYLIST -> navigator.navigateTo(Destination.Playlist(item.serviceId, item.url))
@@ -390,5 +404,32 @@ internal fun Message(
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+/**
+ * The inline "load the next page" failure row at the end of the results grid: the already
+ * loaded results stay visible while it explains that a page failed and repeats it on demand.
+ */
+@Composable
+private fun SearchRetryRow(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(Spacing.lg),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        TextButton(onClick = onRetry) {
+            Text("Retry")
+        }
     }
 }
