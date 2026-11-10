@@ -108,6 +108,16 @@ fun main() {
         // Prepare libVLC in the background while the user browses, so the first video starts
         // playing instantly.
         withContext(Dispatchers.Default) { created.warmUp() }
+        // Warm up the extraction engine as well: initializing the downloader and the service
+        // registry is paid here instead of on the user's first click, so the home grid and
+        // the first stream open sooner.
+        withContext(Dispatchers.Default) {
+            // A failure is harmless: the home screen load path initialises the engine on
+            // demand anyway.
+            runCatching {
+                net.newpipe.app.service.createServiceRegistry().services()
+            }
+        }
     }
 
     // The fullscreen flag of the player drives the real window placement of the main window.

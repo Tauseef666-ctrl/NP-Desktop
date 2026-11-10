@@ -251,45 +251,82 @@ class ExtractorContentRepository(
     private fun extractStreamDetails(serviceId: Int, url: String): StreamDetails {
         val service = serviceForId(serviceId)
         return try {
-            val info = withBotWallRetry(service, url)
-            StreamDetails(
-                serviceId = serviceId,
-                url = info.url ?: url,
-                title = info.name.orEmpty(),
-                uploader = info.uploaderName.orEmpty(),
-                uploaderUrl = info.uploaderUrl,
-                uploaderAvatarUrl = info.uploaderAvatars.bestImageUrl(),
-                thumbnailUrl = info.thumbnails.bestImageUrl(),
-                description = info.description?.content,
-                durationSeconds = info.duration.takeIf { it > 0 },
-                viewCount = info.viewCount.takeIf { it >= 0 },
-                uploadDate = info.textualUploadDate,
-                liveNow = info.streamType == StreamType.LIVE_STREAM,
-                videoStreams = (info.videoStreams + info.videoOnlyStreams)
-                    .mapNotNull { it.toMediaStream() },
-                audioStreams = info.audioStreams.mapNotNull { it.toMediaStream() },
-                subtitles = info.subtitles.mapNotNull {
-                    val subtitleUrl = @Suppress("DEPRECATION") it.url ?: return@mapNotNull null
-                    SubtitleTrack(
-                        url = subtitleUrl,
-                        name = it.displayLanguageName.orEmpty(),
-                        languageTag = it.languageTag
-                    )
-                },
-                relatedItems =
-                    @Suppress("DEPRECATION") info.relatedStreams.mapNotNull { it.toContentItem() }
-            )
+            detailsOf(serviceId, url, withBotWallRetry(service, url))
         } catch (exception: Exception) {
-            // "Made for kids" videos answer the extraction engine's default visionOS client with
-            // UNPLAYABLE; their only remaining YouTube delivery is the SABR stream protocol,
-            // which is probed here once and then answered with an honest error.
+            // "Made for kids" videos answer the extraction engine and only open through its
+            // recovery ladder, which YouTube refuses on some attempts; the playback fallback
+            // retries the plain extraction and then probes the SABR streaming route.
             if (isKidsUnplayable(exception, url)) {
-                kidsPlaybackFallback(serviceId, url, exception)
+                retryKidsExtraction(serviceId, url, exception)
             } else {
                 throw exception
             }
         }
     }
+
+    /**
+     * Re-offers the plain extraction [KIDS_ENGINE_RETRY_ATTEMPTS] times, because the engine's
+     * refusal for made-for-kids videos is flaky and the recovery ladder usually opens the
+     * media on a later attempt. When every retry is refused with UNPLAYABLE, the SABR streaming
+     * route is probed once and the outcome is answered honestly.
+     */
+    private fun retryKidsExtraction(
+        serviceId: Int,
+        url: String,
+        original: Exception
+    ): StreamDetails {
+        var lastFailure = original
+        for (attempt in 1..KIDS_ENGINE_RETRY_ATTEMPTS) {
+            if (attempt > 1) {
+                Thread.sleep(KIDS_RETRY_DELAY_MS)
+            }
+            try {
+                val details = detailsOf(serviceId, url, withBotWallRetry(serviceForId(serviceId), url))
+                Logger.i(messageString = "The plain extraction retry $attempt opened the video")
+                return details
+            } catch (attemptFailure: Exception) {
+                Logger.w(
+                    messageString = "The plain extraction retry $attempt did not open the video",
+                    throwable = attemptFailure
+                )
+                if (!isKidsUnplayable(attemptFailure, url)) {
+                    throw attemptFailure
+                }
+                lastFailure = attemptFailure
+            }
+        }
+        kidsPlaybackFallback(serviceId, url, lastFailure)
+    }
+
+    /** Assembles the app stream details from the extraction engine's [StreamInfo]. */
+    private fun detailsOf(serviceId: Int, url: String, info: StreamInfo): StreamDetails =
+        StreamDetails(
+            serviceId = serviceId,
+            url = info.url ?: url,
+            title = info.name.orEmpty(),
+            uploader = info.uploaderName.orEmpty(),
+            uploaderUrl = info.uploaderUrl,
+            uploaderAvatarUrl = info.uploaderAvatars.bestImageUrl(),
+            thumbnailUrl = info.thumbnails.bestImageUrl(),
+            description = info.description?.content,
+            durationSeconds = info.duration.takeIf { it > 0 },
+            viewCount = info.viewCount.takeIf { it >= 0 },
+            uploadDate = info.textualUploadDate,
+            liveNow = info.streamType == StreamType.LIVE_STREAM,
+            videoStreams = (info.videoStreams + info.videoOnlyStreams)
+                .mapNotNull { it.toMediaStream() },
+            audioStreams = info.audioStreams.mapNotNull { it.toMediaStream() },
+            subtitles = info.subtitles.mapNotNull {
+                val subtitleUrl = @Suppress("DEPRECATION") it.url ?: return@mapNotNull null
+                SubtitleTrack(
+                    url = subtitleUrl,
+                    name = it.displayLanguageName.orEmpty(),
+                    languageTag = it.languageTag
+                )
+            },
+            relatedItems =
+                @Suppress("DEPRECATION") info.relatedStreams.mapNotNull { it.toContentItem() }
+        )
 
     /**
      * True when the extraction failed with the `UNPLAYABLE` playability status that "made for
@@ -319,13 +356,11 @@ class ExtractorContentRepository(
     }
 
     /**
-     * Handles a YouTube video the extraction engine refused (usually "made for kids" content
-     * answering the default visionOS client with UNPLAYABLE). The only delivery YouTube keeps
-     * for such videos is the SABR stream protocol: an authenticated UMP exchange that carries
-     * media segments instead of the plain URLs the desktop player needs. A pot-less SABR
-     * session is replayed through the MWEB player client and driven to one playback request;
-     * while YouTube still serves its media the precise engine error is kept, and when it
-     * refuses the media, an honest user-facing message is raised instead.
+     * Handles a YouTube video every extraction attempt refused (usually "made for kids"
+     * content). A pot-less SABR session is replayed through the MWEB player client and driven
+     * to one playback request so the outcome is known precisely: while YouTube still serves
+     * its media the engine's error is kept, and when it refuses the media, an honest
+     * user-facing message is raised instead.
      */
     private fun kidsPlaybackFallback(
         serviceId: Int,
@@ -333,7 +368,7 @@ class ExtractorContentRepository(
         original: Exception
     ): Nothing {
         val videoId = videoIdOfUrl(url) ?: throw original
-        Logger.i(messageString = "Video $videoId of service $serviceId is refused; probing the SABR streaming route")
+        Logger.i(messageString = "Every extraction attempt was refused; probing the SABR streaming route")
         val (response, visitorData) = mwebPlayerResponse(videoId, original) ?: throw original
         val info = try {
             YoutubeStreamExtractor.buildSabrInfoFromPlayerResponse(
@@ -909,6 +944,14 @@ private const val BOT_WALL_RETRY_DELAY_MS = 2_500L
 private const val MWEB_PLAYER_ATTEMPTS = 3
 private const val MWEB_RETRY_DELAY_MS = 1_500L
 private const val MWEB_CLIENT_VERSION = "2.20260101.00.00"
+
+/**
+ * The engine refusals of made-for-kids videos are flaky: the recovery ladder usually opens
+ * the media on a later attempt, so the playback fallback offers the plain extraction these
+ * many further tries (each separated by KIDS_RETRY_DELAY_MS) before the SABR probe runs.
+ */
+private const val KIDS_ENGINE_RETRY_ATTEMPTS = 2
+private const val KIDS_RETRY_DELAY_MS = 1_200L
 private const val MWEB_PLAYER_USER_AGENT =
     "Mozilla/5.0 (iPad; CPU OS 16_7_10 like Mac OS X) AppleWebKit/605.1.15 " +
         "(KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
