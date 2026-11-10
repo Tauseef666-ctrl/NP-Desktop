@@ -1,10 +1,42 @@
 # Release polish TODO — batch 11 (v0.25.6 release)
 
-**v0.25.6 is released** (tag `v0.25.6` at commit `f8cfd7694`, release
+**v0.25.6 is released** (tag `v0.25.6`, FINAL commit `4ddb3906a`, release
 https://github.com/Tauseef666-ctrl/NP-Desktop/releases/tag/v0.25.6, assets:
 `NP-Desktop-0.25.6.msi` + `checksums-windows-sha256.txt`, local copy of the
 MSI in `Downloads`). Local smoke test: the packaged app image launched and
-stays running.
+stays running; the user-reported cartoon load flake is fixed by the retry
+ladder (below) and re-verified by probes (see "Second kids fix").
+
+## Second kids fix after user re-test (commit 4ddb3906a)
+The first v0.25.6 build still showed "playback fail" on a cartoon video.
+Headless probes proved the extraction and VLC are fine in isolation (kids
+muxed itag 18 plays, `state=PLAYING` 15 s), so the in-app failure is the
+LOAD path being flaky: the engine's kids recovery ladder is refused with
+UNPLAYABLE on some attempts, and the one-shot SABR fallback then surfaced
+an error even though a plain retry would have opened the video.
+1. **Engine retry ladder before the SABR probe** (`ExtractorContent-
+   Repository.kt`): on an UNPLAYABLE kids refusal the plain extraction is
+   re-offered `KIDS_ENGINE_RETRY_ATTEMPTS = 2` more times, each separated
+   by `KIDS_RETRY_DELAY_MS = 1200`, and only when every retry is refused
+   with UNPLAYABLE does the SABR probe run (`kidsPlaybackFallback` stays
+   `: Nothing` as the last resort). A non-UNPLAYABLE retry failure is
+   rethrown immediately. `detailsOf` was extracted as the shared
+   StreamInfo→StreamDetails assembler used by all attempts.
+2. **Extraction engine warm-up at app start** (`Main.kt`): alongside the
+   existing libVLC warm-up, the service registry is initialized in the
+   background (`createServiceRegistry().services()`), paying the
+   downloader/registry setup before the user's first click instead of on
+   it (faster home grid + first stream open).
+3. **Probe evidence** (probe deleted before the commit): 2 consecutive
+   fresh-engine kids extractions both returned the muxed stream
+   (`KIDS-ROUND0/1 streams=1`), VLC played it `state=PLAYING time=13716
+   length=1962643 events=|PLAYING`; normal video control also PLAYING.
+   Full matrix `:shared:compileKotlinJvm :desktopApp:compileKotlin
+   :app:compileDebugKotlin` BUILD SUCCESSFUL before the commit.
+4. Tag re-created at `4ddb3906a` and force-pushed so the release binaries
+   match the shipped code; Windows MSI + Linux Deb workflows re-ran on it
+   (the previous Linux run already proved the proguard `-dontwarn
+   android.os.**` fix passes).
 
 ## What shipped (commit f8cfd7694 "v0.25.6: async extraction fix ...")
 1. **Kids/cartoon videos now play through the engine itself.** Root cause
