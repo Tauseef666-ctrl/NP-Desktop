@@ -19,6 +19,9 @@
 -dontwarn com.sun.awt.AWTUtilities
 # vlcj logs through slf4j 1.x; the 2.x static binder classes only exist optionally.
 -dontwarn org.slf4j.impl.**
+# The PipePipe extractor's Wire protobuf classes carry Android-specific Parcelable
+# adapters that reference android.os.*; those classes are never loaded on the desktop.
+-dontwarn android.os.**
 
 # Keep the behaviour identical to the unprocessed application.
 -dontshrink
