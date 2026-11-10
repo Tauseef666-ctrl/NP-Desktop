@@ -37,6 +37,7 @@ import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
 import net.newpipe.app.ui.PlayerShortcutDispatcher
+import net.newpipe.app.service.UpdateService
 import java.awt.Cursor
 import java.awt.Point
 import java.awt.Toolkit
@@ -61,6 +62,10 @@ import javax.imageio.ImageIO
  * Entry point for compose-related UI components on Desktop
  */
 fun main() {
+    // Hand the packaged version into the in-app updater: the updater compares its release
+    // lookup against this constant. Keep it in sync with `packageVersion` in the Gradle file.
+    UpdateService.initialize(DesktopVersions.APP_VERSION)
+
     // A generous image cache: thumbnails are served from memory on revisit and from disk after
     // a restart, so scrolling through the feed or reopening the app no longer refetches every
     // picture.

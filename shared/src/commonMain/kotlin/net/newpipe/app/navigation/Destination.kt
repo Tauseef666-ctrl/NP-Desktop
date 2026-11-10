@@ -32,6 +32,13 @@ sealed interface Destination : NavKey {
     @Serializable
     data object AccountSettings : Destination
 
+    /**
+     * The update settings of the desktop build: the manual check for a newer release and the
+     * elevated installation of an available update.
+     */
+    @Serializable
+    data object UpdateSettings : Destination
+
     @Serializable
     data object Settings : Destination
 

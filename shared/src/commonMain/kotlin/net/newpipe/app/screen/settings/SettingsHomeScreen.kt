@@ -60,6 +60,10 @@ fun SettingsHomeScreen(
                             Destination.AccountSettings
                         )
 
+                        SettingsCategoryType.UPDATES -> navigator.navigateTo(
+                            Destination.UpdateSettings
+                        )
+
                         SettingsCategoryType.VIDEO_AUDIO -> navigator.navigateTo(
                             Destination.VideoAudioSettings
                         )

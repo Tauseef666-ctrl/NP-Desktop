@@ -11,6 +11,7 @@ import com.grack.nanojson.JsonObject
 import com.grack.nanojson.JsonParser
 import com.grack.nanojson.JsonWriter
 import java.io.IOException
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -32,13 +33,17 @@ import org.schabi.newpipe.extractor.Page
 import org.schabi.newpipe.extractor.StreamingService
 import org.schabi.newpipe.extractor.channel.ChannelInfo
 import org.schabi.newpipe.extractor.channel.ChannelInfoItem
-import org.schabi.newpipe.extractor.channel.tabs.ChannelTabInfo
+import org.schabi.newpipe.extractor.channel.ChannelTabInfo
 import org.schabi.newpipe.extractor.exceptions.ExtractionException
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException
-import org.schabi.newpipe.extractor.exceptions.SignInConfirmNotBotException
-import org.schabi.newpipe.extractor.localization.ContentCountry
-import org.schabi.newpipe.extractor.services.youtube.InnertubeClientRequestInfo
+import org.schabi.newpipe.extractor.search.filter.FilterItem
+import org.schabi.newpipe.extractor.localization.Localization
 import org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper
+import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor
+import org.schabi.newpipe.extractor.services.youtube.sabr.YoutubeSabrInfo
+import org.schabi.newpipe.extractor.services.youtube.sabr.YoutubeSabrRequest
+import org.schabi.newpipe.extractor.services.youtube.sabr.YoutubeSabrSession
+import org.schabi.newpipe.extractor.services.youtube.sabr.media.SabrMediaSegment
 import org.schabi.newpipe.extractor.playlist.PlaylistInfo
 import org.schabi.newpipe.extractor.playlist.PlaylistInfoItem
 import org.schabi.newpipe.extractor.search.SearchInfo
@@ -108,11 +113,31 @@ class ExtractorContentRepository(
     private suspend fun rawSearch(request: SearchRequest): List<ContentItem> = withContext(Dispatchers.IO) {
         guard {
             val service = serviceForId(request.serviceId)
-            val filters = listOfNotNull(request.filter)
+            val filters = contentFilterItems(service, request.filter)
             val handler = service.searchQHFactory.fromQuery(request.query, filters, null)
             val items = loadSearchPage(service, handler, request.query, request.filter, request.page)
             items.mapNotNull { it.toContentItem() }
         }
+    }
+
+    /**
+     * Converts the app's filter string (e.g. "videos") into the extractor's filter item list
+     * expected by the search query handlers of the extraction engine. A `null` filter maps to
+     * the engine's default "all" filter, because the search query handlers of the extraction
+     * engine reject an empty filter list.
+     */
+    private fun contentFilterItems(
+        service: org.schabi.newpipe.extractor.StreamingService,
+        name: String?
+    ): List<FilterItem> {
+        val effectiveFilter = name ?: org.schabi.newpipe.extractor.services.youtube
+            .linkHandler.YoutubeSearchQueryHandlerFactory.ALL
+        val filter = service.searchQHFactory.availableContentFilter ?: return emptyList()
+        val items = filter.filterGroups.asSequence()
+            .flatMap { it.filterItems.asSequence() }
+            .filterNotNull()
+            .toList()
+        return items.filter { it.getName() == effectiveFilter }
     }
 
     override fun kiosks(serviceId: Int): List<ServiceKiosk> = runCatching {
@@ -169,7 +194,7 @@ class ExtractorContentRepository(
                 // handler factory of the extraction engine only supports content filters.
                 val handler = service.searchQHFactory.fromQuery(
                     TRENDING_FALLBACK_QUERY,
-                    listOf(TRENDING_FALLBACK_FILTER),
+                    contentFilterItems(service, TRENDING_FALLBACK_FILTER),
                     null
                 )
                 return@guard loadSearchPage(
@@ -247,7 +272,7 @@ class ExtractorContentRepository(
                     val subtitleUrl = @Suppress("DEPRECATION") it.url ?: return@mapNotNull null
                     SubtitleTrack(
                         url = subtitleUrl,
-                        name = it.name ?: it.displayLanguageName.orEmpty(),
+                        name = it.displayLanguageName.orEmpty(),
                         languageTag = it.languageTag
                     )
                 },
@@ -256,8 +281,8 @@ class ExtractorContentRepository(
             )
         } catch (exception: Exception) {
             // "Made for kids" videos answer the extraction engine's default visionOS client with
-            // UNPLAYABLE; YouTube still serves them through the iOS player client, which becomes
-            // the playback fallback of this repository.
+            // UNPLAYABLE; their only remaining YouTube delivery is the SABR stream protocol,
+            // which is probed here once and then answered with an honest error.
             if (isKidsUnplayable(exception, url)) {
                 kidsPlaybackFallback(serviceId, url, exception)
             } else {
@@ -282,8 +307,8 @@ class ExtractorContentRepository(
             val message = current.message.orEmpty()
             // UNPLAYABLE arrives with varying sub-message wordings ("This video is not
             // available", "This video is unavailable", ...). Any UNPLAYABLE on a YouTube watch
-            // url is worth replaying through the iOS player client; when that replay does not
-            // yield a playable response the original extraction error is rethrown.
+            // url is worth replaying through the SABR streaming route; when that replay does
+            // not reach the media, a clear error is raised below.
             if (message.contains("UNPLAYABLE")) {
                 return true
             }
@@ -294,222 +319,187 @@ class ExtractorContentRepository(
     }
 
     /**
-     * Replays a blocked (usually "made for kids") YouTube video through the iOS player client,
-     * which is still served playable streaming URLs, and assembles the [StreamDetails] directly
-     * from the returned InnerTube player response. When the retry does not yield a playable
-     * response, the original extraction failure is rethrown so the user interface keeps its
-     * precise error message.
+     * Handles a YouTube video the extraction engine refused (usually "made for kids" content
+     * answering the default visionOS client with UNPLAYABLE). The only delivery YouTube keeps
+     * for such videos is the SABR stream protocol: an authenticated UMP exchange that carries
+     * media segments instead of the plain URLs the desktop player needs. A pot-less SABR
+     * session is replayed through the MWEB player client and driven to one playback request;
+     * while YouTube still serves its media the precise engine error is kept, and when it
+     * refuses the media, an honest user-facing message is raised instead.
      */
     private fun kidsPlaybackFallback(
         serviceId: Int,
         url: String,
         original: Exception
-    ): StreamDetails {
-        Logger.i(
-            messageString =
-                "YouTube denied the stream to the default client; retrying with the iOS player client"
-        )
+    ): Nothing {
         val videoId = videoIdOfUrl(url) ?: throw original
-        val response = try {
-            iosPlayerResponse(videoId)
-        } catch (retry: Exception) {
+        Logger.i(messageString = "Video $videoId of service $serviceId is refused; probing the SABR streaming route")
+        val (response, visitorData) = mwebPlayerResponse(videoId, original) ?: throw original
+        val info = try {
+            YoutubeStreamExtractor.buildSabrInfoFromPlayerResponse(
+                videoId, playbackCpn(), response, visitorData, MWEB_CLIENT_VERSION
+            )
+        } catch (failure: Exception) {
+            // The SABR route yields nothing either; keep the engine's precise error.
             throw original
         }
-        val status = response.getObject("playabilityStatus")?.getString("status").orEmpty()
-        val videoDetails = response.getObject("videoDetails")
-        val streamingData = response.getObject("streamingData")
-        if (!status.equals("ok", ignoreCase = true) ||
-            videoDetails == null ||
-            streamingData == null
-        ) {
+        if (info.formats.none { it.isAudio() } || info.formats.none { it.isVideo() }) {
             throw original
         }
-
-        val videoStreams = ArrayList<MediaStream>()
-        val audioStreams = ArrayList<MediaStream>()
-        streamingData.getArray("formats")
-            ?.let { collectPlayerFormats(it, videoStreams, audioStreams) }
-        streamingData.getArray("adaptiveFormats")
-            ?.let { collectPlayerFormats(it, videoStreams, audioStreams) }
-        if (videoStreams.isEmpty() && audioStreams.isEmpty()) {
-            throw original
+        if (requestSabrMediaSegments(info) <= 0) {
+            // YouTube answers every media request with an empty UMP body: this video needs a
+            // BotGuard attestation ("PO token") that a desktop player cannot mint without a
+            // browser engine. Say so instead of surfacing a cryptic protocol error.
+            throw ContentException.Extraction(KIDS_ATT)
         }
-
-        val micro = response.getObject("microformat")?.getObject("playerMicroformatRenderer")
-        val channelId = videoDetails.getString("channelId")
-        return StreamDetails(
-            serviceId = serviceId,
-            url = url,
-            title = videoDetails.getString("title").orEmpty(),
-            uploader = videoDetails.getString("author").orEmpty(),
-            uploaderUrl = channelId?.let { "https://www.youtube.com/channel/$it" },
-            uploaderAvatarUrl = null,
-            thumbnailUrl = videoDetails.getObject("thumbnail")?.getArray("thumbnails")
-                ?.filterIsInstance<JsonObject>()
-                ?.maxByOrNull { (it.getNumber("width") as? Number)?.toInt() ?: 0 }
-                ?.getString("url"),
-            description = videoDetails.getString("shortDescription"),
-            durationSeconds = videoDetails.getString("lengthSeconds")?.toLongOrNull(),
-            viewCount = videoDetails.getString("viewCount")?.toLongOrNull()
-                ?: (micro?.getNumber("viewCount") as? Number)?.toLong(),
-            uploadDate = micro?.getString("uploadDate"),
-            liveNow = videoDetails.getBoolean("isLiveContent") ?: false,
-            videoStreams = videoStreams,
-            audioStreams = audioStreams,
-            subtitles = collectPlayerSubtitles(response)
-        )
+        // Media actually flowed, but UMP segments cannot be handed to the desktop player.
+        throw ContentException.Unsupported(KIDS_SABR_FORMAT)
     }
 
     /**
-     * Requests the player response of [videoId] through the InnerTube endpoint while posing as
-     * the YouTube iOS app: the client version, the User-Agent and the `X-Youtube-*` headers have
-     * to match exactly, otherwise YouTube answers with "Precondition check failed".
+     * Fetches the InnerTube player response of [videoId] through the mobile web (MWEB) player
+     * client, the one client YouTube still lets extract made-for-kids metadata and SABR
+     * streaming data from without an attestation. The visitor data has to be taken from a real
+     * YouTube page response first, and rapid repeat requests routinely flake to UNPLAYABLE, so
+     * the request is retried before giving up. Returns the response together with the visitor
+     * data it was requested with, or null when every attempt was refused.
      */
-    private fun iosPlayerResponse(videoId: String): JsonObject {
+    private fun mwebPlayerResponse(
+        videoId: String,
+        original: Exception
+    ): Pair<JsonObject, String>? {
         val localization = NewPipe.getPreferredLocalization()
         val contentCountry = NewPipe.getPreferredContentCountry()
-            ?: ContentCountry(java.util.Locale.getDefault().country.ifBlank { "US" })
-        val client = InnertubeClientRequestInfo.ofVisionOsClient().also {
-            it.clientInfo.clientName = "IOS"
-            it.clientInfo.clientVersion = IOS_FALLBACK_CLIENT_VERSION
-            it.clientInfo.clientId = "5"
-            it.clientInfo.clientScreen = "WATCH"
-            it.deviceInfo.platform = "MOBILE"
-            it.deviceInfo.deviceMake = "Apple"
-            it.deviceInfo.deviceModel = IOS_FALLBACK_DEVICE_MODEL
-            it.deviceInfo.osName = "iOS"
-            it.deviceInfo.osVersion = IOS_FALLBACK_OS_VERSION
-        }
-        if (client.clientInfo.visitorData == null) {
-            client.clientInfo.visitorData = YoutubeParsingHelper.getVisitorDataFromInnertube(
-                InnertubeClientRequestInfo.ofWebClient().also {
-                    it.clientInfo.clientVersion = YoutubeParsingHelper.getClientVersion()
-                },
-                localization,
-                contentCountry,
-                YoutubeParsingHelper.getYouTubeHeaders(),
-                "https://www.youtube.com/youtubei/v1/",
-                null,
-                false
-            )
-        }
-        val headers = mapOf<String, List<String>>(
-            "User-Agent" to listOf(
-                "com.google.ios.youtube/$IOS_FALLBACK_CLIENT_VERSION " +
-                    "($IOS_FALLBACK_DEVICE_MODEL; U; CPU iOS " +
-                    "${IOS_FALLBACK_OS_VERSION.substringBefore(".")} like Mac OS X)"
-            ),
-            "X-Youtube-Client-Name" to listOf("5"),
-            "X-Youtube-Client-Version" to listOf(IOS_FALLBACK_CLIENT_VERSION),
-            "X-Apple-Product-Model" to listOf(IOS_FALLBACK_DEVICE_MODEL),
-            "X-ios-bundle-identifier" to listOf("com.google.ios.youtube"),
-            "X-Goog-Api-Format-Version" to listOf("2")
-        )
-        val builder = YoutubeParsingHelper.prepareJsonBuilder(
-            localization, contentCountry, client, null
-        )
-        builder.value("videoId", videoId)
-            .value("contentCheckOk", true)
-            .value("racyCheckOk", true)
-        val body = JsonWriter.string(builder.done()).toByteArray(Charsets.UTF_8)
-        val response = NewPipe.getDownloader().postWithContentTypeJson(
-            "https://www.youtube.com/youtubei/v1/player?prettyPrint=false",
-            headers,
-            body,
-            localization
-        )
-        return JsonParser.`object`().from(
-            YoutubeParsingHelper.getValidJsonResponseBody(response)
-        )
-    }
-
-    /**
-     * Adds the playable formats of an InnerTube player response `formats`/`adaptiveFormats` array
-     * to the stream lists. The formats carry plain URLs, so no deciphering is needed; muxed
-     * formats that also contain audio come first because they are handed to the player directly.
-     */
-    private fun collectPlayerFormats(
-        formats: JsonArray,
-        videoStreams: MutableList<MediaStream>,
-        audioStreams: MutableList<MediaStream>
-    ) {
-        for (raw in formats) {
-            val format = raw as? JsonObject ?: continue
-            val streamUrl = format.getString("url") ?: continue
-            val mimeType = format.getString("mimeType").orEmpty()
-            val bitrate = (format.getNumber("bitrate") as? Number)?.toInt() ?: 0
-            val formatId = (format.getNumber("itag") as? Number)?.toInt()?.toString().orEmpty()
-            if (mimeType.startsWith("audio/")) {
-                val sampleRate = (format.getNumber("audioSampleRate") as? Number)?.toInt() ?: 0
-                val quality = format.getString("audioQuality")
-                    ?.removePrefix("AUDIO_QUALITY_")
-                    ?.lowercase()
-                    ?.replaceFirstChar { it.uppercase() }
-                    ?: sampleRate.takeIf { it > 0 }?.let { "${it / 1000} kHz" }
-                    ?: ""
-                audioStreams += MediaStream(
-                    url = streamUrl,
-                    formatId = formatId,
-                    quality = quality,
-                    codec = codecOf(mimeType),
-                    bitrate = bitrate,
-                    isVideoOnly = false
+        for (attempt in 1..MWEB_PLAYER_ATTEMPTS) {
+            if (attempt > 1) {
+                Thread.sleep(MWEB_RETRY_DELAY_MS)
+            }
+            val visitorData = try {
+                homepageVisitorData(localization)
+            } catch (failure: Exception) {
+                Logger.w(messageString = "Fetching the YouTube visitor data failed", throwable = failure)
+                null
+            } ?: continue
+            val body = JsonWriter.string(
+                JsonObject.builder()
+                    .value("videoId", videoId)
+                    .value("contentCheckOk", true)
+                    .value("racyCheckOk", true)
+                    .value(
+                        "context",
+                        JsonObject.builder()
+                            .value(
+                                "client",
+                                JsonObject.builder()
+                                    .value("clientName", "MWEB")
+                                    .value("clientVersion", MWEB_CLIENT_VERSION)
+                                    .value("hl", localization.languageCode)
+                                    .value("gl", contentCountry.countryCode)
+                                    .value("visitorData", visitorData)
+                                    .done()
+                            )
+                            .value(
+                                "user",
+                                JsonObject.builder().value("lockedSafetyMode", false).done()
+                            )
+                            .value(
+                                "request",
+                                JsonObject.builder().value("useSsl", true).done()
+                            )
+                            .done()
+                    )
+                    .done()
+            ).toByteArray(Charsets.UTF_8)
+            val json = try {
+                JsonParser.`object`().from(
+                    YoutubeParsingHelper.getValidJsonResponseBody(
+                        NewPipe.getDownloader().post(
+                            "https://www.youtube.com/youtubei/v1/player?prettyPrint=false",
+                            mapOf(
+                                "User-Agent" to listOf(MWEB_PLAYER_USER_AGENT),
+                                "X-Youtube-Client-Name" to listOf("2"),
+                                "X-Youtube-Client-Version" to listOf(MWEB_CLIENT_VERSION),
+                                "X-Goog-Visitor-Id" to listOf(visitorData),
+                                "X-Goog-Api-Format-Version" to listOf("2"),
+                                "Content-Type" to listOf("application/json")
+                            ),
+                            body,
+                            localization
+                        )
+                    )
                 )
+            } catch (failure: Exception) {
+                Logger.w(messageString = "The MWEB player request failed", throwable = failure)
+                if (failure is ReCaptchaException) throw failure
                 continue
             }
-            val height = (format.getNumber("height") as? Number)?.toInt() ?: 0
-            videoStreams += MediaStream(
-                url = streamUrl,
-                formatId = formatId,
-                quality = format.getString("qualityLabel")
-                    ?: height.takeIf { it > 0 }?.let { "${it}p" }
-                    ?: "",
-                codec = codecOf(mimeType),
-                bitrate = bitrate,
-                // A video format that also contains an audio codec part is not video-only.
-                isVideoOnly = !mimeType.contains("audio"),
-                width = ((format.getNumber("width") as? Number)?.toInt() ?: 0)
-                    .takeIf { it > 0 },
-                height = height.takeIf { it > 0 },
-                fps = ((format.getNumber("fps") as? Number)?.toInt() ?: 0)
-                    .takeIf { it > 0 }
-            )
+            val status = json.getObject("playabilityStatus")?.getString("status")
+            if (status == "OK") {
+                return json to visitorData
+            }
+            Logger.i(messageString = "The MWEB player replay $attempt answered $status")
         }
+        return null
     }
 
     /**
-     * The caption tracks of an InnerTube player response, matching what the regular extraction
-     * delivers for subtitles.
+     * Fetches the YouTube homepage with a desktop browser user agent and extracts the web
+     * client's visitor data, which the MWEB player client requires in its context.
      */
-    private fun collectPlayerSubtitles(response: JsonObject): List<SubtitleTrack> {
-        val tracks = response.getObject("playerCaptionsTracklistRenderer")
-            ?.getArray("captionTracks") ?: return emptyList()
-        return tracks.filterIsInstance<JsonObject>().mapNotNull { track ->
-            val trackUrl = track.getString("baseUrl") ?: return@mapNotNull null
-            val name = track.getObject("name")
-            SubtitleTrack(
-                url = "$trackUrl&fmt=json3",
-                name = name?.getString("simpleText")
-                    ?: name?.getString("vName")
-                    ?: track.getString("languageCode").orEmpty(),
-                languageTag = track.getString("languageCode")
-            )
-        }
+    private fun homepageVisitorData(localization: Localization): String {
+        val response = NewPipe.getDownloader().get(
+            "https://www.youtube.com/",
+            mapOf("User-Agent" to listOf(CHROME_HOME_USER_AGENT)),
+            localization
+        )
+        val html = response.responseBody()
+        return Regex("\"visitorData\":\"([^\"]+)\"").find(html)
+            ?.groupValues?.get(1)
+            ?: throw IOException("The YouTube homepage exposed no visitor data")
     }
 
-    /** The codecs value of an InnerTube MIME type such as `video/mp4; codecs="avc1.640028"`. */
-    private fun codecOf(mimeType: String): String {
-        val marker = "codecs=\""
-        val start = mimeType.indexOf(marker)
-        if (start < 0) {
-            return ""
+    /**
+     * Drives a SABR session far enough to learn whether YouTube still serves the media of the
+     * video without an attestation: one preparation request to declare the format availability,
+     * then one playback request carrying exactly one video and one audio track, counting the
+     * returned media segments (init segments excluded).
+     */
+    private fun requestSabrMediaSegments(info: YoutubeSabrInfo): Int {
+        val audio = info.formats.firstOrNull { it.isAudio() } ?: return 0
+        val video = info.formats.firstOrNull { it.isVideo() } ?: return 0
+        val session = YoutubeSabrSession(info)
+        var mediaSegments = 0
+        try {
+            session.requestOnce(
+                YoutubeSabrRequest.preparation(0L, listOf(audio, video))
+            ) { segment: SabrMediaSegment ->
+                if (!segment.getHeader().isInitSegment()) {
+                    mediaSegments++
+                }
+            }
+            session.requestOnce(
+                YoutubeSabrRequest.playback(
+                    0L,
+                    1.0f,
+                    listOf(
+                        YoutubeSabrRequest.Track.of(video, null, 0),
+                        YoutubeSabrRequest.Track.of(audio, null, 0)
+                    )
+                )
+            ) { segment: SabrMediaSegment ->
+                if (!segment.getHeader().isInitSegment()) {
+                    mediaSegments++
+                }
+            }
+        } catch (failure: Exception) {
+            Logger.w(messageString = "The SABR session probe failed", throwable = failure)
         }
-        val end = mimeType.indexOf('"', start + marker.length)
-        if (end < 0) {
-            return ""
-        }
-        return mimeType.substring(start + marker.length, end)
+        return mediaSegments
     }
+
+    /** The sixteen character playback nonce every SABR request carries. */
+    private fun playbackCpn(): String =
+        UUID.randomUUID().toString().replace("-", "").take(16)
 
     /** The eleven character video id inside a YouTube watch / short / youtu.be URL. */
     private fun videoIdOfUrl(url: String): String? {
@@ -538,7 +528,8 @@ class ExtractorContentRepository(
         url: String
     ): StreamInfo = try {
         StreamInfo.getInfo(service, url)
-    } catch (exception: SignInConfirmNotBotException) {
+    } catch (exception: Exception) {
+        if (!isBotWall(exception)) throw exception
         Logger.w(
             messageString = "YouTube blocked the anonymous access temporarily; retrying once",
             throwable = exception
@@ -546,7 +537,8 @@ class ExtractorContentRepository(
         Thread.sleep(BOT_WALL_RETRY_DELAY_MS)
         try {
             StreamInfo.getInfo(service, url)
-        } catch (anonymousRetry: SignInConfirmNotBotException) {
+        } catch (anonymousRetry: Exception) {
+            if (!isBotWall(anonymousRetry)) throw anonymousRetry
             if (YtSession.exists()) {
                 Logger.w(
                     messageString =
@@ -556,7 +548,8 @@ class ExtractorContentRepository(
                 Thread.sleep(BOT_WALL_RETRY_DELAY_MS)
                 try {
                     StreamInfo.getInfo(service, url)
-                } catch (signedRetry: SignInConfirmNotBotException) {
+                } catch (signedRetry: Exception) {
+                    if (!isBotWall(signedRetry)) throw signedRetry
                     throw ContentException.Extraction(
                         "YouTube is limiting access from this network even with the stored " +
                             "session. Please refresh the session in Settings -> Account.",
@@ -571,6 +564,18 @@ class ExtractorContentRepository(
                     anonymousRetry
                 )
             }
+        }
+    }
+
+    /**
+     * Detects the YouTube "Sign in to confirm you're not a bot" wall. The exact exception
+     * type differs between the extraction engine implementations, so the message text and
+     * supplier's own exception classes are matched.
+     */
+    private fun isBotWall(exception: Exception): Boolean {
+        if (exception.javaClass.name.endsWith("SignInConfirmNotBotException")) return true
+        return sequenceOf(exception, exception.cause).filterNotNull().any { cause ->
+            cause.message.orEmpty().contains("Sign in to confirm", ignoreCase = true)
         }
     }
 
@@ -662,8 +667,8 @@ class ExtractorContentRepository(
             serviceId = serviceId,
             url = info.url ?: url,
             name = info.name.orEmpty(),
-            thumbnailUrl = info.thumbnails.bestImageUrl(),
-            description = info.description?.content,
+            thumbnailUrl = info.thumbnailUrl,
+            description = null,
             uploader = info.uploaderName,
             uploaderUrl = info.uploaderUrl,
             itemCount = info.streamCount.takeIf { it >= 0 },
@@ -691,7 +696,15 @@ class ExtractorContentRepository(
     }
 
     override fun availableSearchFilters(serviceId: Int): List<String> = runCatching {
-        serviceForId(serviceId).searchQHFactory.availableContentFilter.toList()
+        val filter = serviceForId(serviceId).searchQHFactory.availableContentFilter
+            ?: return emptyList()
+        filter.filterGroups.asSequence()
+            .flatMap { it.filterItems.asSequence() }
+            .filterNotNull()
+            .map { it.getName() }
+            .filter { !it.isNullOrEmpty() }
+            .distinct()
+            .toList()
     }.getOrDefault(emptyList())
 
     /**
@@ -888,18 +901,30 @@ private const val MAX_SUGGESTIONS = 8
  */
 private const val BOT_WALL_RETRY_DELAY_MS = 2_500L
 
-/**
- * The iOS YouTube app version the kids-content playback fallback presents: YouTube only
- * serves playable streaming data to current client versions, and the version, User-Agent
- * and headers have to match. When these stop working, refresh all three together.
+/*
+ * The MWEB player client identity the kids-content SABR fallback presents: YouTube validates
+ * the request against the mobile web browser fingerprint, and the visitor data has to come
+ * from a real YouTube page response. When these stop working, refresh all values together.
  */
-private const val IOS_FALLBACK_CLIENT_VERSION = "21.05.2"
+private const val MWEB_PLAYER_ATTEMPTS = 3
+private const val MWEB_RETRY_DELAY_MS = 1_500L
+private const val MWEB_CLIENT_VERSION = "2.20260101.00.00"
+private const val MWEB_PLAYER_USER_AGENT =
+    "Mozilla/5.0 (iPad; CPU OS 16_7_10 like Mac OS X) AppleWebKit/605.1.15 " +
+        "(KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
+private const val CHROME_HOME_USER_AGENT =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+        "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 
-/** The device model the kids-content playback fallback presents alongside the client version. */
-private const val IOS_FALLBACK_DEVICE_MODEL = "iPhone16,2"
+/** The honest error texts of the kids-content fallback. */
+private const val KIDS_ATT =
+    "This video is marked \"made for kids\", so YouTube only serves it through its attested " +
+        "SABR streaming, which requires a browser attestation (\"PO token\") this player " +
+        "cannot generate yet. Playback is unavailable; try the video in a browser."
 
-/** The iOS version the kids-content playback fallback presents alongside the client version. */
-private const val IOS_FALLBACK_OS_VERSION = "18.6.2.23G80"
+private const val KIDS_SABR_FORMAT =
+    "This video streams over YouTube's SABR delivery, whose media segments this player cannot " +
+        "read yet. Playback is unavailable; try the video in a browser."
 
 /**
  * Turns a kiosk id such as `trending_music` into the label `Trending Music`.
@@ -934,7 +959,7 @@ internal fun InfoItem.toContentItem(): ContentItem? {
         url = url,
         title = name.orEmpty(),
         type = type,
-        thumbnailUrl = thumbnails.bestImageUrl()
+        thumbnailUrl = thumbnailUrl
     )
 
     when (this) {
@@ -955,8 +980,7 @@ internal fun InfoItem.toContentItem(): ContentItem? {
 
         is PlaylistInfoItem -> item = item.copy(
             uploader = uploaderName,
-            uploaderUrl = uploaderUrl,
-            description = description?.content
+            uploaderUrl = uploaderUrl
         )
     }
 

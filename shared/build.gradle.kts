@@ -136,9 +136,14 @@ kotlin {
         // The Android and iOS targets keep their own stubs until the implementation is moved
         // into a source set that is shared between all JVM flavours.
         jvmMain.dependencies {
-            implementation(libs.newpipe.extractor)
+            // PipePipeExtractor fork: carries SABR support for made-for-kids YouTube videos.
+            // Desktop only — the Android side uses the upstream extractor (libs.newpipe.extractor).
+            implementation(libs.pipepipe.extractor)
             // The kids-content playback fallback parses InnerTube player responses directly.
             implementation(libs.newpipe.nanojson)
+            // org.json is compile-only in the PipePipeExtractor fork (Android provides it);
+            // the desktop JVM has to carry it itself for the engine's parser paths.
+            implementation(libs.org.json)
             implementation(libs.squareup.okhttp)
             implementation(libs.squareup.okhttp.brotli)
 

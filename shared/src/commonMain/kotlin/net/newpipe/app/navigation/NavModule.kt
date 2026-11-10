@@ -21,6 +21,7 @@ import net.newpipe.app.screen.settings.DebugSettingsScreen
 import net.newpipe.app.screen.settings.DownloadSettingsScreen
 import net.newpipe.app.screen.settings.PlayerSettingsScreen
 import net.newpipe.app.screen.settings.SettingsHomeScreen
+import net.newpipe.app.screen.settings.UpdateSettingsScreen
 import net.newpipe.app.screen.settings.VideoAudioSettingsScreen
 import net.newpipe.app.screen.stream.StreamScreen
 import net.newpipe.app.screen.subscriptions.SubscriptionsScreen
@@ -55,6 +56,10 @@ fun navModule() = module {
 
     navigation<Destination.AccountSettings> {
         AccountSettingsScreen()
+    }
+
+    navigation<Destination.UpdateSettings> {
+        UpdateSettingsScreen()
     }
 
     navigation<Destination.VideoAudioSettings> {

@@ -61,7 +61,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "NP-Desktop"
-            packageVersion = "0.25.5"
+            packageVersion = "0.25.6"
             description = "NP Desktop - Libre lightweight streaming client"
             copyright = "\u00a9 2026 NewPipe e.V. Licensed under GPL-3.0-or-later"
             vendor = "NP Desktop"

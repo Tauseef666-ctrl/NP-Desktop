@@ -43,6 +43,11 @@ object ExtractorInitializer {
             val contentCountry = ContentCountry(locale.country.ifBlank { "US" })
             NewPipe.init(own, localization, contentCountry)
         }
+        // The engine's parallel player calls share a five second budget, but its remote JS
+        // fallback fetches can take longer than that on heavy pages (made-for-kids in
+        // particular), turning a normal extraction into a premature "requests timed out".
+        // Give the engine enough room to finish its recovery ladders.
+        ServiceList.all().forEach { it.loadingTimeout = 20 }
         downloader = own
         own
     }

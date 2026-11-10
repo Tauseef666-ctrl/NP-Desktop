@@ -19,6 +19,7 @@ import net.newpipe.app.service.DownloadRepository
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.QueueRepository
 import net.newpipe.app.service.synchronizeDownloadLibrary
+import net.newpipe.app.screen.settings.UpdatePrompt
 import net.newpipe.app.shell.ModernShell
 import net.newpipe.app.theme.AppTheme
 import net.newpipe.app.ui.PlayerShortcuts
@@ -90,6 +91,12 @@ fun App(
                     )
                 }
             }
+
+            // The desktop build checks the release channel in the background and offers an
+            // in-place update through the Windows installer; every other platform runs a
+            // no-op updater and never shows anything.
+            UpdatePrompt()
+
             withKoin()
         }
     }

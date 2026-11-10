@@ -28,6 +28,7 @@ exoplayer = "2.19.1"
 fragment = "1.9.1"
 groupie = "2.10.1"
 jave = "3.5.0"
+json = "20260522"
 jsoup = "1.23.2"
 junit = "4.13.2"
 junit-ext = "1.3.0"
@@ -55,6 +56,7 @@ multiplatform = "1.12.2"
 navigation3 = "1.1.2"
 okhttp = "5.5.0"
 phoenix = "3.0.0"
+pipepipe-extractor = "sabr-v5.5.1"
 preference = "1.2.1"
 prettytime = "5.0.8.Final"
 recyclerview = "1.4.0"
@@ -79,6 +81,14 @@ teamnewpipe-nanojson = "e9d656ddb49a412a5a0a5d5ef20ca7ef09549996"
 # the corresponding commit hash, since JitPack sometimes deletes artifacts.
 # If there’s already a git hash, just add more of it to the end (or remove a letter)
 # to cause jitpack to regenerate the artifact.
+#
+# There are two extractors in use:
+# - teamnewpipe-newpipe-extractor: the upstream NewPipeExtractor, used by the ANDROID side
+#   (`app` module + `shared` androidMain). The Android app does not need SABR and must stay
+#   on upstream behavior/APIs.
+# - pipepipe-extractor: the PipePipeExtractor fork (JitPack commit), used ONLY by the desktop
+#   jvm target (`shared` jvmMain / desktopApp). It carries SABR support needed for
+#   made-for-kids YouTube playback, which upstream cannot provide yet.
 teamnewpipe-newpipe-extractor = "2f7d9da4ce82248637fdd3f8025086bd345f7fc2"
 viewpager2 = "1.1.0"
 # VLCJ is the Java binding of libVLC. It requires VLC 4.0 or newer as of 4.8, but the
@@ -171,7 +181,9 @@ newpipe-nanojson = { module = "com.github.TeamNewPipe:nanojson", version.ref = "
 noties-markwon-core = { module = "io.noties.markwon:core", version.ref = "markwon" }
 noties-markwon-linkify = { module = "io.noties.markwon:linkify", version.ref = "markwon" }
 ocpsoft-prettytime = { module = "org.ocpsoft.prettytime:prettytime", version.ref = "prettytime" }
+org-json = { module = "org.json:json", version.ref = "json" }
 pinterest-ktlint = { module = "com.pinterest.ktlint:ktlint-cli", version.ref = "ktlint" }
+pipepipe-extractor = { module = "com.github.Tauseef666-ctrl.PipePipeExtractor:extractor", version.ref = "pipepipe-extractor" }
 puppycrawl-checkstyle = { module = "com.puppycrawl.tools:checkstyle", version.ref = "checkstyle" }
 reactivex-rxandroid = { module = "io.reactivex.rxjava3:rxandroid", version.ref = "rxandroid" }
 reactivex-rxjava = { module = "io.reactivex.rxjava3:rxjava", version.ref = "rxjava" }

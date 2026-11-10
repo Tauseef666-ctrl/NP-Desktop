@@ -13,9 +13,12 @@ import okhttp3.Gzip
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.brotli.Brotli
+import org.schabi.newpipe.extractor.downloader.CancellableCall
 import org.schabi.newpipe.extractor.downloader.Downloader
+import org.schabi.newpipe.extractor.downloader.Downloader.AsyncCallback
 import org.schabi.newpipe.extractor.downloader.Request
 import org.schabi.newpipe.extractor.downloader.Response
+import org.schabi.newpipe.extractor.downloader.StreamingResponse
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException
 
 /**
@@ -93,14 +96,112 @@ class JvmDownloader(
             if (response.code == HTTP_TOO_MANY_REQUESTS) {
                 throw ReCaptchaException("reCaptcha challenge requested", request.url())
             }
+            val raw = response.body.bytes()
             return Response(
                 response.code,
                 response.message,
                 response.headers.toMultimap(),
-                response.body.string(),
+                raw.toString(Charsets.UTF_8),
+                raw,
                 response.request.url.toString()
             )
         }
+    }
+
+    override fun executeAsync(request: Request, callback: AsyncCallback): CancellableCall {
+        val call = client.newCall(toOkHttpRequest(request))
+        val cancellable = CancellableCall(call)
+        call.enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: java.io.IOException) {
+                // The engine awaits the call's completion latch; it has to open even on failure,
+                // otherwise every parallel extraction runs into the loading timeout.
+                cancellable.setFinished()
+                callback.onError(RuntimeException(e))
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                try {
+                    response.use {
+                        if (it.code == HTTP_TOO_MANY_REQUESTS) {
+                            callback.onError(
+                                ReCaptchaException("reCaptcha challenge requested", request.url())
+                            )
+                        } else {
+                            val raw = it.body.bytes()
+                            callback.onSuccess(
+                                Response(
+                                    it.code,
+                                    it.message,
+                                    it.headers.toMultimap(),
+                                    raw.toString(Charsets.UTF_8),
+                                    raw,
+                                    it.request.url.toString()
+                                )
+                            )
+                        }
+                    }
+                } catch (error: Exception) {
+                    callback.onError(error)
+                } finally {
+                    cancellable.setFinished()
+                }
+            }
+        })
+        return cancellable
+    }
+
+    /** Streaming GET: the body is handed to the caller without buffering it. */
+    override fun getStreaming(
+        url: String,
+        headers: Map<String, List<String>>?,
+        localization: org.schabi.newpipe.extractor.localization.Localization?
+    ): StreamingResponse = exchange(
+        Request.newBuilder().get(url).headers(headers).localization(localization).build()
+    )
+
+    /** Streaming POST: the body is handed to the caller without buffering it. */
+    override fun postStreaming(
+        url: String,
+        headers: Map<String, List<String>>?,
+        dataToSend: ByteArray?,
+        localization: org.schabi.newpipe.extractor.localization.Localization?
+    ): StreamingResponse = exchange(
+        Request.newBuilder().post(url, dataToSend).headers(headers)
+            .localization(localization).build()
+    )
+
+    /**
+     * Performs [request] and exposes the (unclosed) response body. The caller MUST close the
+     * returned [StreamingResponse]; this is exactly what the SABR reader does.
+     */
+    private fun exchange(request: Request): StreamingResponse {
+        val call = client.newCall(toOkHttpRequest(request))
+        val response = call.execute()
+        if (response.code == HTTP_TOO_MANY_REQUESTS) {
+            response.close()
+            throw ReCaptchaException("reCaptcha challenge requested", request.url())
+        }
+        return StreamingResponse(
+            response.code,
+            response.headers.toMultimap(),
+            response.body.byteStream()
+        )
+    }
+
+    private fun toOkHttpRequest(request: Request): okhttp3.Request {
+        val body = request.dataToSend()?.toRequestBody()
+        val requestBuilder = okhttp3.Request.Builder()
+            .url(request.url())
+            .method(request.httpMethod(), body)
+            .header("User-Agent", USER_AGENT)
+        val cookies = cookiesFor(request.url())
+        if (cookies.isNotEmpty()) requestBuilder.header("Cookie", cookies)
+        request.headers().forEach { (name, values) ->
+            requestBuilder.removeHeader(name)
+            values.forEach { requestBuilder.addHeader(name, it) }
+        }
+        applySession(request, request.url(), requestBuilder)
+        return requestBuilder.build()
     }
 
     /**

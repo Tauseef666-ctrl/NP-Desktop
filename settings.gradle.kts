@@ -18,6 +18,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Optional fallback, e.g. a locally built extractor: JitPack serves the
+        // PipePipeExtractor fork by commit hash, so this is only needed for artifacts
+        // that were installed from source (./gradlew publishToMavenLocal).
+        mavenLocal()
         maven(url = "https://jitpack.io")
         maven(url = "https://repo.clojars.org")
     }

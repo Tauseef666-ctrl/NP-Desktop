@@ -155,7 +155,7 @@ fun VideoPlayer(
     }
 
     Box(
-        modifier = modifier.background(Color.Black),
+        modifier = modifier.playerCursor(hideCursor).background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
         if (hasMedia) {
@@ -181,9 +181,12 @@ fun VideoPlayer(
 
             // Any real pointer movement over the video brings the controls back and restarts
             // the auto hide timer. The overlay is composed before the controls, so the controls
-            // always receive their clicks first. Replayed Move events for a stationary cursor
-            // must keep the timer running, otherwise the controls never hide over a playing
-            // video.
+            // always receive their clicks first and this handler still sees everything that
+            // happens over them. Enter and Move are handled the same way: the platform replays
+            // Move events for a stationary cursor over a redrawing surface and synthesizes
+            // Enter events whenever the hit test chain changes while the controls hide, so the
+            // events only count when the pointer really arrived somewhere new. Otherwise the
+            // controls would flicker forever over a parked, still mouse.
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -192,16 +195,16 @@ fun VideoPlayer(
                             while (true) {
                                 val event = awaitPointerEvent()
                                 when (event.type) {
-                                    PointerEventType.Press,
-                                    PointerEventType.Enter -> {
+                                    PointerEventType.Press -> {
                                         lastPointerPosition =
                                             event.changes.firstOrNull()?.let { Pair(it.position.x, it.position.y) }
                                         controlsVisible = true
                                         interactions++
                                     }
-                                    PointerEventType.Move -> {
-                                        val changed = event.changes.firstOrNull()
-                                        val position = changed?.let { Pair(it.position.x, it.position.y) }
+                                    PointerEventType.Move,
+                                    PointerEventType.Enter -> {
+                                        val position = event.changes.firstOrNull()
+                                            ?.let { Pair(it.position.x, it.position.y) }
                                         val last = lastPointerPosition
                                         val moved = position != null && (
                                             last == null ||
@@ -253,12 +256,16 @@ fun VideoPlayer(
             ) {
                 Box(
                     modifier = Modifier.pointerInput(Unit) {
+                        // Presses inside the controls restart the idle timer directly, so a
+                        // stationary click still keeps the controls shown. Pointer movement is
+                        // not tracked here on purpose: the surface handler above already sees
+                        // every move over the controls with the replayed-event filtering, so a
+                        // duplicate tracker here would keep resetting the timer forever while
+                        // the mouse rests motionless on a button.
                         awaitPointerEventScope {
                             while (true) {
                                 val event = awaitPointerEvent()
-                                if (event.type == PointerEventType.Move ||
-                                    event.type == PointerEventType.Press
-                                ) {
+                                if (event.type == PointerEventType.Press) {
                                     controlsVisible = true
                                     interactions++
                                 }
@@ -434,12 +441,13 @@ private fun PlayerTopBar(
                 )
             )
             .pointerInput(Unit) {
+                // Presses on the top bar restart the idle timer directly. Pointer movement is
+                // handled by the surface handler of the video area, which filters the replayed
+                // Move events the platform sends for a stationary cursor.
                 awaitPointerEventScope {
                     while (true) {
                         val event = awaitPointerEvent()
-                        if (event.type == PointerEventType.Move ||
-                            event.type == PointerEventType.Press
-                        ) {
+                        if (event.type == PointerEventType.Press) {
                             onInteraction()
                         }
                     }
