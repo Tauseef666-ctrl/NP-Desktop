@@ -1,3 +1,61 @@
+# Release polish TODO — batch 11 (v0.25.6 release)
+
+**v0.25.6 is released** (tag `v0.25.6` at commit `f8cfd7694`, release
+https://github.com/Tauseef666-ctrl/NP-Desktop/releases/tag/v0.25.6, assets:
+`NP-Desktop-0.25.6.msi` + `checksums-windows-sha256.txt`, local copy of the
+MSI in `Downloads`). Local smoke test: the packaged app image launched and
+stays running.
+
+## What shipped (commit f8cfd7694 "v0.25.6: async extraction fix ...")
+1. **Kids/cartoon videos now play through the engine itself.** Root cause
+   chain: the engine's parallel player calls never opened the fork's
+   `CancellableCall` completion latch (our `JvmDownloader.executeAsync` did
+   not call `setFinished()`), so EVERY `StreamInfo.getInfo` ran into the
+   "YouTube requests timed out" guard after the 5 s budget — the "made for
+   kids" recovery path (web player + remote JS fallback + android reel,
+   ~2.5 s per remote JS stage) never got a chance to run. With the latch
+   fixed and the loading timeout raised to 20 s
+   (`ServiceList.all().forEach { it.loadingTimeout = 20 }` in
+   `ExtractorServiceRegistry`), the engine extracts the kids video
+   (`dX1FcGYP6C4`) into a REAL muxed itag 18 (360p avc1+mp4a) videoplayback
+   url — verified readable via both `range=` and `Range:` from 0 MB through
+   80 MB (416 at 160 MB+ = past EOF, normal HTTP), i.e. VLC-playable.
+   - Live evidence from this session: normal video `jNQXAC9IVRw` extracts
+     5 video + 5 audio streams; kids video extracts 1 muxed 360p stream;
+     tests=3 failures=0 / tests=1 failures=0 (ProbeSabr + ProbePlayback,
+     probes deleted before the commit).
+2. **The broken iOS head-range kids fallback is REPLACED** by a SABR-first
+   probe: MWEB player response (3 attempts, homepage visitorData) →
+   `buildSabrInfoFromPlayerResponse` → one preparation + one playback
+   request. If YouTube still refuses the media (empty UMP body / 403), the
+   user now gets an honest message (BotGuard "PO token" attestation cannot
+   be minted without a browser engine) instead of a frozen player. The
+   architecture is ready for future PoToken support (`YoutubeSabrSession
+   .setPoToken(byte[])` is the single missing piece).
+3. **In-app updater (Windows)**: startup check against
+   `Tauseef666-ctrl/NP-Desktop` releases, progress + elevated install
+   (UAC announced), Settings > Update screen, skip-this-version.
+4. **Player cursor/hover polish**: controls once per real mouse move, 3 s
+   auto-hide, cursor hides in fullscreen with the controls
+   (`Modifier.playerCursor`, transparent AWT cursor via `pointerHoverIcon`).
+5. **Desktop extractor source switched** to the JDK-21 JitPack artifact of
+   the fork: `com.github.Tauseef666-ctrl.PipePipeExtractor:extractor:
+   sabr-v5.5.1` (the InfinityLoop1308 commit artifact is Java-25 bytecode
+   and unusable on the Java-21 toolchain). Maintaining the fork means:
+   push a new tag to the fork, let JitPack build it, bump
+   `pipepipe-extractor` in `libs.versions.toml` (alphabetical order matters:
+   `pipepipe-extractor` sorts AFTER `teamnewpipe-*`? no — inside the
+   versions/libraries blocks the checker wants `p`-lines after `o`-lines).
+6. **Desktop-only engine needs `org.json:json:20260522`** on the classpath
+   (`compileOnly` in the fork; Android provides it from the platform).
+
+## Follow-ups (not blockers)
+- Kids videos resolve to a single 360p muxed stream; higher quality for
+  made-for-kids videos requires the PoToken/SABR bridge (see 2).
+- Updater check is unauthenticated GitHub API (60 req/h/IP budget).
+
+---
+
 # Release polish TODO — batch 10 (kids playback + popup return)
 
 The app for v0.25.5 is fully working, tested end to end, and BUILT. Both
