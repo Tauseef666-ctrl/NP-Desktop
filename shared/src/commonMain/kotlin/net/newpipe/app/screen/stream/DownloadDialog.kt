@@ -75,9 +75,10 @@ fun DownloadDialog(
 ) {
     // One video quality list: muxed streams already contain the audio, video only streams are
     // merged with the best audio file after the download, so every option is a single file
-    // with sound.
+    // with sound. A muxed and an adaptive stream of the same quality appear as two entries,
+    // because they differ in what they contain.
     val videoStreams = details.videoStreams
-        .distinctBy { it.quality }
+        .distinctBy { it.quality to it.isVideoOnly }
         .sortedByDescending { it.height ?: it.bitrate }
 
     val audioStreams = details.audioStreams
@@ -95,6 +96,9 @@ fun DownloadDialog(
     var audioSelection by remember {
         mutableStateOf(audioStreams.firstOrNull())
     }
+    // The container of a merged download: `null` lets the codecs choose, otherwise the user
+    // picked mp4 or mkv explicitly.
+    var mergeContainer by remember { mutableStateOf<String?>(null) }
 
     val dialogScope = rememberCoroutineScope()
     var location by remember { mutableStateOf(DownloadLocation.resolve()) }
@@ -203,6 +207,14 @@ fun DownloadDialog(
                                         videoStreams.firstOrNull { it.url == selection }
                                 }
                             )
+
+                            val video = videoSelection
+                            if (video != null && video.isVideoOnly && supportsAudio) {
+                                ContainerChoice(
+                                    selected = mergeContainer,
+                                    onSelect = { mergeContainer = it }
+                                )
+                            }
                         }
                     }
                 }
@@ -274,6 +286,7 @@ fun DownloadDialog(
                                 downloadVideo(
                                     video = video,
                                     audio = audio,
+                                    container = if (audio != null) mergeContainer else null,
                                     item = item,
                                     downloader = downloader,
                                     repository = repository,
@@ -390,14 +403,61 @@ private fun InfoLine(text: String) {
     )
 }
 
+/**
+ * The container choice for a download that merges a video only stream with a separate audio
+ * file: automatic keeps the safe codec-derived container, mp4 and mkv force one explicitly.
+ */
+@Composable
+private fun ContainerChoice(
+    selected: String?,
+    onSelect: (String?) -> Unit
+) {
+    Column(
+        modifier = Modifier.padding(top = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+    ) {
+        Text(
+            text = "Container of the merged file",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            listOf(
+                null to "Automatic",
+                "mp4" to "MP4",
+                "mkv" to "MKV"
+            ).forEach { (value, label) ->
+                TypeChip(
+                    label = label,
+                    selected = selected == value,
+                    onClick = { onSelect(value) }
+                )
+            }
+        }
+
+        Text(
+            text = "MP4 keeps the original quality only for H.264 video with AAC audio; " +
+                "MKV works with every codec combination.",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
 private fun videoLabel(stream: MediaStream): String = stream.quality.ifEmpty { "Video" }
 
 private fun videoSubtitle(stream: MediaStream, audioAvailable: Boolean): String = buildString {
     append(containerLabel(DownloadManager.videoContainerFor(stream)))
     stream.fps?.takeIf { it > 30 }?.let { append(" \u00B7 ${it}fps") }
-    if (!audioAvailable) {
-        append(" \u00B7 without audio")
-    }
+    append(
+        when {
+            !stream.isVideoOnly -> " \u00B7 with audio"
+            audioAvailable -> " \u00B7 video only, merged with best audio"
+            else -> " \u00B7 without audio"
+        }
+    )
 }
 
 private fun audioLabel(stream: MediaStream): String = when {
@@ -417,13 +477,17 @@ private fun containerLabel(extension: String) = when (extension) {
 private fun downloadVideo(
     video: MediaStream,
     audio: MediaStream?,
+    container: String?,
     item: ContentItem,
     downloader: MediaDownloader,
     repository: DownloadRepository,
     onResult: (Result<String>) -> Unit
 ) {
+    val containerExtension = container
+        ?: audio?.let { DownloadManager.mergedContainerFor(video, it) }
+        ?: DownloadManager.videoContainerFor(video)
     val label = when {
-        audio != null -> "${video.quality} \u00B7 ${DownloadManager.mergedContainerFor(video, audio)}"
+        audio != null -> "${video.quality} \u00B7 $containerExtension"
         else -> "${video.quality} \u00B7 ${DownloadManager.videoContainerFor(video)}"
     }
     DownloadManager.start(
@@ -434,6 +498,7 @@ private fun downloadVideo(
         audio = audio,
         downloader = downloader,
         repository = repository,
+        container = container,
         onResult = onResult
     )
 }

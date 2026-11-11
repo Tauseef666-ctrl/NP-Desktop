@@ -52,7 +52,7 @@ class DownloadRepository(
             quality = quality,
             formatId = formatId,
             audioFilePath = audioFilePath,
-            downloadedAt = 0L
+            downloadedAt = System.currentTimeMillis()
         )
 
         val updated = listOf(entry) + _downloads.value.filterNot { it.id == filePath }

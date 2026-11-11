@@ -82,7 +82,9 @@ fun DownloadsScreen(
     var selected by remember { mutableStateOf<DownloadedVideo?>(null) }
     var sortBy by remember { mutableStateOf(DownloadSort.RECENT) }
     var sortExpanded by remember { mutableStateOf(false) }
-    val activeById = activeDownloads.associateBy { it.id }
+    // Active downloads are keyed by the video url, because the download entry id only exists
+    // (as a file path) after the download finishes; the running entry carries the item url.
+    val activeByUrl = activeDownloads.associateBy { it.itemUrl }.filterKeys { it.isNotBlank() }
     val sortedDownloads = remember(downloads, sortBy) { sortDownloads(downloads, sortBy) }
 
     LazyColumn(
@@ -279,7 +281,7 @@ fun DownloadsScreen(
                 DownloadRow(
                     download = download,
                     selected = download.id == selected?.id,
-                    active = activeById[download.id],
+                    active = activeByUrl[download.item.url],
                     onOpen = {
                         selected = download
                         playDownloaded(download, controller)

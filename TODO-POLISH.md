@@ -27,7 +27,7 @@ Working checklist for this polish round. Ticks update as items land.
 - No content prefetch anywhere; libVLC warmUp is media-only.
 - Fix set chosen for item 2: raise TTLs, session caches for kiosk feed + subscriptions feed + last search, background prefetch of the next queue/related video.
 - [x] 2. Add caching/prefetch layer for instant screen + video loads
-- [ ] 3. Implement download options UI (quality, audio/video, formats) + fix download function
+- [x] 3. Implement download options UI (quality, audio/video, formats) + fix download function
 - [ ] 4. Apply glassmorphism panels theme app-wide (Windows + TV)
 - [ ] 5. Split/prioritize Windows vs Android TV layout handling
 - [ ] 6. TV remote/D-pad fixes + layout scaling (awaiting user's detailed list)

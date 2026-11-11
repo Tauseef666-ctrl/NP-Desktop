@@ -40,7 +40,8 @@ object DownloadManager {
         val totalBytes: Long = 0L,
         val speedBytesPerSec: Long = 0L,
         val etaSeconds: Long? = null,
-        val merging: Boolean = false
+        val merging: Boolean = false,
+        val itemUrl: String = ""
     )
 
     /**
@@ -67,6 +68,8 @@ object DownloadManager {
      * @param stream the video stream that is downloaded, or `null` for an audio only download
      * @param audio the separate audio file that is downloaded, or `null` when the video stream
      * already contains the audio or nothing but audio is requested
+     * @param container the container of the merged file, for example `mp4` or `mkv`, or `null`
+     * to let the codecs decide
      * @param downloader the platform downloader that writes the files
      * @param repository the repository the finished files are registered in
      * @param onResult invoked exactly once with the path of the main file or the failure
@@ -79,6 +82,7 @@ object DownloadManager {
         audio: MediaStream?,
         downloader: MediaDownloader,
         repository: DownloadRepository,
+        container: String? = null,
         onResult: (Result<String>) -> Unit = {}
     ) {
         if (stream == null && audio == null) {
@@ -90,7 +94,7 @@ object DownloadManager {
         // merged into a single playable video file by the platform.
         val merging = stream != null && audio != null
         val mergeOutputName = if (merging) {
-            "${title}.${mergedContainerFor(stream!!, audio!!)}"
+            "${title}.${container ?: mergedContainerFor(stream!!, audio!!)}"
         } else {
             null
         }
@@ -110,10 +114,11 @@ object DownloadManager {
 
         val speed = SpeedTracker()
         val id = "download-${Random.nextLong()}-${Random.nextInt()}"
-        _active.update { current -> current + Active(id, title, label, 0f) }
+        _active.update { current -> current + Active(id, title, label, 0f, itemUrl = item.url) }
 
         jobs[id] = scope.launch {
             var error: Throwable? = null
+            var mergeFailed = false
             val paths = mutableListOf<String>()
 
             try {
@@ -150,14 +155,19 @@ object DownloadManager {
 
             if (failure == null && mergeOutputName != null) {
                 setActive(id, progress = 1f, merging = true)
-                downloader.merge(
+                val mergedPath = downloader.merge(
                     videoPath = paths.getOrNull(0) ?: "",
                     audioPath = paths.getOrNull(1) ?: "",
                     outputName = mergeOutputName
-                )?.let { mergedPath ->
+                )
+                if (mergedPath != null) {
                     // The single file replaces the two intermediate files
                     mainPath = mergedPath
                     registeredAudioPath = null
+                } else {
+                    // The merge failed (for example no ffmpeg): the video-only intermediate is
+                    // registered below so the download is not lost, with an honest label.
+                    mergeFailed = true
                 }
             }
 
@@ -180,7 +190,7 @@ object DownloadManager {
                     repository.add(
                         item = item,
                         filePath = mainPath,
-                        quality = quality,
+                        quality = if (mergeFailed) "$quality · video only" else quality,
                         formatId = formatId,
                         audioFilePath = registeredAudioPath
                     )
