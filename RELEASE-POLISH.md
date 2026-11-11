@@ -27,13 +27,27 @@ an error even though a plain retry would have opened the video.
    background (`createServiceRegistry().services()`), paying the
    downloader/registry setup before the user's first click instead of on
    it (faster home grid + first stream open).
-3. **Probe evidence** (probe deleted before the commit): 2 consecutive
+3. **File log for the installed build** (commit `d4aefd6e6`,
+   `AppFileLogger.kt`): every kermit line is appended to
+   `%APPDATA%\NP-Desktop\logs\npdesktop.log` (rotated at 2 MB to `*.old`),
+   with one guaranteed startup line per launch. The packaged app's
+   default writers only reach stderr, which nobody sees — this makes any
+   future "playback fail" report diagnosable from the log file alone.
+   Verified: the MSI jpackage image embeds the fresh `shared-jvm-*.jar`
+   containing the class (extracted via `msiexec /a`, admin extract only).
+4. **Probe evidence** (probe deleted before the commit): 2 consecutive
    fresh-engine kids extractions both returned the muxed stream
    (`KIDS-ROUND0/1 streams=1`), VLC played it `state=PLAYING time=13716
    length=1962643 events=|PLAYING`; normal video control also PLAYING.
    Full matrix `:shared:compileKotlinJvm :desktopApp:compileKotlin
    :app:compileDebugKotlin` BUILD SUCCESSFUL before the commit.
-4. Tag re-created at `4ddb3906a` and force-pushed so the release binaries
+5. **Packaging pitfall discovered**: `:desktopApp:packageMsi` does NOT
+   depend on `createDistributable` — the smoke-test image under
+   `build/compose/binaries/main/app` can be days stale while the MSI is
+   fresh. To verify MSI content, extract it (`msiexec /a <msi> /qn
+   TARGETDIR=<dir>`, no trailing backslash, quoted paths) and check the
+   `shared-jvm-<hash>.jar` timestamp/hash instead of the app-image dir.
+6. Tag re-created at `d4aefd6e6` and force-pushed so the release binaries
    match the shipped code; Windows MSI + Linux Deb workflows re-ran on it
    (the previous Linux run already proved the proguard `-dontwarn
    android.os.**` fix passes).
