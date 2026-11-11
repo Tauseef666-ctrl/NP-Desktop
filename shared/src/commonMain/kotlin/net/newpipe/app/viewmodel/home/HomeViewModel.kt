@@ -9,11 +9,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import net.newpipe.app.model.ContentItem
 import net.newpipe.app.model.ContentType
 import net.newpipe.app.model.ServiceInfo
@@ -89,6 +93,13 @@ class HomeViewModel(
 
     /** Distinguishes the current feed build from cancelled stale ones in state teardown. */
     private var feedGeneration = 0
+
+    /**
+     * The recommendations already fetched per watched video url, kept for the whole session:
+     * a feed rebuild after watching something new only fetches the recommendations of the
+     * new video instead of re-extracting the watch pages of every video the feed knows.
+     */
+    private val relatedByUrl = ConcurrentHashMap<String, List<ContentItem>>()
 
     init {
         val services = serviceRegistry.services()
@@ -335,22 +346,30 @@ class HomeViewModel(
             try {
                 // The recommendations that are related to what the user actually watched. The
                 // watch page of each recent video reports its own related streams, which is the
-                // strongest personal signal a feed can follow.
-                val relatedOfWatched = watched.take(RELATED_VIDEOS_PER_FEED).flatMap { entry ->
-                    try {
-                        repository.streamDetails(entry.serviceId, entry.url).relatedItems.take(
-                            RELATED_ITEMS_PER_WATCHED
-                        )
-                    } catch (exception: CancellationException) {
-                        throw exception
-                    } catch (exception: Exception) {
-                        Logger.w(
-                            messageString = "The related videos of '${entry.title}' could not be loaded",
-                            throwable = exception
-                        )
-                        anySourceFailed = true
-                        emptyList()
-                    }
+                // strongest personal signal a feed can follow. The fetches run in parallel and
+                // known videos are served from the session cache, so a rebuild after watching
+                // something new costs one extraction instead of several.
+                val relatedOfWatched = coroutineScope {
+                    watched.take(RELATED_VIDEOS_PER_FEED).map { entry ->
+                        async {
+                            relatedByUrl[entry.url] ?: run {
+                                try {
+                                    repository.streamDetails(entry.serviceId, entry.url).relatedItems
+                                        .take(RELATED_ITEMS_PER_WATCHED)
+                                        .also { relatedByUrl[entry.url] = it }
+                                } catch (exception: CancellationException) {
+                                    throw exception
+                                } catch (exception: Exception) {
+                                    Logger.w(
+                                        messageString = "The related videos of '${entry.title}' could not be loaded",
+                                        throwable = exception
+                                    )
+                                    anySourceFailed = true
+                                    emptyList()
+                                }
+                            }
+                        }
+                    }.awaitAll().flatten()
                 }
 
                 val channelItems = if (channelUrl != null) {
@@ -370,21 +389,25 @@ class HomeViewModel(
                     emptyList()
                 }
 
-                val searchItems = terms.flatMap { term ->
-                    try {
-                        repository.search(
-                            SearchRequest(query = term, serviceId = _serviceId.value)
-                        ).take(SEARCH_RESULTS_PER_TERM)
-                    } catch (exception: CancellationException) {
-                        throw exception
-                    } catch (exception: Exception) {
-                        Logger.w(
-                            messageString = "The feed search '$term' could not be loaded",
-                            throwable = exception
-                        )
-                        anySourceFailed = true
-                        emptyList()
-                    }
+                val searchItems = coroutineScope {
+                    terms.map { term ->
+                        async {
+                            try {
+                                repository.search(
+                                    SearchRequest(query = term, serviceId = _serviceId.value)
+                                ).take(SEARCH_RESULTS_PER_TERM)
+                            } catch (exception: CancellationException) {
+                                throw exception
+                            } catch (exception: Exception) {
+                                Logger.w(
+                                    messageString = "The feed search '$term' could not be loaded",
+                                    throwable = exception
+                                )
+                                anySourceFailed = true
+                                emptyList()
+                            }
+                        }
+                    }.awaitAll().flatten()
                 }
 
                 feedRelatedOfWatched = relatedOfWatched
@@ -486,15 +509,15 @@ class HomeViewModel(
         private const val RECENT_WATCHED = 4
 
         /** How many of the most recent watched videos feed on their related streams. */
-        private const val RELATED_VIDEOS_PER_FEED = 3
+        private const val RELATED_VIDEOS_PER_FEED = 2
 
         /** How many related streams are taken per watched video for the personal pool. */
-        private const val RELATED_ITEMS_PER_WATCHED = 10
+        private const val RELATED_ITEMS_PER_WATCHED = 8
 
         /** How many recent search terms personalise the feed. */
-        private const val SEARCH_QUERY_LIMIT = 3
+        private const val SEARCH_QUERY_LIMIT = 2
 
         /** How many results of each search are mixed into the feed. */
-        private const val SEARCH_RESULTS_PER_TERM = 8
+        private const val SEARCH_RESULTS_PER_TERM = 6
     }
 }
