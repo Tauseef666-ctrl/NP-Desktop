@@ -62,6 +62,11 @@ import javax.imageio.ImageIO
  * Entry point for compose-related UI components on Desktop
  */
 fun main() {
+    // Everything the app logs (extractor refusals, player errors, the updater) is written into
+    // `%APPDATA%\NP-Desktop\logs\npdesktop.log`, so failures of the installed build can be
+    // diagnosed afterwards.
+    runCatching { net.newpipe.app.platform.AppFileLogger.install() }
+
     // Hand the packaged version into the in-app updater: the updater compares its release
     // lookup against this constant. Keep it in sync with `packageVersion` in the Gradle file.
     UpdateService.initialize(DesktopVersions.APP_VERSION)
