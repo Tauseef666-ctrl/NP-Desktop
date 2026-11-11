@@ -80,6 +80,13 @@ compose.desktop {
                 upgradeUuid = "6943C53C-2A58-48D3-87FD-4375A2BB5854"
                 perUserInstall = false
             }
+
+            linux {
+                shortcut = true
+                menuGroup = "NP Desktop"
+                iconFile.set(project.file("src/main/resources/app-icon.png"))
+                debMaintainer = "NewPipe e.V. <https://newpipe-ev.de>"
+            }
         }
     }
 }

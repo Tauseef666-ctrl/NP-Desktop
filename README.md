@@ -4,45 +4,45 @@
   <img src="assets/np_desktop_chosen.svg" width="120" alt="NP Desktop Logo">
 </p>
 
-<h3 align="center">A modern, rebuilt fork of <a href="https://github.com/TeamNewPipe/NewPipe">NewPipe</a> for Windows Desktop and Android TV</h3>
+<h3 align="center">A free and open-source streaming client for Windows and Android TV</h3>
 
 <p align="center">
-  <a href="https://github.com/Tauseef666-ctrl/NP-Desktop/releases"><img src="https://img.shields.io/github/v/release/Tauseef666-ctrl/NP-Desktop?label=latest%20release"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL%20v3-blue.svg"></a>
+  <a href="https://github.com/Tauseef666-ctrl/NP-Desktop/releases"><img src="https://img.shields.io/github/v/release/Tauseef666-ctrl/NP-Desktop?label=release&sort=semver" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg" alt="License: GPL-3.0-or-later"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-lightgrey.svg" alt="Platform: Windows | Linux | Android">
 </p>
 
 <p align="center">
   <img src="doc/screenshots/home-feed.png" width="820" alt="NP Desktop home feed">
 </p>
 
-## About
+## What is NP Desktop?
 
-**NP Desktop** is a personal rebuild of NewPipe with a heavy focus on a proper Windows desktop experience, alongside continued support for Android TV and Android. The goal is to bring a cleaner, more app-like feel to the desktop with proper windowing, keyboard shortcuts, navigation, and media controls while keeping the spirit of NewPipe intact.
+**NP Desktop** is a free, libre, lightweight streaming client for Windows and Android TV, built as a rebuilt fork of [NewPipe](https://github.com/TeamNewPipe/NewPipe). It plays video and audio from YouTube and other supported services without ads, without tracking, and without requiring a Google account — your subscriptions, history, and preferences stay on your own machine. The desktop experience is built with Kotlin Multiplatform and Compose Desktop, with playback handled by libVLC/VLCJ and content extraction handled by a fork of NewPipe-Extractor ([PipePipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor)).
 
 > This project is not affiliated with, endorsed by, or connected to the official NewPipe team. All credit for the original idea, extractor, and core goes to the [NewPipe](https://github.com/TeamNewPipe/NewPipe) project and its contributors.
 
-## Platforms
-
-- **Windows Desktop (x64)** – Primary focus. Built with Kotlin Multiplatform + Compose Desktop
-- **Android TV** – Optimized for D-pad/remote navigation
-- **Android Phone/Tablet** – Kept functional for compatibility
-
 ## Key Features
 
-- **Windows Desktop UI** – Custom modern shell, side rail navigation, resizable window, proper fullscreen/immersive modes
-- **Keyboard Shortcuts** – YouTube-like shortcuts for playback, volume, captions, speed, seeking and more
-- **Full keyboard reference** – see [doc/KEYBOARD-SHORTCUTS.md](doc/KEYBOARD-SHORTCUTS.md)
-- **Web Session Sign-in** – Optional in-app browser sign-in unlocks your YouTube subscriptions and account feed
-- **Right-click Everywhere** – A single glass context menu covers feeds, search results, channel pages, history, playlists and the player
-- **Queue & Watch Later** – Add anything to the queue or watch later from any surface, with a miniplayer to keep watching while browsing
-- **Miniplayer / Picture-in-Picture style popup** – Keep watching while browsing
-- **Live Streams** – Live HLS playback that just works, including news channels
-- **Fast Startup** – The window appears in about a second; VLC spins up lazily on first playback
-- **Downloads** – Built-in download UI for supported streams
-- **History & Subscriptions** – Local history, subscription management, and personalized home feed
-- **Kiosk Sections** – Feed, Trending, Live, Gaming, Music, Movies & Shows, Podcasts
-- **Multi-service support** – YouTube, SoundCloud, PeerTube, Bandcamp, media.ccc.de
-- **Local-first** – No forced account login. Subscriptions, history and preferences stay local by default
+- **YouTube video and audio playback** — quality ladder including 1080p+, audio-only listening, and made-for-kids videos (via a local SABR relay)
+- **Search, trending, and subscriptions feeds** — with kiosk sections (Feed, Trending, Live, Gaming, Music, Movies & Shows, Podcasts)
+- **Downloads** — built-in download options UI: muxed or adaptive streams, with quality and format choice
+- **Glassmorphism UI** — modern desktop shell with side rail navigation, resizable window, and a unified context menu across feeds, search results, channel pages, history, playlists, and the player
+- **Windows and Android TV form factors** — proper windowing and keyboard shortcuts on desktop; D-pad/remote navigation on TV
+- **Fullscreen player** — toggle with `F` or `F11`; mini-player to keep watching while browsing; media key support
+- **Watch history and session caching** — local history and fast startup with lazy VLC initialization
+- **Multi-service support** — YouTube, YouTube Music, SoundCloud, PeerTube, Bandcamp, media.ccc.de
+- **Local-first** — no forced account login. Subscriptions, history, and preferences stay local by default
+
+Full keyboard reference: [doc/KEYBOARD-SHORTCUTS.md](doc/KEYBOARD-SHORTCUTS.md)
+
+<!--
+  Screenshot placeholder — add your launch screenshots here.
+
+  <p align="center">
+    <img src="doc/screenshots/YOUR_NEW_SCREENSHOT.png" width="820" alt="Description">
+  </p>
+-->
 
 ## Screenshots
 
@@ -70,30 +70,51 @@
 - [SoundCloud](https://soundcloud.com/)
 - [media.ccc.de](https://media.ccc.de/)
 
-## Download
+## Installation
 
-Head over to the [Releases](https://github.com/Tauseef666-ctrl/NP-Desktop/releases) page to download the latest Windows installer (`.msi` or `.exe`) or Android TV/Phone APK. SHA-256 checksums are published alongside each release.
+Download the latest installer from the [Releases](https://github.com/Tauseef666-ctrl/NP-Desktop/releases) page — `.msi` for Windows, `.deb` for Debian/Ubuntu, or an Android APK. SHA-256 checksums are published alongside each release.
+
+Step-by-step instructions, including how to handle the Windows SmartScreen warning for unsigned installers, are in [INSTALL.md](INSTALL.md).
 
 ## Building From Source
 
 ### Prerequisites
+
 - JDK 21
-- Android SDK (for Android builds)
 - Git
+- Android SDK (for Android builds only)
+
+### Clone
+
+```bash
+git clone https://github.com/Tauseef666-ctrl/NP-Desktop.git
+cd NP-Desktop
+```
 
 ### Windows Desktop
-```bash
-./gradlew.bat :desktopApp:packageReleaseMsi :desktopApp:packageReleaseExe
-```
-The built installers will be available under `desktopApp/build/compose/binaries/main-release/` (`msi/` and `exe/`). For a quick local run without packaging:
 
 ```bash
-./gradlew.bat :desktopApp:createDistributable
+gradlew.bat --no-configuration-cache :desktopApp:packageMsi
 ```
+
+The installer is written to `desktopApp/build/compose/binaries/`. For a quick local run without packaging:
+
+```bash
+gradlew.bat --no-configuration-cache :desktopApp:createDistributable
+```
+
+### Linux (Debian/Ubuntu)
+
+```bash
+./gradlew --no-configuration-cache :desktopApp:packageDeb
+```
+
+The package is written to `desktopApp/build/compose/binaries/`.
 
 ### Android / Android TV
+
 ```bash
-./gradlew.bat assembleRelease
+./gradlew assembleRelease
 ```
 
 ## Contributing
@@ -108,14 +129,19 @@ Start with `good first issue` labeled issues if you are new.
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0 or later**. See [LICENSE](LICENSE) for more details.
+This project is licensed under the **GNU General Public License v3.0 or later** (GPL-3.0-or-later). See [LICENSE](LICENSE) for details. SPDX headers in the source follow the [REUSE](https://reuse.software/) convention and credit NewPipe e.V.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for the security policy, how to report vulnerabilities, and a statement on how the app handles data.
 
 ## Credits
 
-- [NewPipe](https://github.com/TeamNewPipe/NewPipe) - Original project and NewPipeExtractor
-- [NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor) - The backbone for fetching content from supported services
+- **[Tauseef Khan](https://github.com/Tauseef666-ctrl)** — author of the Windows desktop, Linux and Android TV builds of NP Desktop, and its UI polish
+- [NewPipe](https://github.com/TeamNewPipe/NewPipe) — original project and NewPipeExtractor
+- [PipePipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor) — content extraction layer used by this fork
 - All upstream contributors who made this possible
 
 ## Disclaimer
 
-Using third-party clients may be against the Terms of Service of some platforms. Use at your own discretion and in compliance with your local laws.
+NP Desktop is not affiliated with, endorsed by, or connected to YouTube, Google, or any of the supported streaming platforms. It does not include advertising and does not require an account. Third-party clients may be against the Terms of Service of some platforms; you are responsible for using this app in compliance with those terms and your local laws.

@@ -114,6 +114,20 @@ fun AboutPageContent(
             }
         }
 
+        // Credit for the desktop builds of the app
+        item {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = spaceLarge, vertical = spaceXSmall),
+                text = "Made possible by Tauseef Khan (github.com/Tauseef666-ctrl), who built " +
+                    "and polished the NP Desktop releases for Windows, Linux and Android TV.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+
         // Links about NewPipe
         items(items = links, key = { link -> link.url }) { link ->
             LinkListItem(

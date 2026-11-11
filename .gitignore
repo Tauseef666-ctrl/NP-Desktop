@@ -42,3 +42,7 @@ desktopApp/src/main/resources/vlc-runtime.zip
 # Handoff task lists for the second AI session (not part of the repository)
 TODO-SECOND-AI.md
 TV-DPAD-AUDIT.md
+
+# JVM crash logs (leak local usernames/paths — never commit)
+hs_err_pid*.log
+replay_pid*.log

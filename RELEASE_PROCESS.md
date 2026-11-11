@@ -34,7 +34,6 @@ Publish checksums with release.
 1. Create tag `vX.Y.Z`
 2. Create GitHub Release for Windows-only (or combined as appropriate)
 3. Upload artifacts + checksums
-4. Complete PRE_RELEASE_SECURITY_CHECKLIST.md
 
 ## Notes
 - Never commit keystores/secrets
