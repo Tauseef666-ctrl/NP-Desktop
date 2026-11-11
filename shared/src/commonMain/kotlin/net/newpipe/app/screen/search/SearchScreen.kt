@@ -71,6 +71,7 @@ import net.newpipe.app.ui.Glass
 import net.newpipe.app.ui.Radius
 import net.newpipe.app.ui.Spacing
 import net.newpipe.app.ui.trackTextFieldFocus
+import net.newpipe.app.viewmodel.search.SearchSessionStore
 import net.newpipe.app.viewmodel.search.SearchViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -102,6 +103,19 @@ fun SearchScreen(
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(150)
         runCatching { focusRequester.requestFocus() }
+    }
+
+    // Returning to a recent search restores its results from the session store instead of
+    // starting blank; typing a new query replaces them through the normal update path.
+    LaunchedEffect(Unit) {
+        if (items.isEmpty() && SearchSessionStore.items.isNotEmpty()) {
+            viewModel.restoreSession(
+                query = SearchSessionStore.query,
+                filter = SearchSessionStore.filter,
+                items = SearchSessionStore.items,
+                hasMore = SearchSessionStore.hasMore
+            )
+        }
     }
 
     // Load the next page when the user scrolls to the end of the list. A snapshot flow on the

@@ -81,11 +81,11 @@ class ExtractorContentRepository(
      * some services expire; lists live a little longer. Values are consumed read-only by the
      * user interface, so sharing them across callers is safe.
      */
-    private val streamCache = ResultsCache<CacheKey, StreamDetails>(ttlMillis = 5 * 60_000L)
+    private val streamCache = ResultsCache<CacheKey, StreamDetails>(ttlMillis = 10 * 60_000L)
     private val channelCache = ResultsCache<CacheKey, ChannelDetails>(ttlMillis = 10 * 60_000L)
     private val playlistCache = ResultsCache<CacheKey, PlaylistDetails>(ttlMillis = 10 * 60_000L)
-    private val kioskCache = ResultsCache<CacheKey, List<ContentItem>>(ttlMillis = 2 * 60_000L)
-    private val searchCache = ResultsCache<CacheKey, List<ContentItem>>(ttlMillis = 2 * 60_000L)
+    private val kioskCache = ResultsCache<CacheKey, List<ContentItem>>(ttlMillis = 10 * 60_000L)
+    private val searchCache = ResultsCache<CacheKey, List<ContentItem>>(ttlMillis = 5 * 60_000L)
 
     override suspend fun search(request: SearchRequest): List<ContentItem> = withContext(Dispatchers.IO) {
         guard {
@@ -853,7 +853,7 @@ private data class CacheKey(val serviceId: Int, val id: String)
  */
 internal class ResultsCache<K : Any, V : Any>(
     private val ttlMillis: Long,
-    private val maxSize: Int = 24
+    private val maxSize: Int = 64
 ) {
     private class Entry<V>(val value: V, val storedAt: Long)
 

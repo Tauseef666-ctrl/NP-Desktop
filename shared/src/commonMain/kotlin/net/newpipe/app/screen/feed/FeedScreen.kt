@@ -65,17 +65,28 @@ fun FeedScreen(
     navigator: Navigator = koinInject(),
     repository: ContentRepository = koinInject()
 ) {
-    var items by remember(kioskId) { mutableStateOf<List<ContentItem>>(emptyList()) }
-    var loading by remember(kioskId) { mutableStateOf(true) }
+    val cached = feedSessionCache[kioskId]
+    var items by remember(kioskId) { mutableStateOf(cached?.items ?: emptyList()) }
+    var loading by remember(kioskId) { mutableStateOf(isFeedSessionStale(cached)) }
     var loadingMore by remember(kioskId) { mutableStateOf(false) }
-    var hasMore by remember(kioskId) { mutableStateOf(true) }
-    var nextPage by remember(kioskId) { mutableIntStateOf(1) }
+    var hasMore by remember(kioskId) { mutableStateOf(cached?.hasMore ?: true) }
+    var nextPage by remember(kioskId) { mutableIntStateOf(cached?.nextPage ?: 1) }
     var error by remember(kioskId) { mutableStateOf<String?>(null) }
     var retryKey by remember { mutableStateOf(0) }
 
     val gridState = rememberLazyGridState()
 
     LaunchedEffect(kioskId, retryKey) {
+        // A kiosk the user visited in this session renders instantly from the session cache;
+        // only an unseen or expired kiosk shows a spinner and fetches page 0 again.
+        val session = feedSessionCache[kioskId]
+        if (session != null && !isFeedSessionStale(session)) {
+            items = session.items
+            hasMore = session.hasMore
+            nextPage = session.nextPage
+            loading = false
+            return@LaunchedEffect
+        }
         loading = true
         error = null
         try {
@@ -84,6 +95,8 @@ fun FeedScreen(
             items = first
             hasMore = first.isNotEmpty()
             nextPage = 1
+            feedSessionCache[kioskId] =
+                FeedSessionState(first, 1, first.isNotEmpty(), System.currentTimeMillis())
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -108,10 +121,16 @@ fun FeedScreen(
                     val more = repository.kioskPage(SERVICE_ID, kioskId, nextPage)
                     if (more.isEmpty()) {
                         hasMore = false
+                        feedSessionCache[kioskId]?.let { session ->
+                            feedSessionCache[kioskId] = session.copy(hasMore = false)
+                        }
                     } else {
                         val known = items.map { it.url }.toSet()
-                        items = items + more.filterNot { it.url in known }
+                        val merged = items + more.filterNot { it.url in known }
+                        items = merged
                         nextPage += 1
+                        feedSessionCache[kioskId] =
+                            FeedSessionState(merged, nextPage, hasMore, System.currentTimeMillis())
                     }
                 } catch (exception: CancellationException) {
                     throw exception
@@ -221,7 +240,29 @@ private fun navigateToItem(item: ContentItem, navigator: Navigator) {
 }
 
 /** YouTube, the default service of NewPipe. */
-private const val SERVICE_ID = 0
+/**
+ * One visited kiosk's page state in the session cache of [FeedScreen].
+ */
+private data class FeedSessionState(
+    val items: List<ContentItem>,
+    val nextPage: Int,
+    val hasMore: Boolean,
+    val fetchedAt: Long
+)
 
+/**
+ * Session cache of the feed kiosks the user visited. The feed screen is recreated on every
+ * rail switch, so this store keeps visited kiosks from refetching and flashing a spinner.
+ * Entries expire after the same window the repository cache uses.
+ */
+private val feedSessionCache =
+    java.util.concurrent.ConcurrentHashMap<String, FeedSessionState>()
+
+private const val FEED_SESSION_TTL_MS = 10 * 60_000L
+
+private fun isFeedSessionStale(state: FeedSessionState?): Boolean =
+    state == null || System.currentTimeMillis() - state.fetchedAt > FEED_SESSION_TTL_MS
+
+private const val SERVICE_ID = 0
 /** How many entries before the end the next page starts loading. */
 private const val PAGE_PREFETCH_DISTANCE = 6

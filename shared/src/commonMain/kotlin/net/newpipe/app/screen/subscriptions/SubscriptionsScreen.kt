@@ -101,10 +101,14 @@ fun SubscriptionsScreen(
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
     var channelSort by rememberSaveable { mutableIntStateOf(0) }
-    var feed by remember { mutableStateOf<List<ContentItem>>(emptyList()) }
-    var loading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
     var pendingUnsubscribe by remember { mutableStateOf<SubscribedChannel?>(null) }
+
+    // The subscriptions feed is rebuilt on every visit; the session cache renders the last
+    // built feed instantly while a refresh runs quietly for fresh uploads.
+    val cachedFeed = SubscriptionsFeedCache.feed
+    var feed by remember { mutableStateOf(cachedFeed) }
+    var loading by remember { mutableStateOf(cachedFeed.isEmpty()) }
+    var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(channels) {
         if (channels.isEmpty()) {
@@ -114,7 +118,19 @@ fun SubscriptionsScreen(
             return@LaunchedEffect
         }
 
-        loading = true
+        val channelKey = channels.joinToString(separator = "|") { it.url }
+        if (SubscriptionsFeedCache.channelKey == channelKey &&
+            System.currentTimeMillis() - SubscriptionsFeedCache.fetchedAt <
+            SUBSCRIPTIONS_FEED_TTL_MS
+        ) {
+            feed = SubscriptionsFeedCache.feed
+            loading = false
+            return@LaunchedEffect
+        }
+
+        if (feed.isEmpty()) {
+            loading = true
+        }
         error = null
         Logger.i(messageString = "Loading uploads of ${channels.size} subscribed channels")
         val uploads = mutableListOf<ContentItem>()
@@ -131,6 +147,9 @@ fun SubscriptionsScreen(
         }
         feed = uploads.distinctBy { it.url }
         loading = false
+        SubscriptionsFeedCache.feed = feed
+        SubscriptionsFeedCache.channelKey = channelKey
+        SubscriptionsFeedCache.fetchedAt = System.currentTimeMillis()
     }
 
     if (showSearch) {

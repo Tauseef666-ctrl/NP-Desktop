@@ -41,6 +41,7 @@ import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.platform.ShareHandler
 import net.newpipe.app.screen.search.Message
+import net.newpipe.app.service.ContentRepository
 import net.newpipe.app.service.DownloadRepository
 import net.newpipe.app.service.MediaDownloader
 import net.newpipe.app.service.PlaybackController
@@ -76,6 +77,7 @@ fun StreamScreen(
     downloads: DownloadRepository = koinInject(),
     downloader: MediaDownloader = koinInject(),
     queueRepository: QueueRepository = koinInject(),
+    contentRepository: ContentRepository = koinInject(),
     shareHandler: ShareHandler = koinInject()
 ) {
     val details by viewModel.details.collectAsState()
@@ -114,6 +116,26 @@ fun StreamScreen(
     // suggestions of the stream the user is watching.
     LaunchedEffect(relatedItems) {
         queueRepository.relatedSuggestions = relatedItems
+    }
+
+    // Prefetch the candidate "next" videos in the background: the queue head and the first
+    // related suggestion. Their extraction lands in the repository cache, so skipping forward
+    // or the automatic advance at the end of the video starts without an extraction wait.
+    // Failures are silent; a prefetch must never disturb the user.
+    LaunchedEffect(
+        details?.url,
+        queueItems.firstOrNull()?.url,
+        relatedItems.firstOrNull()?.url
+    ) {
+        val candidates = listOfNotNull(
+            queueItems.firstOrNull { it.type == ContentType.STREAM },
+            relatedItems.firstOrNull { it.type == ContentType.STREAM && it.url != url }
+        ).distinctBy { it.url }.take(2)
+        for (candidate in candidates) {
+            runCatching {
+                contentRepository.streamDetails(candidate.serviceId, candidate.url)
+            }
+        }
     }
 
     val snackbarHostState = remember { SnackbarHostState() }

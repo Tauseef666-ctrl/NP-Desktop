@@ -193,6 +193,26 @@ class SearchViewModel(
      * start one request per keystroke. Submitting the query (for example with the Enter key) uses
      * `false` to search immediately.
      */
+    /**
+     * Restores the last search of the session without a network round trip. The search screen
+     * calls this when the user navigates back, so a recent search renders instantly instead of
+     * starting blank.
+     */
+    fun restoreSession(
+        query: String,
+        filter: String?,
+        items: List<ContentItem>,
+        hasMore: Boolean
+    ) {
+        if (_query.value.isNotBlank() || _items.value.isNotEmpty()) return
+        if (items.isEmpty() || query.isBlank()) return
+        _query.value = query
+        _filter.value = filter
+        _items.value = items
+        _hasMore.value = hasMore
+        nextPage = 1
+    }
+
     fun search(query: String, debounce: Boolean = true) {
         _query.value = query
         keyboardSelected = false
@@ -238,6 +258,10 @@ class SearchViewModel(
                     searchHistory.record(query)
                     clearSuggestions()
                 }
+                SearchSessionStore.query = query
+                SearchSessionStore.filter = _filter.value
+                SearchSessionStore.items = deduped
+                SearchSessionStore.hasMore = deduped.isNotEmpty()
             } catch (exception: CancellationException) {
                 // A newer search replaced this one; it owns the state from here on.
                 throw exception
@@ -322,8 +346,11 @@ class SearchViewModel(
                     // entries across continuations, and the grid renders keyed by url.
                     _items.value = (_items.value + result).distinctBy { it.url }
                     nextPage += 1
+                    SearchSessionStore.items = _items.value
+                    SearchSessionStore.hasMore = _hasMore.value
                 } else {
                     _hasMore.value = false
+                    SearchSessionStore.hasMore = false
                 }
             } catch (exception: ContentException) {
                 Logger.e(messageString = "Loading the next page failed", throwable = exception)
@@ -356,4 +383,16 @@ class SearchViewModel(
         private const val SEARCH_DEBOUNCE_MILLIS = 300L
         private const val SUGGESTION_DEBOUNCE_MILLIS = 250L
     }
+}
+
+/**
+ * Remembers the last executed search of the session. The search screen restores it when the
+ * user navigates back, because the screen entry (and with it its view model) is destroyed on
+ * pop; a recent search then renders instantly instead of starting blank.
+ */
+object SearchSessionStore {
+    var query: String = ""
+    var filter: String? = null
+    var items: List<ContentItem> = emptyList()
+    var hasMore: Boolean = false
 }
