@@ -49,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -103,14 +104,19 @@ fun SearchScreen(
         runCatching { focusRequester.requestFocus() }
     }
 
-    // Load the next page when the user scrolls to the end of the list
-    LaunchedEffect(gridState, items.size, hasMore) {
-        if (!hasMore || loading) return@LaunchedEffect
-        val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-            ?: return@LaunchedEffect
-        if (lastVisible >= items.size - 3) {
-            viewModel.loadMore()
-        }
+    // Load the next page when the user scrolls to the end of the list. A snapshot flow on the
+    // last visible index is used instead of a plain LaunchedEffect key: the grid state object
+    // never changes identity, so a keyed effect would not re-fire while the user keeps
+    // scrolling through pages of results.
+    LaunchedEffect(gridState, hasMore) {
+        snapshotFlow { gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastVisible ->
+                if (!hasMore) return@collect
+                val index = lastVisible ?: return@collect
+                if (index >= items.size - 3) {
+                    viewModel.loadMore()
+                }
+            }
     }
 
     Scaffold(

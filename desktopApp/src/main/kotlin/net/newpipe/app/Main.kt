@@ -65,7 +65,7 @@ fun main() {
     // Everything the app logs (extractor refusals, player errors, the updater) is written into
     // `%APPDATA%\NP-Desktop\logs\npdesktop.log`, so failures of the installed build can be
     // diagnosed afterwards.
-    runCatching { net.newpipe.app.platform.AppFileLogger.install() }
+    runCatching { net.newpipe.app.platform.AppFileLogger.install(DesktopVersions.APP_VERSION) }
 
     // Hand the packaged version into the in-app updater: the updater compares its release
     // lookup against this constant. Keep it in sync with `packageVersion` in the Gradle file.
@@ -133,19 +133,35 @@ fun main() {
         playerUiState.setImmersive(fullscreen)
     }
     val appFullscreen by playerUiState.appFullscreen.collectAsState()
+    // Entering fullscreen lets the platform resize the window; the size and position from before
+    // are remembered here and restored on exit, so leaving the fullscreen player does not leave
+    // the window at the wrong size.
+    var savedWindowPlacement by remember {
+        mutableStateOf(windowState.size to windowState.position)
+    }
+    var inWindowFullscreen by remember { mutableStateOf(false) }
     LaunchedEffect(fullscreen, appFullscreen) {
         runCatching {
             if (fullscreen || appFullscreen) {
+                if (!inWindowFullscreen) {
+                    inWindowFullscreen = true
+                    savedWindowPlacement = windowState.size to windowState.position
+                }
                 windowState.placement = WindowPlacement.Fullscreen
             } else {
                 windowState.placement = WindowPlacement.Floating
+                if (inWindowFullscreen) {
+                    inWindowFullscreen = false
+                    windowState.size = savedWindowPlacement.first
+                    windowState.position = savedWindowPlacement.second
+                }
             }
         }
     }
 
     Window(
         onCloseRequest = ::exitApplication,
-        title = if (fullscreen || appFullscreen) "" else "NP Desktop",
+        title = "NP Desktop",
         state = windowState,
         undecorated = false,
         transparent = false,

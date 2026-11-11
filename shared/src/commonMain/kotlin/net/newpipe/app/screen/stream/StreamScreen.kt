@@ -46,6 +46,7 @@ import net.newpipe.app.service.MediaDownloader
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.PlaybackRequest
 import net.newpipe.app.service.PopupPlayer
+import net.newpipe.app.service.QueueRepository
 import net.newpipe.app.service.WatchHistoryRepository
 import net.newpipe.app.ui.PlayerShortcutHooks
 import net.newpipe.app.ui.PlayerUiState
@@ -74,6 +75,7 @@ fun StreamScreen(
     watchHistory: WatchHistoryRepository = koinInject(),
     downloads: DownloadRepository = koinInject(),
     downloader: MediaDownloader = koinInject(),
+    queueRepository: QueueRepository = koinInject(),
     shareHandler: ShareHandler = koinInject()
 ) {
     val details by viewModel.details.collectAsState()
@@ -86,8 +88,33 @@ fun StreamScreen(
     val loadingMoreRelated by viewModel.loadingMoreRelated.collectAsState()
     val hasMoreRelated by viewModel.hasMoreRelated.collectAsState()
     val playbackState by playbackController.state.collectAsState()
+    val queueItems by queueRepository.queue.collectAsState()
     val immersive by playerUiState.immersive.collectAsState()
     val audioOnly by playerUiState.audioOnly.collectAsState()
+
+    // The next button skips to the head of the queue when the user has queued videos, and only
+    // falls back to the first related stream when the queue is empty. A queue entry is removed
+    // when it is played, exactly like the automatic advance at the end of a video does.
+    val skipToNext: (() -> Unit)? = {
+        val queued = queueRepository.pollNext()
+        if (queued != null) {
+            navigator.navigateTo(Destination.Stream(queued.serviceId, queued.url))
+        } else {
+            relatedItems
+                .firstOrNull { it.type == ContentType.STREAM && it.url != url }
+                ?.let { next ->
+                    navigator.navigateTo(Destination.Stream(next.serviceId, next.url))
+                }
+        }
+    }
+    val hasNext = queueItems.any { it.type == ContentType.STREAM } ||
+        relatedItems.any { it.type == ContentType.STREAM && it.url != url }
+
+    // The auto-queue fallback in the queue repository takes its "next" video from the related
+    // suggestions of the stream the user is watching.
+    LaunchedEffect(relatedItems) {
+        queueRepository.relatedSuggestions = relatedItems
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -122,12 +149,8 @@ fun StreamScreen(
         }
     }
 
-    DisposableEffect(serviceId, url, relatedItems, navigator.backstack.size) {
-        PlayerShortcutHooks.next = relatedItems
-            .firstOrNull { it.type == ContentType.STREAM }
-            ?.let { next ->
-                { navigator.navigateTo(Destination.Stream(next.serviceId, next.url)) }
-            }
+    DisposableEffect(serviceId, url, relatedItems, queueItems, navigator.backstack.size) {
+        PlayerShortcutHooks.next = if (hasNext) skipToNext else null
         PlayerShortcutHooks.previous = if (navigator.backstack.size > 1) {
             ({ navigator.navigateUp() })
         } else {
@@ -331,15 +354,7 @@ fun StreamScreen(
                             playerUiState.toggleFullscreen()
                         },
                         onClose = playbackController::clear,
-                        onNext = relatedItems
-                            .firstOrNull { it.type == ContentType.STREAM }
-                            ?.let { next ->
-                                {
-                                    navigator.navigateTo(
-                                        Destination.Stream(next.serviceId, next.url)
-                                    )
-                                }
-                            },
+                        onNext = if (hasNext) skipToNext else null,
                         onPrevious = if (navigator.backstack.size > 1) {
                             ({ navigator.navigateUp() })
                         } else {
@@ -363,15 +378,7 @@ fun StreamScreen(
                         hasMoreRelated = hasMoreRelated,
                         onToggleImmersive = { playerUiState.toggleFullscreen() },
                         onClosePlayer = playbackController::clear,
-                        onNext = relatedItems
-                            .firstOrNull { it.type == ContentType.STREAM }
-                            ?.let { next ->
-                                {
-                                    navigator.navigateTo(
-                                        Destination.Stream(next.serviceId, next.url)
-                                    )
-                                }
-                            },
+                        onNext = if (hasNext) skipToNext else null,
                         onPrevious = if (navigator.backstack.size > 1) {
                             ({ navigator.navigateUp() })
                         } else {

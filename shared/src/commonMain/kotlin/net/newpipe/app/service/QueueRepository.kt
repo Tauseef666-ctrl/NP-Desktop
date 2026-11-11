@@ -6,6 +6,7 @@
 package net.newpipe.app.service
 
 import co.touchlab.kermit.Logger
+import com.russhwolf.settings.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import net.newpipe.app.model.ContentItem
 import net.newpipe.app.model.ContentType
+import net.newpipe.app.preferences.VideoAudioPreferences
 
 /**
  * The playback queue of the session: the "up next" videos the user added while browsing.
@@ -25,7 +27,8 @@ import net.newpipe.app.model.ContentType
  * removed by the user interface at the same time.
  */
 class QueueRepository(
-    private val controller: PlaybackController
+    private val controller: PlaybackController,
+    private val settings: Settings
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -37,6 +40,35 @@ class QueueRepository(
      * the queue is already removed then. The shell sets the navigation callback.
      */
     var onAutoAdvance: ((ContentItem) -> Unit)? = null
+
+    /**
+     * The related suggestions of the stream the user is currently watching; the auto-queue
+     * fallback takes its "next" entry from here when the queue is empty. Written by the user
+     * interface, read from the collector below.
+     */
+    @Volatile
+    var relatedSuggestions: List<ContentItem> = emptyList()
+
+    private val _autoQueueEnabled = MutableStateFlow(
+        settings.getBoolean(
+            VideoAudioPreferences.KEY_AUTO_QUEUE,
+            VideoAudioPreferences.DEFAULT_AUTO_QUEUE
+        )
+    )
+
+    /**
+     * Whether the next related suggestion is played automatically when the current video ends
+     * and the queue is empty; persisted with the other player behaviour settings.
+     */
+    val autoQueueEnabled: StateFlow<Boolean> = _autoQueueEnabled.asStateFlow()
+
+    /**
+     * Turns the auto-queue behaviour on or off and persists the choice.
+     */
+    fun setAutoQueueEnabled(enabled: Boolean) {
+        _autoQueueEnabled.value = enabled
+        settings.putBoolean(VideoAudioPreferences.KEY_AUTO_QUEUE, enabled)
+    }
 
     private val _queue = MutableStateFlow<List<ContentItem>>(emptyList())
 
@@ -52,6 +84,17 @@ class QueueRepository(
         if (item.type != ContentType.STREAM) return
         if (_queue.value.any { it.url == item.url }) return
         _queue.value = _queue.value + item
+    }
+
+    /**
+     * Removes the head of the queue and returns it, or `null` when the queue is empty. The
+     * next button of the player uses this to skip to the queued video the user chose instead
+     * of a related recommendation.
+     */
+    fun pollNext(): ContentItem? {
+        val head = _queue.value.firstOrNull() ?: return null
+        _queue.value = _queue.value.drop(1)
+        return head
     }
 
     /**
@@ -118,10 +161,24 @@ class QueueRepository(
                 }
                 if (finished && armed && !state.loading && state.error == null) {
                     armed = false
-                    val head = _queue.value.firstOrNull() ?: return@collect
-                    _queue.value = _queue.value.drop(1)
-                    Logger.i(messageString = "Queue: the playback ended; advancing to ${head.url}")
-                    onAutoAdvance?.invoke(head)
+                    val head = _queue.value.firstOrNull()
+                    if (head != null) {
+                        _queue.value = _queue.value.drop(1)
+                        Logger.i(messageString = "Queue: the playback ended; advancing to ${head.url}")
+                        onAutoAdvance?.invoke(head)
+                    } else if (_autoQueueEnabled.value) {
+                        // The queue is empty and auto-queue is on: the first related
+                        // suggestion that is not the current video plays next.
+                        val suggestion = relatedSuggestions.firstOrNull {
+                            it.type == ContentType.STREAM && it.url != url
+                        }
+                        if (suggestion != null) {
+                            Logger.i(
+                                messageString = "Queue: auto-queue playing the next suggestion ${suggestion.url}"
+                            )
+                            onAutoAdvance?.invoke(suggestion)
+                        }
+                    }
                 }
             }
         }

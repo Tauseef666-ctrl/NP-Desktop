@@ -40,7 +40,7 @@ fun contentModule(
     single { playerUiState ?: PlayerUiState() }
     single { WatchHistoryRepository(get()) }
     single { PlaylistRepository(get()) }
-    single { QueueRepository(get()) }
+    single { QueueRepository(get(), get()) }
     single { DownloadRepository(get()) }
     single { SearchHistoryRepository(get()) }
     single { SubscriptionRepository(get()) }

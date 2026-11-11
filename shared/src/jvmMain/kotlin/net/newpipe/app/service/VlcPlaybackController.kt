@@ -70,6 +70,28 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     private var ticker: Job? = null
 
     /**
+     * The request the current playback was started with; the error handler reuses it for the
+     * automatic retry, because the libVLC error event carries no context of its own.
+     */
+    @Volatile
+    private var activeRequest: PlaybackRequest? = null
+
+    /**
+     * Guards the automatic retry so a failing playback is restarted at most once; set again in
+     * every [play] call.
+     */
+    @Volatile
+    private var retriedOnError = false
+
+    /**
+     * The web url and timestamp of the last [play] call; identical calls within the window are
+     * deduplicated, because recomposition and detail reloads can start the same video twice in
+     * quick succession and the second start races the first one inside libVLC.
+     */
+    private var lastPlayUrl: String? = null
+    private var lastPlayAt = 0L
+
+    /**
      * The size of the picture that libVLC was last negotiated to render. These values are only
      * touched from the libVLC format callbacks, and only read from its render callback, which run
      * sequentially on the video output thread.
@@ -109,7 +131,32 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 }
 
                 override fun error(mediaPlayer: MediaPlayer) {
+                    Logger.e(
+                        messageString = "libVLC reported an error event" +
+                            " (video='${activeRequest?.title}' webUrl='${activeRequest?.webUrl}')"
+                    )
+                    if (!retriedOnError) {
+                        retriedOnError = true
+                        val request = activeRequest
+                        if (request != null) {
+                            // The libVLC event thread must not be blocked here; the retry is
+                            // scheduled on the controller scope and all libVLC work is queued
+                            // through submit() again. A short delay lets the broken ES output
+                            // of the failed attempt shut down before the retry prepares fresh.
+                            scope.launch {
+                                delay(RETRY_DELAY_MS)
+                                retryPlayback(request)
+                            }
+                            return
+                        }
+                    }
                     _state.update { it.copy(playing = false, loading = false, error = "Playback failed") }
+                    // A dead playback keeps its stale audio elementary stream otherwise, which
+                    // can keep playing sound in the background; stop and reset kill it.
+                    player.submit {
+                        player.controls().stop()
+                        player.media().reset()
+                    }
                 }
 
                 override fun lengthChanged(mediaPlayer: MediaPlayer, length: Long) {
@@ -149,7 +196,21 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
             return
         }
 
+        // Rapid duplicate starts of the same video race each other inside libVLC (two stop/
+        // prepare/play sequences interleaved within a second); the second start is ignored.
+        val now = System.currentTimeMillis()
+        synchronized(this) {
+            if (request.webUrl == lastPlayUrl && now - lastPlayAt < PLAY_DEDUPE_MS) {
+                Logger.i(messageString = "Duplicate start of '${request.title}' ignored")
+                return
+            }
+            lastPlayUrl = request.webUrl
+            lastPlayAt = now
+        }
+
         ticker?.cancel()
+        activeRequest = request
+        retriedOnError = false
         Logger.i(messageString = "Starting playback of '${request.title}'")
 
         // The user settings of the player survive a change of the media.
@@ -211,6 +272,50 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         }
 
         startTicker()
+    }
+
+    /**
+     * Restarts the current playback once after libVLC reported an error: the player is stopped
+     * and reset first so the failed attempt's elementary streams die before a fresh prepare
+     * reattaches the audio slave and plays again.
+     */
+    private fun retryPlayback(request: PlaybackRequest) {
+        val player = player ?: return
+        Logger.i(messageString = "Retrying playback of '${request.title}' after an error")
+        _frame.value = null
+        _state.update { it.copy(playing = false, loading = true, error = null) }
+        player.submit {
+            try {
+                player.controls().stop()
+                player.media().reset()
+                val options = mutableListOf<String>()
+                if (request.startPositionMs > 5_000) {
+                    options += ":start-time=${request.startPositionMs / 1_000}"
+                }
+                if (!player.media().prepare(request.videoUrl, *options.toTypedArray())) {
+                    _state.update {
+                        it.copy(playing = false, loading = false, error = "Playback failed")
+                    }
+                    return@submit
+                }
+                val audioUrl = request.audioUrl
+                if (audioUrl != null) {
+                    player.media().addSlave(MediaSlaveType.AUDIO, audioUrl, true)
+                }
+                player.audio().setVolume(_state.value.volume)
+                player.audio().setMute(_state.value.muted)
+                player.controls().setRate(_state.value.speed)
+                player.controls().play()
+            } catch (exception: Throwable) {
+                Logger.e(
+                    messageString = "The retry of '${request.title}' failed",
+                    throwable = exception
+                )
+                _state.update {
+                    it.copy(playing = false, loading = false, error = "Playback failed")
+                }
+            }
+        }
     }
 
     override fun resume() {
@@ -399,6 +504,17 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
          * The interval the playback position is refreshed with.
          */
         private const val TICK_INTERVAL_MS = 250L
+
+        /**
+         * Identical play() calls within this window are ignored, because two starts of the same
+         * video within a second race each other inside libVLC.
+         */
+        private const val PLAY_DEDUPE_MS = 1_000L
+
+        /**
+         * The delay before the automatic retry after a libVLC error event.
+         */
+        private const val RETRY_DELAY_MS = 800L
 
         /**
          * The pixel budget the decoded video frames are scaled into.

@@ -127,13 +127,16 @@ fun VideoPlayer(
     var controlsVisible by remember(hasMedia) { mutableStateOf(true) }
     var interactions by remember { mutableIntStateOf(0) }
     var aspect by remember { mutableStateOf(PlayerAspect.Fit) }
+    // Whether one of the option menus of the top bar (quality, audio, speed) is open. While a
+    // menu is open the controls must not hide, because the menus would disappear with them.
+    var menuOpen by remember { mutableStateOf(false) }
     // The last position the pointer had when it last really moved. The video surface under a
     // stationary cursor redraws with every frame, and the platform then replays Move events for
     // the same position; comparing positions makes those fake moves identifiable.
     var lastPointerPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
 
-    LaunchedEffect(controlsVisible, interactions, state.playing, hasMedia) {
-        if (hasMedia && controlsVisible && state.playing) {
+    LaunchedEffect(controlsVisible, interactions, state.playing, hasMedia, menuOpen) {
+        if (hasMedia && controlsVisible && state.playing && !menuOpen) {
             delay(CONTROLS_HIDE_DELAY_MS)
             controlsVisible = false
         }
@@ -244,7 +247,8 @@ fun VideoPlayer(
                     onInteraction = {
                         controlsVisible = true
                         interactions++
-                    }
+                    },
+                    onMenuOpenChange = { menuOpen = it }
                 )
             }
 
@@ -286,6 +290,30 @@ fun VideoPlayer(
 
             if (state.loading) {
                 CircularProgressIndicator(color = Color.White)
+            }
+
+            // The video has run to its end: a centered replay button lets the user watch it
+            // again without going through the play/pause toggle in the controls.
+            if (state.durationMs > 0 &&
+                state.positionMs >= state.durationMs - END_OF_VIDEO_GRACE_MS &&
+                !state.playing &&
+                !state.loading &&
+                state.error == null
+            ) {
+                FilledIconButton(
+                    onClick = {
+                        controller.seekTo(0)
+                        controller.resume()
+                    },
+                    modifier = Modifier.size(72.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_play_arrow),
+                        contentDescription = "Replay",
+                        tint = PlayerForeground,
+                        modifier = Modifier.size(44.dp)
+                    )
+                }
             }
             }
         } else {
@@ -428,7 +456,8 @@ private fun PlayerTopBar(
     onShare: (() -> Unit)?,
     aspect: PlayerAspect,
     onCycleAspect: () -> Unit,
-    onInteraction: () -> Unit
+    onInteraction: () -> Unit,
+    onMenuOpenChange: (Boolean) -> Unit
 ) {
     val state by controller.state.collectAsState()
 
@@ -469,7 +498,8 @@ private fun PlayerTopBar(
             QualityMenu(
                 streams = videoStreams,
                 selected = selectedVideo,
-                onSelect = onSelectVideo
+                onSelect = onSelectVideo,
+                onOpenChange = onMenuOpenChange
             )
         }
 
@@ -477,13 +507,15 @@ private fun PlayerTopBar(
             AudioMenu(
                 streams = audioStreams,
                 selected = selectedAudio,
-                onSelect = onSelectAudio
+                onSelect = onSelectAudio,
+                onOpenChange = onMenuOpenChange
             )
         }
 
         SpeedMenu(
             speed = state.speed,
-            onSpeedChange = controller::setSpeed
+            onSpeedChange = controller::setSpeed,
+            onOpenChange = onMenuOpenChange
         )
 
         PlayerChip(
@@ -539,12 +571,14 @@ private fun PlayerChip(
 @Composable
 private fun SpeedMenu(
     speed: Float,
-    onSpeedChange: (Float) -> Unit
+    onSpeedChange: (Float) -> Unit,
+    onOpenChange: (Boolean) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var sliderSpeed by remember { mutableFloatStateOf(speed) }
 
     LaunchedEffect(speed) { sliderSpeed = speed }
+    LaunchedEffect(expanded) { onOpenChange(expanded) }
 
     Box {
         PlayerChip(
@@ -600,9 +634,12 @@ private fun SpeedMenu(
 private fun QualityMenu(
     streams: List<MediaStream>,
     selected: MediaStream?,
-    onSelect: (MediaStream) -> Unit
+    onSelect: (MediaStream) -> Unit,
+    onOpenChange: (Boolean) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(expanded) { onOpenChange(expanded) }
 
     Box {
         PlayerChip(
@@ -615,6 +652,24 @@ private fun QualityMenu(
             onDismissRequest = { expanded = false }
         ) {
             val distinct = streams.distinctBy { it.quality }
+            if (distinct.size <= 1) {
+                // Some videos (for example made-for-kids content served through restricted
+                // clients) only carry a single muxed quality; say so instead of offering a
+                // dropdown with one seemingly arbitrary entry.
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = "Only ${distinct.firstOrNull()?.quality ?: "one quality"} is" +
+                                " available for this video",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        distinct.firstOrNull()?.let(onSelect)
+                    }
+                )
+            }
             distinct.forEach { stream ->
                 DropdownMenuItem(
                     text = {
@@ -644,9 +699,12 @@ private fun QualityMenu(
 private fun AudioMenu(
     streams: List<MediaStream>,
     selected: MediaStream?,
-    onSelect: (MediaStream) -> Unit
+    onSelect: (MediaStream) -> Unit,
+    onOpenChange: (Boolean) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(expanded) { onOpenChange(expanded) }
 
     Box {
         PlayerChip(
@@ -715,6 +773,12 @@ private val PlayerForeground = Color(0xFFF5F5F5)
  * interaction while the playback is running.
  */
 private const val CONTROLS_HIDE_DELAY_MS = 3_000L
+
+/**
+ * The position counts as "the video has ended" when it is this close to the duration; the
+ * replay button appears in that window while the playback is stopped.
+ */
+private const val END_OF_VIDEO_GRACE_MS = 1_000
 
 /**
  * The pointer distance in pixels that counts as a real movement; hover events replayed for a

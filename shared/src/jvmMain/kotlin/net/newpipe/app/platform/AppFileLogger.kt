@@ -35,7 +35,7 @@ object AppFileLogger {
      * call is ignored. Every failure of the writer itself is swallowed, logging must never break
      * the app.
      */
-    fun install() {
+    fun install(appVersion: String? = null) {
         synchronized(this) {
             if (file != null) {
                 return
@@ -62,6 +62,14 @@ object AppFileLogger {
                 write(severity, tag, message, throwable)
             }
         })
+        // Guarantee the file exists from app start, so "no log file" never means "nothing was
+        // logged yet": every launch leaves exactly one line with the app version.
+        write(
+            Severity.Info,
+            null,
+            "NP Desktop ${appVersion ?: "unknown"} started; file logging active",
+            null
+        )
     }
 
     /** The log file that [install] writes to, or `null` when it could not be set up. */

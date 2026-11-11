@@ -14,6 +14,7 @@ import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -55,6 +58,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,6 +86,7 @@ import net.newpipe.app.model.StreamDetails
 import net.newpipe.app.model.SubscribedChannel
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.PlaylistRepository
+import net.newpipe.app.service.QueueRepository
 import net.newpipe.app.service.SubscriptionRepository
 import net.newpipe.app.ui.Breakpoints
 import net.newpipe.app.ui.Motion
@@ -205,7 +210,21 @@ internal fun WatchPage(
                 )
             }
         } else {
+            val relatedListState = rememberLazyListState()
+
+            // The same scroll-load trigger as the two column layout above.
+            LaunchedEffect(relatedListState, hasMoreRelated, relatedItems.size) {
+                snapshotFlow { relatedListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+                    .collect { lastVisible ->
+                        if (!hasMoreRelated) return@collect
+                        if (lastVisible != null && lastVisible >= relatedItems.size - 1) {
+                            onLoadMoreRelated()
+                        }
+                    }
+            }
+
             LazyColumn(
+                state = relatedListState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(Spacing.md)
             ) {
@@ -259,8 +278,7 @@ internal fun WatchPage(
                 item(key = "related-loader") {
                     RelatedLoader(
                         loading = loadingMoreRelated,
-                        hasMore = hasMoreRelated,
-                        onLoadMore = onLoadMoreRelated
+                        hasMore = hasMoreRelated
                     )
                 }
             }
@@ -911,16 +929,42 @@ private fun parseTimestamp(text: String): Long? {
 }
 
 /**
- * The heading of the related column.
+ * The heading of the related column, with the auto-queue switch that decides whether the next
+ * related suggestion plays automatically when the current video ends.
  */
 @Composable
 private fun RelatedHeader(modifier: Modifier = Modifier) {
+    val queueRepository: QueueRepository = koinInject()
+    val autoQueueEnabled by queueRepository.autoQueueEnabled.collectAsState()
+
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = "Related videos",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Related videos",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+            ) {
+                Text(
+                    text = "Auto-queue",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Switch(
+                    checked = autoQueueEnabled,
+                    onCheckedChange = { queueRepository.setAutoQueueEnabled(it) },
+                    modifier = Modifier.height(28.dp)
+                )
+            }
+        }
         Text(
             text = "More from this service",
             style = MaterialTheme.typography.bodySmall,
@@ -941,7 +985,23 @@ private fun RelatedPanel(
     onOpenItem: (ContentItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val listState = rememberLazyListState()
+
+    // Load more entries when the user scrolls near the end of the list. A snapshot flow on the
+    // last visible index is used instead of a trigger inside the trailing item: that item stays
+    // composed while the list grows, so an effect keyed on composition would fire only once.
+    LaunchedEffect(listState, hasMore, items.size) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastVisible ->
+                if (!hasMore) return@collect
+                if (lastVisible != null && lastVisible >= items.size - 1) {
+                    onLoadMore()
+                }
+            }
+    }
+
     LazyColumn(
+        state = listState,
         modifier = modifier,
         contentPadding = PaddingValues(bottom = Spacing.lg)
     ) {
@@ -961,8 +1021,7 @@ private fun RelatedPanel(
         item(key = "related-loader") {
             RelatedLoader(
                 loading = loadingMore,
-                hasMore = hasMore,
-                onLoadMore = onLoadMore
+                hasMore = hasMore
             )
         }
     }
@@ -1031,14 +1090,13 @@ private fun RecommendationItem(
 }
 
 /**
- * The trailing entry of the related list: triggers loading more entries when it becomes visible and
- * reports when the list has been exhausted.
+ * The trailing entry of the related list: reports whether more entries are loading or the list
+ * has been exhausted. The loading itself is triggered by the scroll position of the list.
  */
 @Composable
 private fun RelatedLoader(
     loading: Boolean,
-    hasMore: Boolean,
-    onLoadMore: () -> Unit
+    hasMore: Boolean
 ) {
     Box(
         modifier = Modifier
@@ -1052,14 +1110,11 @@ private fun RelatedLoader(
                 strokeWidth = 2.dp
             )
 
-            hasMore -> {
-                LaunchedEffect(Unit) { onLoadMore() }
-                Text(
-                    text = "Loading more\u2026",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            hasMore -> Text(
+                text = "Loading more\u2026",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             else -> Text(
                 text = "No more suggestions",
