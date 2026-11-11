@@ -31,7 +31,7 @@ Working checklist for this polish round. Ticks update as items land.
 - [x] 4. Apply glassmorphism panels theme app-wide (Windows + TV) — single-point override in Theme.kt: `withGlassSurfaces()` makes surfaceContainer* tiers translucent, so system surfaces (dropdown menus, dialogs, cards, snackbars) render as frosted glass. TV-specific polish follows in item 5.
 - [x] 5. Split/prioritize Windows vs Android TV layout handling — DeviceForm is the single form-factor authority; JVM honors `NP_FORM=tv` / `newpipe.form=tv` override (Windows default unchanged); Android detection strengthened with Fire-TV model + battery-absent set-top-box heuristics (ported from legacy DeviceUtils).
 - [ ] 6. TV remote/D-pad fixes + layout scaling (awaiting user's detailed list)
-- [ ] 7. Live player scrubber bogus duration fix (from earlier)
+- [x] 7. Live player scrubber bogus duration fix (from earlier) — verified: controller zeroes durationMs for live (lengthChanged + ticker); PlayerControls and MiniPlayer show a LIVE badge instead of a scrubber; watch history tolerates durationMs = 0. No further change needed.
 - [ ] 8. Rebuild + refresh release after polish round
 
 ## Notes
