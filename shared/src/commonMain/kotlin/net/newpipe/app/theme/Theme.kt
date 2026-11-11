@@ -103,6 +103,23 @@ private val darkScheme = darkColorScheme(
 private val blackScheme = darkScheme.copy(surface = Color.Black)
 
 /**
+ * Overrides the container tiers of a scheme with translucent glass tones, so the surfaces
+ * Compose draws itself (dropdown menus, dialogs, snackbars, cards) match the frosted glass
+ * panels the app paints explicitly, instead of rendering as opaque boxes on top of the glass
+ * design. The alpha ladder keeps popups slightly denser than cards for readability.
+ */
+private fun withGlassSurfaces(scheme: ColorScheme): ColorScheme {
+    val surface = scheme.surface
+    return scheme.copy(
+        surfaceContainerLowest = surface.copy(alpha = 0.96f),
+        surfaceContainerLow = surface.copy(alpha = 0.94f),
+        surfaceContainer = surface.copy(alpha = 0.92f),
+        surfaceContainerHigh = surface.copy(alpha = 0.90f),
+        surfaceContainerHighest = surface.copy(alpha = 0.88f)
+    )
+}
+
+/**
  * Gets current color scheme chosen by the user
  */
 @Composable
@@ -172,7 +189,7 @@ fun AppTheme(
     content: @Composable () -> Unit
 ) {
     MaterialExpressiveTheme(
-        colorScheme = colorScheme,
+        colorScheme = withGlassSurfaces(colorScheme),
         content = content
     )
 }
