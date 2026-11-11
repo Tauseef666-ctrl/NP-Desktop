@@ -30,9 +30,9 @@ Working checklist for this polish round. Ticks update as items land.
 - [x] 3. Implement download options UI (quality, audio/video, formats) + fix download function
 - [x] 4. Apply glassmorphism panels theme app-wide (Windows + TV) — single-point override in Theme.kt: `withGlassSurfaces()` makes surfaceContainer* tiers translucent, so system surfaces (dropdown menus, dialogs, cards, snackbars) render as frosted glass. TV-specific polish follows in item 5.
 - [x] 5. Split/prioritize Windows vs Android TV layout handling — DeviceForm is the single form-factor authority; JVM honors `NP_FORM=tv` / `newpipe.form=tv` override (Windows default unchanged); Android detection strengthened with Fire-TV model + battery-absent set-top-box heuristics (ported from legacy DeviceUtils).
-- [ ] 6. TV remote/D-pad fixes + layout scaling (awaiting user's detailed list)
+- [ ] 6. TV remote/D-pad fixes + layout scaling — DEFERRED to a future round per user decision: needs a proper dedicated Android TV app with TV-native controls (minibar cannot be reopened into the main player with the remote, UI lacks TV control support). Bigger project, not a polish tick.
 - [x] 7. Live player scrubber bogus duration fix (from earlier) — verified: controller zeroes durationMs for live (lengthChanged + ticker); PlayerControls and MiniPlayer show a LIVE badge instead of a scrubber; watch history tolerates durationMs = 0. No further change needed.
-- [ ] 8. Rebuild + refresh release after polish round
+- [x] 8. Rebuild + refresh release after polish round — tag v0.25.6 re-pointed to 2c0294dd4, Windows workflow re-ran (success), local MSI built + verified (msiexec /a), uploaded with --clobber, Downloads copy + checksum refreshed.
 
 ## Notes
 - One Gradle run at a time, `--no-configuration-cache`, never kill daemons.

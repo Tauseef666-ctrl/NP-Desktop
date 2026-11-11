@@ -1,5 +1,49 @@
 # Release polish TODO — batch 11 (v0.25.6 release)
 
+**v0.25.6 re-released after the polish round** (tag `v0.25.6` re-pointed from
+`d4aefd6e6` to `2c0294dd4`, release
+https://github.com/Tauseef666-ctrl/NP-Desktop/releases/tag/v0.25.6, assets:
+`NP-Desktop-0.25.6.msi` + `checksums-windows-sha256.txt`, local copy of the
+MSI in `Downloads`). The Windows MSI workflow re-ran successfully on the new
+tag; the local build was uploaded with `--clobber` so the release asset
+matches the Downloads copy byte-for-byte. MSI content verified via
+`msiexec /a` extract: the embedded `shared-jvm` jar contains the new classes
+(`SubscriptionsFeedSessionKt`, `SearchSessionStore`).
+
+## Polish round (batch 12, commits aff9a30d3..2c0294dd4)
+Shipped on top of the previous release, all compiled via
+`:desktopApp:compileKotlin` (BUILD SUCCESSFUL) and pushed to `main`:
+1. **Player carry-over batch** (`8892019b0`): controller robustness (dedupe
+   double-start, one auto-retry on VLC error, stop stale audio ES), menus
+   block auto-hide, centered replay button, fullscreen-exit window restore,
+   queue-aware Next button, scroll-load for search + related, auto-queue
+   toggle, honest single-quality note for kids videos, file-logger startup
+   line.
+2. **UI load audit** (`8892019b0` findings): 2-min kiosk/search TTL,
+   refetch-per-visit feeds, search lost on back, no prefetch.
+3. **Caching + prefetch** (`a7a7c46c0`): stream/kiosk TTL 10 min, search
+   5 min, LRU 64; session caches for kiosk rails and the subscriptions feed;
+   search results survive back navigation; background prefetch of the
+   candidate next videos (queue head + first related).
+4. **Download options** (`eaae46c35`): muxed vs adaptive entries with honest
+   labels, container choice (Automatic/MP4/MKV) for merged downloads, merge
+   failure registers the video-only file with an honest label, running
+   downloads match library rows by video url, real download timestamps.
+5. **Glassmorphism app-wide** (`0de650621`): `withGlassSurfaces()` in
+   `Theme.kt` overrides the `surfaceContainer*` tiers translucently, so
+   dropdown menus, dialogs, cards and snackbars render as frosted glass like
+   the hand-painted panels.
+6. **Windows vs TV split** (`2c7820458`): `DeviceForm` is the single
+   form-factor authority; desktop honors `NP_FORM=tv` / `newpipe.form=tv`
+   (default unchanged); Android TV detection now also catches Fire TV
+   models and battery-less set-top boxes.
+7. **Live scrubber** (`2c0294dd4`, no code change): fix verified complete —
+   controller zeroes live duration, PlayerControls/MiniPlayer show a LIVE
+   badge, watch history tolerates duration 0.
+8. **TV round deferred**: the user decided a dedicated Android TV app with
+   TV-native controls should be built later (minibar cannot be reopened with
+   the remote; UI lacks TV control support) — see TODO-POLISH.md item 6.
+
 **v0.25.6 is released** (tag `v0.25.6`, FINAL commit `4ddb3906a`, release
 https://github.com/Tauseef666-ctrl/NP-Desktop/releases/tag/v0.25.6, assets:
 `NP-Desktop-0.25.6.msi` + `checksums-windows-sha256.txt`, local copy of the
