@@ -48,11 +48,16 @@ object SabrMediaServer {
     private const val MAX_SEGMENT_ROUNDS = 4_000
 
     /**
-     * How often a connection may recycle its SABR session. YouTube demands a browser
-     * attestation ("PO token") after a few streamed rounds; a fresh session streams again
-     * without one, so the relay keeps restarting sessions to finish a video pot-less.
+     * The empty playback rounds a connection rides out with the same session before it ends.
+     * Brief gaps in the server's segment delivery are normal pacing, but each session's
+     * pot-less media budget is finite and a stretch of empty rounds means the generation is
+     * done: ending the connection keeps every byte it delivered valid, and the player
+     * reconnects for a fresh generation.
      */
-    private const val MAX_SESSION_RESTARTS = 120
+    private const val MAX_EMPTY_ROUNDS = 3
+
+    /** The pause between empty playback rounds before the connection is given up. */
+    private const val EMPTY_ROUND_DELAY_MS = 500L
 
     /**
      * The bytes collected before the response starts: warming a SABR session up takes the
@@ -138,14 +143,13 @@ object SabrMediaServer {
         val byteCounter = deliveredBytes.computeIfAbsent(key) {
             java.util.concurrent.atomic.AtomicLong()
         }
-        var session = YoutubeSabrSession(info)
+        val session = YoutubeSabrSession(info)
         installReloader(session)
         val bitrate = format.bitrate.takeIf { it > 0 } ?: 500_000
         var currentMs = (offset * 8_000.0 / bitrate).toLong()
         var lastSequence = -1
         var rounds = 0
-        var restarts = 0
-        var consecutiveFailures = 0
+        var emptyRounds = 0
         var headersSent = false
         var initDelivered = false
         var clientGone = false
@@ -183,7 +187,6 @@ object SabrMediaServer {
                 } else {
                     body.write(bytes, from, length)
                 }
-                consecutiveFailures = 0
             } catch (failure: IOException) {
                 // The player went away; the relay loop must not keep streaming to nobody.
                 clientGone = true
@@ -193,7 +196,7 @@ object SabrMediaServer {
 
         fun acceptInit(segment: SabrMediaSegment) {
             // The initialization segment is only ever served from the file start, and only
-            // once per connection even when the SABR session is recycled mid-stream.
+            // once per connection.
             if (offset != 0L) return
             if (!initDelivered) {
                 deliver(segment.data, 0, segment.data.size)
@@ -223,7 +226,7 @@ object SabrMediaServer {
 
         try {
             prepareSession()
-            while (rounds++ < MAX_SEGMENT_ROUNDS && restarts < MAX_SESSION_RESTARTS) {
+            while (rounds++ < MAX_SEGMENT_ROUNDS) {
                 val track = YoutubeSabrRequest.Track.of(format, timeline, lastSequence.coerceAtLeast(0))
                 val outcome = runCatching {
                     session.requestOnce(
@@ -254,52 +257,36 @@ object SabrMediaServer {
                 }
                 if (outcome.isFailure) {
                     val failure = outcome.exceptionOrNull()!!
-                    Logger.d(
-                        messageString = "SABR relay round failed: " +
-                            (failure.message ?: failure.javaClass.simpleName)
-                    )
-                    if (clientGone) break
-                    // The session died (typically "SABR attestation required" after a few
-                    // rounds); a fresh session streams again pot-less. Delivery position is
-                    // preserved, so the player sees one continuous stream.
-                    restarts++
-                    consecutiveFailures++
-                    if (restarts >= MAX_SESSION_RESTARTS || consecutiveFailures > 5) break
-                    runCatching {
-                        // A wall usually means this stream generation is exhausted: reload the
-                        // stream info (a fresh player response with a fresh streaming url) and
-                        // restart on it; falling back to the stale info still gives the session
-                        // host rotation and a clean protocol state.
-                        val fresh = runCatching {
-                            org.schabi.newpipe.extractor.services.youtube.extractors
-                                .YoutubeStreamExtractor.fetchSabrInfoForReload(
-                                    info.videoId,
-                                    ""
-                                )
-                        }.getOrNull()
-                        session = YoutubeSabrSession(fresh ?: info)
-                        installReloader(session)
-                        prepareSession()
+                    if (!clientGone) {
+                        Logger.d(
+                            messageString = "SABR relay round failed: " +
+                                (failure.message ?: failure.javaClass.simpleName)
+                        )
                     }
-                    continue
+                    // The stream generation is over (usually YouTube's attestation wall). The
+                    // bytes already delivered stay valid because they all come from this one
+                    // session; the player reconnects for the next generation. Restarting the
+                    // session here instead would splice misaligned segment bytes into the
+                    // response and corrupt the stream for the demuxer.
+                    break
                 }
                 val result = outcome.getOrThrow()
                 val backoff = result.backoffMs
                 if (backoff > 0) Thread.sleep(backoff.toLong())
                 if (result.segmentCount == 0) {
-                    // Empty rounds are the server's pacing wall, not the end of the video: the
-                    // stream only truly ends when the parsed segment timeline is exhausted.
+                    // The stream only truly ends when the parsed segment timeline is
+                    // exhausted; a few empty rounds in between are the server's pacing. They
+                    // are ridden out with the same session — switching the session would
+                    // splice misaligned bytes into the response — and after that the
+                    // connection ends so the player can reconnect for a fresh generation.
                     val reachedEnd = timeline != null &&
                         lastSequence >= timeline!!.endSequence &&
                         lastSequence > 0
-                    if (reachedEnd) break
-                    restarts++
-                    consecutiveFailures++
-                    if (restarts >= MAX_SESSION_RESTARTS || consecutiveFailures > 8) break
-                    runCatching {
-                        session = YoutubeSabrSession(info)
-                        prepareSession()
-                    }
+                    if (reachedEnd || emptyRounds >= MAX_EMPTY_ROUNDS) break
+                    emptyRounds++
+                    Thread.sleep(EMPTY_ROUND_DELAY_MS)
+                } else {
+                    emptyRounds = 0
                 }
             }
             // A short track may finish inside the pre-buffer; flush whatever was collected.

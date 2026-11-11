@@ -36,10 +36,13 @@ object ExtractorInitializer {
         val existing = runCatching { NewPipe.getDownloader() }.getOrNull()
         val own = existing as? JvmDownloader ?: JvmDownloader()
         if (existing == null) {
-            // Mirror what the Android app does: the extraction engine needs the user's language
-            // and content country to request the localized content lists of a service.
+            // The user interface is English, so the extraction engine requests English texts
+            // as well: YouTube serves view counts, relative dates ("3 months ago") and list
+            // labels in the requested language, and a non-English system locale made those
+            // texts appear in that language inside the English interface. The content country
+            // still follows the system, so the regional lists stay local.
             val locale = Locale.getDefault()
-            val localization = Localization.fromLocale(locale)
+            val localization = Localization.fromLocale(Locale.forLanguageTag("en"))
             val contentCountry = ContentCountry(locale.country.ifBlank { "US" })
             NewPipe.init(own, localization, contentCountry)
         }
