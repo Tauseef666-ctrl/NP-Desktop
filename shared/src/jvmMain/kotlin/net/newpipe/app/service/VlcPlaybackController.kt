@@ -92,6 +92,49 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     private var lastPlayAt = 0L
 
     /**
+     * SABR stream chaining: a SABR media generation served through the local relay carries
+     * roughly a minute of media before YouTube's attestation wall ends it. When the player
+     * reaches that end while the video is actually unfinished, the playback is transparently
+     * reconnected at the last position — a fresh connection starts a fresh stream generation.
+     * This counts the reconnects of the current playback.
+     */
+    @Volatile
+    private var sabrChains = 0
+
+    /**
+     * Guards against double reconnects, because a stream generation end arrives as a
+     * `finished` event followed by a `stopped` event, and the reconnect's own stop triggers
+     * `stopped` as well.
+     */
+    @Volatile
+    private var sabrChainScheduled = false
+
+    /**
+     * Set by the user facing [stop] and [clear] so their libVLC `stopped` event is not
+     * mistaken for a SABR stream generation end.
+     */
+    @Volatile
+    private var stoppedByUser = false
+
+    /**
+     * The position the last reconnect resumed from; a reconnect that makes no progress means
+     * the media really is over, and chaining must not loop on it.
+     */
+    @Volatile
+    private var lastChainPositionMs = -1L
+
+    /**
+     * The wall clock baseline for the playback position estimate: libVLC does not report a
+     * time for every media (fragmented streams in particular), so the elapsed time since the
+     * last `playing` event fills the gap.
+     */
+    @Volatile
+    private var playingSinceAt = 0L
+
+    @Volatile
+    private var playingBaselineMs = 0L
+
+    /**
      * The size of the picture that libVLC was last negotiated to render. These values are only
      * touched from the libVLC format callbacks, and only read from its render callback, which run
      * sequentially on the video output thread.
@@ -109,6 +152,11 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         player.events().addMediaPlayerEventListener(
             object : MediaPlayerEventAdapter() {
                 override fun playing(mediaPlayer: MediaPlayer) {
+                    // A fresh playback stint starts: the wall clock position estimate is
+                    // rebased so that it stays meaningful across reconnects.
+                    playingBaselineMs = _state.value.positionMs
+                    playingSinceAt = System.currentTimeMillis()
+                    sabrChainScheduled = false
                     _state.update { it.copy(playing = true, loading = false) }
                 }
 
@@ -117,6 +165,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 }
 
                 override fun stopped(mediaPlayer: MediaPlayer) {
+                    if (maybeChainSabr()) return
                     _state.update { it.copy(playing = false, positionMs = 0) }
                 }
 
@@ -125,6 +174,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 }
 
                 override fun finished(mediaPlayer: MediaPlayer) {
+                    if (maybeChainSabr()) return
                     if (!_state.value.live) {
                         _state.update { it.copy(playing = false, positionMs = it.durationMs) }
                     }
@@ -135,6 +185,9 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                         messageString = "libVLC reported an error event" +
                             " (video='${activeRequest?.title}' webUrl='${activeRequest?.webUrl}')"
                     )
+                    // A SABR stream that dies mid-playback is reconnected at its position, not
+                    // restarted from the beginning.
+                    if (maybeChainSabr()) return
                     if (!retriedOnError) {
                         retriedOnError = true
                         val request = activeRequest
@@ -211,6 +264,13 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         ticker?.cancel()
         activeRequest = request
         retriedOnError = false
+        // A new media also starts a new SABR chaining budget.
+        sabrChains = 0
+        sabrChainScheduled = false
+        stoppedByUser = false
+        lastChainPositionMs = -1L
+        playingSinceAt = 0L
+        playingBaselineMs = 0L
         Logger.i(messageString = "Starting playback of '${request.title}'")
 
         // The user settings of the player survive a change of the media.
@@ -318,6 +378,121 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         }
     }
 
+    /**
+     * Decides whether a playback end was the attestation wall of a SABR stream generation and
+     * schedules a transparent reconnect at the last position in that case. Called from the
+     * libVLC event thread with the `finished`, `stopped` and `error` events.
+     *
+     * A genuine end of the media is detected when the position is at the known duration, or
+     * when a previous reconnect already resumed from (roughly) the same position and could
+     * therefore not make any progress.
+     */
+    private fun maybeChainSabr(): Boolean {
+        if (stoppedByUser) {
+            stoppedByUser = false
+            return false
+        }
+        val request = activeRequest ?: return false
+        if (!isSabrMedia(request.videoUrl)) return false
+        if (sabrChainScheduled) return true
+        if (request.live) return false
+
+        val state = _state.value
+        val position = estimatedPositionMs(state)
+        val duration = state.durationMs
+        if (position <= 0) return false
+        if (duration > 0 && position >= duration - SABR_END_EPSILON_MS) return false
+        if (position - lastChainPositionMs < SABR_PROGRESS_EPSILON_MS) {
+            // The previous reconnect resumed at this position already: the media really is
+            // over, chaining would loop on its last seconds forever.
+            return false
+        }
+        if (sabrChains >= SABR_CHAIN_LIMIT) {
+            Logger.w(messageString = "The SABR reconnect limit is reached; playback ends")
+            return false
+        }
+
+        sabrChainScheduled = true
+        sabrChains++
+        lastChainPositionMs = position
+        Logger.i(
+            messageString = "SABR stream generation ended at ${position}ms;" +
+                " reconnecting (chain ${sabrChains}/${SABR_CHAIN_LIMIT})"
+        )
+        scope.launch {
+            delay(SABR_CHAIN_DELAY_MS)
+            chainSabrPlayback(request, position)
+        }
+        return true
+    }
+
+    /**
+     * Reconnects a SABR playback at [positionMs]: the player is stopped and reset so the
+     * exhausted attempt's elementary streams die, then the same media is prepared fresh —
+     * a fresh connection starts a fresh stream generation — and played from the position.
+     */
+    private fun chainSabrPlayback(request: PlaybackRequest, positionMs: Long) {
+        val player = player ?: return
+        Logger.i(messageString = "Reconnecting '${request.title}' at ${positionMs}ms")
+        _state.update { it.copy(loading = true, error = null) }
+        player.submit {
+            try {
+                player.controls().stop()
+                player.media().reset()
+                if (!player.media().prepare(
+                        request.videoUrl,
+                        ":start-time=${positionMs / 1_000}"
+                    )
+                ) {
+                    sabrChainScheduled = false
+                    _state.update {
+                        it.copy(playing = false, loading = false, error = "Playback failed")
+                    }
+                    return@submit
+                }
+                val audioUrl = request.audioUrl
+                if (audioUrl != null) {
+                    player.media().addSlave(MediaSlaveType.AUDIO, audioUrl, true)
+                }
+                player.audio().setVolume(_state.value.volume)
+                player.audio().setMute(_state.value.muted)
+                player.controls().setRate(_state.value.speed)
+                player.controls().play()
+            } catch (exception: Throwable) {
+                Logger.e(
+                    messageString = "The SABR reconnect of '${request.title}' failed",
+                    throwable = exception
+                )
+                sabrChainScheduled = false
+                _state.update {
+                    it.copy(playing = false, loading = false, error = "Playback failed")
+                }
+            }
+        }
+    }
+
+    /**
+     * The best known playback position: libVLC's own time when it reports one, otherwise the
+     * wall clock estimate since the last `playing` event.
+     */
+    private fun estimatedPositionMs(state: PlaybackState): Long {
+        val fromVlc = state.positionMs
+        val speed = state.speed.coerceAtLeast(0.25f)
+        val fromWallClock = if (state.playing && playingSinceAt > 0) {
+            playingBaselineMs + (System.currentTimeMillis() - playingSinceAt) * speed.toLong()
+        } else {
+            playingBaselineMs
+        }
+        return maxOf(fromVlc, fromWallClock)
+    }
+
+    /**
+     * Whether [url] is a stream served by the local SABR relay, which is the media whose
+     * playback gets chained across stream generations.
+     */
+    private fun isSabrMedia(url: String?): Boolean =
+        url != null && url.startsWith("http://127.0.0.1:") && url.contains("/sabr/")
+
     override fun resume() {
         val player = player ?: return
         player.submit { player.controls().setPause(false) }
@@ -332,6 +507,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         val player = player ?: return
         ticker?.cancel()
         _frame.value = null
+        stoppedByUser = true
         player.submit {
             player.controls().stop()
             player.media().reset()
@@ -349,6 +525,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         val player = player ?: return
         ticker?.cancel()
         _frame.value = null
+        stoppedByUser = true
         val previous = _state.value
         _state.value = PlaybackState(
             volume = previous.volume,
@@ -515,6 +692,30 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
          * The delay before the automatic retry after a libVLC error event.
          */
         private const val RETRY_DELAY_MS = 800L
+
+        /**
+         * How often a SABR playback may be reconnected across stream generations; each
+         * reconnect is a fresh connection with a fresh pot-less media budget.
+         */
+        private const val SABR_CHAIN_LIMIT = 60
+
+        /**
+         * The delay before a SABR reconnect re-prepares the media, letting the broken
+         * elementary streams of the ended generation shut down first.
+         */
+        private const val SABR_CHAIN_DELAY_MS = 400L
+
+        /**
+         * A position this close to the known duration is the real end of the media, not a
+         * stream generation wall.
+         */
+        private const val SABR_END_EPSILON_MS = 1_500L
+
+        /**
+         * A reconnect that resumed this close to the previous reconnect's position made no
+         * progress, so the media really is over.
+         */
+        private const val SABR_PROGRESS_EPSILON_MS = 1_000L
 
         /**
          * The pixel budget the decoded video frames are scaled into.

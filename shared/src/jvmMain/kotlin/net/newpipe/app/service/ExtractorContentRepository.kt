@@ -13,6 +13,9 @@ import com.grack.nanojson.JsonWriter
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -71,6 +74,15 @@ class ExtractorContentRepository(
      * require re-fetching all previous pages.
      */
     private val searchCursors = ConcurrentHashMap<String, SearchCursor>()
+
+    /**
+     * Guards the engine's global player client selection: the engine reads the selected client
+     * at several points during an extraction, so switching it for one video would race every
+     * concurrent extraction. Plain extractions hold the read lock while the engine extracts,
+     * and the made-for-kids MWEB attempt holds the write lock around its client switch,
+     * extraction and restore, so no other extraction observes a switched client.
+     */
+    private val playerClientLock = ReentrantReadWriteLock()
 
     /**
      * Short-lived caches that make repeated navigation feel instant: revisiting a stream,
@@ -250,25 +262,71 @@ class ExtractorContentRepository(
 
     private fun extractStreamDetails(serviceId: Int, url: String): StreamDetails {
         val service = serviceForId(serviceId)
-        return try {
-            detailsOf(serviceId, url, withBotWallRetry(service, url))
+        val details = try {
+            playerClientLock.read {
+                detailsOf(serviceId, url, withBotWallRetry(service, url))
+            }
         } catch (exception: Exception) {
             // "Made for kids" videos answer the extraction engine and only open through its
             // recovery ladder, which YouTube refuses on some attempts; the playback fallback
             // retries the plain extraction and then probes the SABR streaming route.
             if (isKidsUnplayable(exception, url)) {
-                retryKidsExtraction(serviceId, url, exception)
+                return retryKidsExtraction(serviceId, url, exception)
             } else {
                 throw exception
             }
         }
+        return offerKidsSabrLadder(serviceId, url, details)
+    }
+
+    /**
+     * A "made for kids" video sometimes opens through the default visionOS client but only
+     * with its single low-resolution muxed fallback stream — YouTube serves the full quality
+     * ladder exclusively to the MWEB player client. When the plain extraction of a YouTube
+     * video came back without a single stream above 360p, the MWEB ladder is offered instead
+     * when it turns out richer. Any other video keeps its plain extraction untouched.
+     */
+    private fun offerKidsSabrLadder(
+        serviceId: Int,
+        url: String,
+        details: StreamDetails
+    ): StreamDetails {
+        val isYouTubeWatch = url.contains("youtube.com/watch?v=") || url.contains("youtu.be/")
+        if (!isYouTubeWatch) {
+            return details
+        }
+        if (details.videoStreams.any { (it.height ?: 0) > 360 }) {
+            return details
+        }
+        val richer = try {
+            extractWithMwebClient(serviceId, url)
+        } catch (failure: Exception) {
+            Logger.w(
+                messageString = "The mweb ladder upgrade did not open the video",
+                throwable = failure
+            )
+            null
+        }
+        if (richer == null || richer.videoStreams.size <= details.videoStreams.size) {
+            return details
+        }
+        Logger.i(messageString = "The mweb player client offered a richer ladder for the video")
+        // The mweb ladder streams over SABR (whose media generations need the player's
+        // reconnect chaining), while the plain extraction's muxed progressive stream plays
+        // completely without any of that. It is kept in the list, so the quality menu always
+        // holds one complete playback option for the video.
+        val merged = richer.videoStreams + details.videoStreams
+            .filter { muxed -> !muxed.isVideoOnly }
+            .filter { muxed -> richer.videoStreams.none { it.formatId == muxed.formatId } }
+        return richer.copy(videoStreams = merged)
     }
 
     /**
      * Re-offers the plain extraction [KIDS_ENGINE_RETRY_ATTEMPTS] times, because the engine's
      * refusal for made-for-kids videos is flaky and the recovery ladder usually opens the
-     * media on a later attempt. When every retry is refused with UNPLAYABLE, the SABR streaming
-     * route is probed once and the outcome is answered honestly.
+     * media on a later attempt. When every retry is refused with UNPLAYABLE, the extraction is
+     * re-offered through the MWEB player client, and when that client is refused too, the SABR
+     * streaming route is probed once and the outcome is answered honestly.
      */
     private fun retryKidsExtraction(
         serviceId: Int,
@@ -281,7 +339,9 @@ class ExtractorContentRepository(
                 Thread.sleep(KIDS_RETRY_DELAY_MS)
             }
             try {
-                val details = detailsOf(serviceId, url, withBotWallRetry(serviceForId(serviceId), url))
+                val details = playerClientLock.read {
+                    detailsOf(serviceId, url, withBotWallRetry(serviceForId(serviceId), url))
+                }
                 Logger.i(messageString = "The plain extraction retry $attempt opened the video")
                 return details
             } catch (attemptFailure: Exception) {
@@ -295,7 +355,65 @@ class ExtractorContentRepository(
                 lastFailure = attemptFailure
             }
         }
+        val mwebDetails = retryKidsExtractionWithMwebClient(serviceId, url, lastFailure)
+        if (mwebDetails != null) {
+            return mwebDetails
+        }
         kidsPlaybackFallback(serviceId, url, lastFailure)
+    }
+
+    /**
+     * Offers the extraction once with the engine's MWEB player client selected, the one client
+     * that still opens "made for kids" videos and answers their full SABR quality ladder where
+     * the default visionOS client refuses them or answers only the low-resolution muxed
+     * fallback. The player client is a global the engine reads during extraction, so the whole
+     * attempt (client switch, extraction, restore) holds the write lock and no read-locked
+     * plain extraction can interleave. Raises every failure to the caller.
+     */
+    private fun extractWithMwebClient(serviceId: Int, url: String): StreamDetails =
+        playerClientLock.write {
+            NewPipe.setYoutubePlayerClient("mweb")
+            try {
+                detailsOf(serviceId, url, withBotWallRetry(serviceForId(serviceId), url))
+            } finally {
+                NewPipe.setYoutubePlayerClient("visionos")
+            }
+        }
+
+    /**
+     * Re-offers the extraction with the MWEB player client [KIDS_MWEB_ATTEMPTS] times, because
+     * the client's answers are flaky like the plain ones.
+     *
+     * Returns null when every attempt is refused with a kids-unplayable status, so the caller
+     * can hand the video to the playback fallback; other failures are raised directly.
+     */
+    private fun retryKidsExtractionWithMwebClient(
+        serviceId: Int,
+        url: String,
+        original: Exception
+    ): StreamDetails? {
+        var lastFailure = original
+        for (attempt in 1..KIDS_MWEB_ATTEMPTS) {
+            if (attempt > 1) {
+                Thread.sleep(KIDS_RETRY_DELAY_MS)
+            }
+            try {
+                extractWithMwebClient(serviceId, url).let { details ->
+                    Logger.i(messageString = "The mweb player client opened the made-for-kids video")
+                    return details
+                }
+            } catch (attemptFailure: Exception) {
+                Logger.w(
+                    messageString = "The mweb player client did not open the made-for-kids video",
+                    throwable = attemptFailure
+                )
+                if (!isKidsUnplayable(attemptFailure, url)) {
+                    throw attemptFailure
+                }
+                lastFailure = attemptFailure
+            }
+        }
+        return null
     }
 
     /** Assembles the app stream details from the extraction engine's [StreamInfo]. */
@@ -952,6 +1070,14 @@ private const val MWEB_CLIENT_VERSION = "2.20260101.00.00"
  */
 private const val KIDS_ENGINE_RETRY_ATTEMPTS = 2
 private const val KIDS_RETRY_DELAY_MS = 1_200L
+
+/**
+ * The default visionos client refuses made-for-kids videos with UNPLAYABLE on every plain
+ * attempt: before the playback fallback probes the SABR streaming route alone, the extraction
+ * is re-offered with the MWEB player client this many times (each separated by
+ * KIDS_RETRY_DELAY_MS), because that client still answers the full quality ladder.
+ */
+private const val KIDS_MWEB_ATTEMPTS = 2
 private const val MWEB_PLAYER_USER_AGENT =
     "Mozilla/5.0 (iPad; CPU OS 16_7_10 like Mac OS X) AppleWebKit/605.1.15 " +
         "(KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
@@ -1032,9 +1158,21 @@ internal fun InfoItem.toContentItem(): ContentItem? {
 
 /**
  * Converts an extraction engine video stream into a [MediaStream].
+ *
+ * Streams under YouTube's SABR delivery have no plain url; they are relayed through the local
+ * [SabrMediaServer], which drives the engine's SABR session and serves the media bytes, so the
+ * player can open them like any other url.
  */
 private fun org.schabi.newpipe.extractor.stream.VideoStream.toMediaStream(): MediaStream? {
-    val streamUrl = @Suppress("DEPRECATION") url ?: return null
+    val streamUrl = when (deliveryMethod) {
+        org.schabi.newpipe.extractor.stream.DeliveryMethod.SABR -> {
+            val sabrInfo = deliveryMethodInfo as? YoutubeSabrInfo ?: return null
+            val format = sabrInfo.formats.firstOrNull { it.toItagItem().id == itag }
+                ?: return null
+            SabrMediaServer.urlFor(sabrInfo, format)
+        }
+        else -> @Suppress("DEPRECATION") url ?: return null
+    }
     return MediaStream(
         url = streamUrl,
         formatId = itag.toString(),
@@ -1050,9 +1188,19 @@ private fun org.schabi.newpipe.extractor.stream.VideoStream.toMediaStream(): Med
 
 /**
  * Converts an extraction engine audio stream into a [MediaStream].
+ *
+ * SABR-delivered audio is relayed through the local [SabrMediaServer] like SABR video.
  */
 private fun org.schabi.newpipe.extractor.stream.AudioStream.toMediaStream(): MediaStream? {
-    val streamUrl = @Suppress("DEPRECATION") url ?: return null
+    val streamUrl = when (deliveryMethod) {
+        org.schabi.newpipe.extractor.stream.DeliveryMethod.SABR -> {
+            val sabrInfo = deliveryMethodInfo as? YoutubeSabrInfo ?: return null
+            val format = sabrInfo.formats.firstOrNull { it.toItagItem().id == itag }
+                ?: return null
+            SabrMediaServer.urlFor(sabrInfo, format)
+        }
+        else -> @Suppress("DEPRECATION") url ?: return null
+    }
     return MediaStream(
         url = streamUrl,
         formatId = itag.toString(),
