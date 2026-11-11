@@ -7,6 +7,8 @@ package net.newpipe.app.ui
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 
 /**
  * The user interface mode of the player.
@@ -19,8 +21,27 @@ class PlayerUiState {
     private val _fullscreen = MutableStateFlow(false)
     val fullscreen = _fullscreen.asStateFlow()
 
+    /** The mark of the last fullscreen or app-fullscreen toggle, to swallow key auto-repeat. */
+    private var lastFullscreenToggleMark: TimeSource.Monotonic.ValueTimeMark? = null
+
+    /**
+     * Ignores a fullscreen toggle that arrives right after the previous one. Holding F or F11
+     * makes the operating system repeat the key many times per second; each repeat would flip
+     * the placement back and forth and leave the window frame in a glitched intermediate state.
+     */
+    private fun togglesTooFast(): Boolean {
+        val now = TimeSource.Monotonic.markNow()
+        val tooFast = lastFullscreenToggleMark?.let { now - it < FULLSCREEN_TOGGLE_DEBOUNCE_MS } == true
+        if (!tooFast) lastFullscreenToggleMark = now
+        return tooFast
+    }
+
     fun setFullscreen(value: Boolean) { _fullscreen.value = value }
-    fun toggleFullscreen() { _fullscreen.value = !_fullscreen.value }
+
+    fun toggleFullscreen() {
+        if (togglesTooFast()) return
+        _fullscreen.value = !_fullscreen.value
+    }
 
 
     private val _appFullscreen = MutableStateFlow(false)
@@ -41,6 +62,7 @@ class PlayerUiState {
      * Switches between the windowed and the fullscreen app mode (F11).
      */
     fun toggleAppFullscreen() {
+        if (togglesTooFast()) return
         _appFullscreen.value = !_appFullscreen.value
     }
 
@@ -101,5 +123,13 @@ class PlayerUiState {
      */
     fun setHideCursor(value: Boolean) {
         _hideCursor.value = value
+    }
+
+    private companion object {
+        /**
+         * The minimum pause between two accepted fullscreen toggles: longer than the OS key
+         * auto-repeat interval, but short enough to never get in the way of real presses.
+         */
+        private val FULLSCREEN_TOGGLE_DEBOUNCE_MS = 250.milliseconds
     }
 }

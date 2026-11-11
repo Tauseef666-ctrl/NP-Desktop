@@ -45,6 +45,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 import net.newpipe.app.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import net.newpipe.app.composable.VideoPlayer
 import net.newpipe.app.navigation.Destination
@@ -133,27 +134,41 @@ fun main() {
         playerUiState.setImmersive(fullscreen)
     }
     val appFullscreen by playerUiState.appFullscreen.collectAsState()
-    // Entering fullscreen lets the platform resize the window; the size and position from before
-    // are remembered here and restored on exit, so leaving the fullscreen player does not leave
-    // the window at the wrong size.
+    // Entering fullscreen lets the platform resize the window; the geometry and placement from
+    // before are remembered here and restored on exit, so leaving the fullscreen player does not
+    // leave the window at the wrong size. Restoring immediately glitches the frame on Windows
+    // while the native Fullscreen->Floating transition is still running, so the geometry is
+    // restored only after the transition has settled.
     var savedWindowPlacement by remember {
-        mutableStateOf(windowState.size to windowState.position)
+        mutableStateOf<Triple<WindowPlacement, DpSize, WindowPosition>?>(null)
     }
-    var inWindowFullscreen by remember { mutableStateOf(false) }
     LaunchedEffect(fullscreen, appFullscreen) {
         runCatching {
             if (fullscreen || appFullscreen) {
-                if (!inWindowFullscreen) {
-                    inWindowFullscreen = true
-                    savedWindowPlacement = windowState.size to windowState.position
+                if (savedWindowPlacement == null) {
+                    savedWindowPlacement = Triple(
+                        windowState.placement,
+                        windowState.size,
+                        windowState.position
+                    )
                 }
                 windowState.placement = WindowPlacement.Fullscreen
             } else {
                 windowState.placement = WindowPlacement.Floating
-                if (inWindowFullscreen) {
-                    inWindowFullscreen = false
-                    windowState.size = savedWindowPlacement.first
-                    windowState.position = savedWindowPlacement.second
+                val saved = savedWindowPlacement ?: return@LaunchedEffect
+                savedWindowPlacement = null
+                if (saved.first == WindowPlacement.Maximized) {
+                    windowState.placement = WindowPlacement.Maximized
+                } else {
+                    // Leave fullscreen cleanly first; restoring the geometry too early races the
+                    // frame transition and renders a broken, half-sized window.
+                    delay(150)
+                    if (!fullscreen && !appFullscreen &&
+                        windowState.placement == WindowPlacement.Floating
+                    ) {
+                        windowState.size = saved.second
+                        windowState.position = saved.third
+                    }
                 }
             }
         }
