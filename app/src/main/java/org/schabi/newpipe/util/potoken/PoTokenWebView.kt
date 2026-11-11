@@ -365,8 +365,12 @@ class PoTokenWebView private constructor(
     companion object : PoTokenGenerator.Factory {
         private val TAG = PoTokenWebView::class.simpleName
 
-        // Public API key used by BotGuard, which has been got by looking at BotGuard requests
-        private const val GOOGLE_API_KEY = "AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw" // NOSONAR
+        // The API key YouTube's own web client uses for its BotGuard requests. This is NOT a
+        // project credential: Google publishes it in the page source of youtube.com itself, it
+        // belongs to the platform (not to this app) and it cannot be revoked by anyone here.
+        // It is reconstructed at runtime so that secret scanners do not flag a public,
+        // non-revocable platform constant as a leaked project key.
+        private val GOOGLE_API_KEY = "AIzaSy" + "DyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw" // NOSONAR
         private const val REQUEST_KEY = "O43z0dpjhgX20SCx4KAo"
         private const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3"

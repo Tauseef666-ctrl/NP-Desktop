@@ -15,11 +15,14 @@ import co.touchlab.kermit.Logger
  * @param version the release version without the leading `v` of the tag, for example `0.25.6`
  * @param releaseUrl the web page of the release, used for manual downloads
  * @param installerUrl the direct download of the Windows installer asset
+ * @param checksumUrl the direct download of the installer's SHA-256 checksum file; the
+ * downloaded installer is verified against it before it is ever started
  */
 data class UpdateInfo(
     val version: String,
     val releaseUrl: String?,
-    val installerUrl: String
+    val installerUrl: String,
+    val checksumUrl: String? = null
 )
 
 /**
