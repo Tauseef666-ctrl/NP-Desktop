@@ -8,9 +8,12 @@ package net.newpipe.app.ui
 /**
  * The form factor the user interface is laid out for.
  *
- * The desktop build always runs as [DESKTOP], the Android build decides per device: an Android TV
- * box or a Fire TV reports [TV], phones, tablets and foldables report [DESKTOP]. The shell uses
- * the value to choose between hover driven navigation and a permanently visible, focusable rail.
+ * The desktop build runs as [DESKTOP] by default and can be switched to [TV] with the
+ * `NP_FORM` environment variable or the `newpipe.form` system property (a PC connected to a
+ * television, or manual testing of the TV layout). The Android build decides per device: an
+ * Android TV box, a Fire TV or a set top box reports [TV]; phones, tablets and foldables
+ * report [DESKTOP]. The shell uses the value to choose between hover driven navigation and a
+ * permanently visible, focusable rail.
  */
 enum class DeviceForm {
     DESKTOP,
