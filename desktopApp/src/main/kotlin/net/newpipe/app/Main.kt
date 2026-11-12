@@ -129,22 +129,24 @@ fun main() {
     // The fullscreen flag of the player drives the real window placement of the main window.
     // `setUndecorated` throws for frames that are already displayable, so the decoration flag
     // must stay constant and only the placement is toggled (AWT handles Fullscreen safely).
-    // F11 fullscreens the whole app, F (and the player button) fullscreens a playing video.
+    // F fullscreens the video inside the app window (the shell chrome hides and the player
+    // uses the whole content area) without moving the window itself.
     LaunchedEffect(fullscreen) {
         playerUiState.setImmersive(fullscreen)
     }
     val appFullscreen by playerUiState.appFullscreen.collectAsState()
-    // Entering fullscreen lets the platform resize the window; the geometry and placement from
-    // before are remembered here and restored on exit, so leaving the fullscreen player does not
-    // leave the window at the wrong size. Restoring immediately glitches the frame on Windows
-    // while the native Fullscreen->Floating transition is still running, so the geometry is
-    // restored only after the transition has settled.
+    // F11 fullscreens the whole app window and is the only player mode that changes the window
+    // placement. Entering fullscreen lets the platform resize the window; the geometry and
+    // placement from before are remembered here and restored on exit, so leaving the fullscreen
+    // app does not leave the window at the wrong size. Restoring immediately glitches the frame
+    // on Windows while the native Fullscreen->Floating transition is still running, so the
+    // geometry is restored only after the transition has settled.
     var savedWindowPlacement by remember {
         mutableStateOf<Triple<WindowPlacement, DpSize, WindowPosition>?>(null)
     }
-    LaunchedEffect(fullscreen, appFullscreen) {
+    LaunchedEffect(appFullscreen) {
         runCatching {
-            if (fullscreen || appFullscreen) {
+            if (appFullscreen) {
                 if (savedWindowPlacement == null) {
                     savedWindowPlacement = Triple(
                         windowState.placement,
@@ -163,7 +165,7 @@ fun main() {
                     // Leave fullscreen cleanly first; restoring the geometry too early races the
                     // frame transition and renders a broken, half-sized window.
                     delay(150)
-                    if (!fullscreen && !appFullscreen &&
+                    if (!appFullscreen &&
                         windowState.placement == WindowPlacement.Floating
                     ) {
                         windowState.size = saved.second

@@ -135,6 +135,21 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     private var playingBaselineMs = 0L
 
     /**
+     * When the current playback was started; the stuck-watchdog measures from here. Re-armed by
+     * every retry and reconnect, so each attempt gets the full window to produce media.
+     */
+    @Volatile
+    private var playbackStartedAt = 0L
+
+    /**
+     * How many times the stuck-watchdog has already force-reconnected this playback. A playback
+     * that no media ever arrives for is reconnected a bounded number of times before the error
+     * is shown, so a dead stream never hangs as an endless black screen.
+     */
+    @Volatile
+    private var stuckChains = 0
+
+    /**
      * The size of the picture that libVLC was last negotiated to render. These values are only
      * touched from the libVLC format callbacks, and only read from its render callback, which run
      * sequentially on the video output thread.
@@ -271,6 +286,8 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         lastChainPositionMs = -1L
         playingSinceAt = 0L
         playingBaselineMs = 0L
+        playbackStartedAt = now
+        stuckChains = 0
         Logger.i(messageString = "Starting playback of '${request.title}'")
 
         // The user settings of the player survive a change of the media.
@@ -342,6 +359,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     private fun retryPlayback(request: PlaybackRequest) {
         val player = player ?: return
         Logger.i(messageString = "Retrying playback of '${request.title}' after an error")
+        playbackStartedAt = System.currentTimeMillis()
         _frame.value = null
         _state.update { it.copy(playing = false, loading = true, error = null) }
         player.submit {
@@ -434,6 +452,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     private fun chainSabrPlayback(request: PlaybackRequest, positionMs: Long) {
         val player = player ?: return
         Logger.i(messageString = "Reconnecting '${request.title}' at ${positionMs}ms")
+        playbackStartedAt = System.currentTimeMillis()
         _state.update { it.copy(loading = true, error = null) }
         player.submit {
             try {
@@ -468,6 +487,55 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                     it.copy(playing = false, loading = false, error = "Playback failed")
                 }
             }
+        }
+    }
+
+    /**
+     * The watchdog path for a playback from which no media ever arrived: no decoded frame and
+     * no progress after the watchdog window. A SABR playback is force-reconnected (a fresh
+     * connection, which the relay armours with fresh stream extractions) a bounded number of
+     * times; anything else is retried once. When the budget is spent the playback fails
+     * visibly instead of hanging as a black screen.
+     *
+     * Runs on the ticker coroutine; all libVLC work is queued through `player.submit`.
+     */
+    private fun handleStuckPlayback() {
+        val player = player ?: return
+        val request = activeRequest
+        if (request == null) {
+            playbackStartedAt = 0
+            return
+        }
+        // Re-arm first: whatever happens now gets its own full watchdog window.
+        playbackStartedAt = System.currentTimeMillis()
+        if (isSabrMedia(request.videoUrl) && !sabrChainScheduled && stuckChains < STUCK_CHAIN_LIMIT) {
+            stuckChains++
+            sabrChainScheduled = true
+            stoppedByUser = false
+            lastChainPositionMs = 0L
+            Logger.w(
+                messageString = "No media arrived within the watchdog window; forcing a fresh " +
+                    "SABR connection (${stuckChains}/${STUCK_CHAIN_LIMIT})"
+            )
+            scope.launch {
+                delay(SABR_CHAIN_DELAY_MS)
+                chainSabrPlayback(request, 0L)
+            }
+            return
+        }
+        if (!isSabrMedia(request.videoUrl) && !retriedOnError) {
+            retriedOnError = true
+            retryPlayback(request)
+            return
+        }
+        Logger.w(messageString = "The playback produced no media; failing with an error")
+        playbackStartedAt = 0
+        _state.update {
+            it.copy(playing = false, loading = false, error = STUCK_ERROR_MESSAGE)
+        }
+        player.submit {
+            player.controls().stop()
+            player.media().reset()
         }
     }
 
@@ -656,6 +724,21 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                     )
                 }
 
+                // Stuck-playback watchdog: when no frame has been decoded and the playback has
+                // not progressed within the watchdog window, the stream is hung — a walled
+                // relay connection can leave libVLC waiting on a headerless stream forever
+                // without ever firing a finished or error event. The watchdog force-reconnects
+                // such a playback a bounded number of times and finally reports the error, so
+                // the user never stares at an endless black screen.
+                val startedAt = playbackStartedAt
+                if (startedAt > 0 &&
+                    System.currentTimeMillis() - startedAt > STUCK_WATCHDOG_MS &&
+                    _frame.value == null &&
+                    estimatedPositionMs(_state.value) <= STUCK_PROGRESS_EPSILON_MS
+                ) {
+                    handleStuckPlayback()
+                }
+
                 delay(TICK_INTERVAL_MS)
             }
         }
@@ -716,6 +799,32 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
          * progress, so the media really is over.
          */
         private const val SABR_PROGRESS_EPSILON_MS = 1_000L
+
+        /**
+         * How long a playback may produce neither a frame nor progress before the watchdog
+         * declares it stuck. Generous, because a SABR start includes the extraction and the
+         * relay's pre-buffer before the first frame can appear.
+         */
+        private const val STUCK_WATCHDOG_MS = 25_000L
+
+        /**
+         * How much progress counts as "the media is flowing" for the watchdog; audio-only
+         * playback advances the position without frames and must never be killed by it.
+         */
+        private const val STUCK_PROGRESS_EPSILON_MS = 1_000L
+
+        /**
+         * How many watchdog force-reconnects a stuck SABR playback gets before it fails
+         * visibly.
+         */
+        private const val STUCK_CHAIN_LIMIT = 3
+
+        /**
+         * The error shown when even the watchdog reconnects could not bring any media up.
+         */
+        private const val STUCK_ERROR_MESSAGE =
+            "Playback failed — no media could be streamed for this video. " +
+                "Please try again in a moment or pick another quality."
 
         /**
          * The pixel budget the decoded video frames are scaled into.

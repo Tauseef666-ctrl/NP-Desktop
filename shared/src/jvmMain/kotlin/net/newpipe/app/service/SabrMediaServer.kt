@@ -60,6 +60,14 @@ object SabrMediaServer {
     private const val EMPTY_ROUND_DELAY_MS = 500L
 
     /**
+     * How often a connection may throw the cached stream info away and fetch a fresh one when
+     * YouTube walls the session before any media is served. Each fresh extraction carries a new
+     * streaming url and host, and a fresh session regularly streams where the cached one was
+     * denied; nothing has leaked to the player at that point, so the restart is byte safe.
+     */
+    private const val MAX_FRESH_EXTRACTION_ATTEMPTS = 2
+
+    /**
      * The bytes collected before the response starts: warming a SABR session up takes the
      * engine several seconds of YouTube round trips, so the exchange only answers once enough
      * media is in hand — from then on the stream pours at LAN speed and the player never sees
@@ -143,22 +151,15 @@ object SabrMediaServer {
         val byteCounter = deliveredBytes.computeIfAbsent(key) {
             java.util.concurrent.atomic.AtomicLong()
         }
-        val session = YoutubeSabrSession(info)
-        installReloader(session)
         val bitrate = format.bitrate.takeIf { it > 0 } ?: 500_000
-        var currentMs = (offset * 8_000.0 / bitrate).toLong()
-        var lastSequence = -1
-        var rounds = 0
-        var emptyRounds = 0
+
         var headersSent = false
-        var initDelivered = false
         var clientGone = false
+        // The media bytes (everything except the initialization segment) this connection has
+        // delivered; the health signal that decides between a partial flush and a hard failure.
+        var mediaBytes = 0L
         val preBuffer = java.io.ByteArrayOutputStream()
         var buffered = 0L
-        // The segment timeline parsed from the initialization segment; the SABR protocol needs
-        // it (and the highest buffered sequence) so the server knows where the player is.
-        var timeline: org.schabi.newpipe.extractor.services.youtube.sabr.YoutubeSabrFormatTimeline? =
-            null
 
         fun sendHeaders() {
             exchange.responseHeaders.set("Content-Type", contentTypeOf(format))
@@ -194,106 +195,177 @@ object SabrMediaServer {
             }
         }
 
-        fun acceptInit(segment: SabrMediaSegment) {
-            // The initialization segment is only ever served from the file start, and only
-            // once per connection.
-            if (offset != 0L) return
-            if (!initDelivered) {
-                deliver(segment.data, 0, segment.data.size)
-                initDelivered = true
-            }
-            timeline = runCatching {
-                org.schabi.newpipe.extractor.services.youtube.sabr.YoutubeSabrFormatTimeline
-                    .parse(format, segment.data)
-            }.getOrNull()
-            // A range request starts mid-file: snap the playback time to the exact start of the
-            // segment the timeline places there, instead of trusting the bitrate estimate.
-            timeline?.let { parsed ->
-                val sequence = parsed.getSequenceAt(currentMs)
-                parsed.getStartMs(sequence).takeIf { it >= 0 }?.let { currentMs = it }
-            }
-        }
-
-        fun prepareSession() {
-            session.requestOnce(
-                YoutubeSabrRequest.preparation(0L, listOf(format))
-            ) { segment ->
-                if (segment.header.isInitSegment) {
-                    acceptInit(segment)
-                }
-            }
-        }
-
         try {
-            prepareSession()
-            while (rounds++ < MAX_SEGMENT_ROUNDS) {
-                val track = YoutubeSabrRequest.Track.of(format, timeline, lastSequence.coerceAtLeast(0))
-                val outcome = runCatching {
-                    session.requestOnce(
-                        YoutubeSabrRequest.playback(currentMs, 1.0f, listOf(track))
-                    ) { segment ->
-                    if (segment.hasFailed()) return@requestOnce
-                    if (segment.header.isInitSegment) {
-                        acceptInit(segment)
-                        return@requestOnce
-                    }
-                    if (segment.header.sequenceNumber <= lastSequence) return@requestOnce
-                    lastSequence = segment.header.sequenceNumber
-                    val duration = segment.header.durationMs
-                    if (duration > 0) {
-                        currentMs = segment.header.startMs + duration
-                    }
-                    val startRange = segment.header.startRange
-                    when {
-                        startRange + segment.length <= offset -> return@requestOnce
-                        startRange < offset -> {
-                            // The segment straddles the requested offset: skip its leading bytes.
-                            val skip = (offset - startRange).toInt()
-                            deliver(segment.data, skip, segment.length - skip)
-                        }
-                        else -> deliver(segment.data, 0, segment.data.size)
-                    }
-                }
-                }
-                if (outcome.isFailure) {
-                    val failure = outcome.exceptionOrNull()!!
-                    if (!clientGone) {
-                        Logger.d(
-                            messageString = "SABR relay round failed: " +
-                                (failure.message ?: failure.javaClass.simpleName)
-                        )
-                    }
-                    // The stream generation is over (usually YouTube's attestation wall). The
-                    // bytes already delivered stay valid because they all come from this one
-                    // session; the player reconnects for the next generation. Restarting the
-                    // session here instead would splice misaligned segment bytes into the
-                    // response and corrupt the stream for the demuxer.
-                    break
-                }
-                val result = outcome.getOrThrow()
-                val backoff = result.backoffMs
-                if (backoff > 0) Thread.sleep(backoff.toLong())
-                if (result.segmentCount == 0) {
-                    // The stream only truly ends when the parsed segment timeline is
-                    // exhausted; a few empty rounds in between are the server's pacing. They
-                    // are ridden out with the same session — switching the session would
-                    // splice misaligned bytes into the response — and after that the
-                    // connection ends so the player can reconnect for a fresh generation.
-                    val reachedEnd = timeline != null &&
-                        lastSequence >= timeline!!.endSequence &&
-                        lastSequence > 0
-                    if (reachedEnd || emptyRounds >= MAX_EMPTY_ROUNDS) break
-                    emptyRounds++
-                    Thread.sleep(EMPTY_ROUND_DELAY_MS)
-                } else {
-                    emptyRounds = 0
-                }
-            }
-            // A short track may finish inside the pre-buffer; flush whatever was collected.
-            if (!headersSent) {
-                sendHeaders()
-                preBuffer.writeTo(body)
+            var activeInfo = info
+            var freshAttempts = 0
+            attempt@ while (true) {
+                var currentMs = (offset * 8_000.0 / bitrate).toLong()
+                var lastSequence = -1
+                var rounds = 0
+                var emptyRounds = 0
+                var initDelivered = false
+                // The segment timeline parsed from the initialization segment; the SABR protocol
+                // needs it (and the highest buffered sequence) so the server knows where the
+                // player is.
+                var timeline: org.schabi.newpipe.extractor.services.youtube.sabr.YoutubeSabrFormatTimeline? =
+                    null
+                // Everything pre-buffered so far belongs to the previous session attempt; the
+                // player has not seen any of it (the headers are still unsent), so it is dropped.
                 preBuffer.reset()
+                buffered = 0L
+
+                val session = YoutubeSabrSession(activeInfo)
+                installReloader(session)
+
+                fun acceptInit(segment: SabrMediaSegment) {
+                    // The initialization segment is only ever served from the file start, and
+                    // only once per connection.
+                    if (offset != 0L) return
+                    if (!initDelivered) {
+                        deliver(segment.data, 0, segment.data.size)
+                        initDelivered = true
+                    }
+                    timeline = runCatching {
+                        org.schabi.newpipe.extractor.services.youtube.sabr.YoutubeSabrFormatTimeline
+                            .parse(format, segment.data)
+                    }.getOrNull()
+                    // A range request starts mid-file: snap the playback time to the exact start
+                    // of the segment the timeline places there, instead of trusting the bitrate
+                    // estimate.
+                    timeline?.let { parsed ->
+                        val sequence = parsed.getSequenceAt(currentMs)
+                        parsed.getStartMs(sequence).takeIf { it >= 0 }?.let { currentMs = it }
+                    }
+                }
+
+                fun prepareSession() {
+                    session.requestOnce(
+                        YoutubeSabrRequest.preparation(0L, listOf(format))
+                    ) { segment ->
+                        if (segment.header.isInitSegment) {
+                            acceptInit(segment)
+                        }
+                    }
+                }
+
+                // A session can die in the preparation round already (YouTube's attestation
+                // wall), so its outcome decides whether the playback rounds run at all.
+                var walled = runCatching { prepareSession() }.isFailure
+                if (!walled) {
+                    while (rounds++ < MAX_SEGMENT_ROUNDS) {
+                        val track = YoutubeSabrRequest.Track.of(format, timeline, lastSequence.coerceAtLeast(0))
+                        val outcome = runCatching {
+                            session.requestOnce(
+                                YoutubeSabrRequest.playback(currentMs, 1.0f, listOf(track))
+                            ) { segment ->
+                                if (segment.hasFailed()) return@requestOnce
+                                if (segment.header.isInitSegment) {
+                                    acceptInit(segment)
+                                    return@requestOnce
+                                }
+                                if (segment.header.sequenceNumber <= lastSequence) return@requestOnce
+                                lastSequence = segment.header.sequenceNumber
+                                val duration = segment.header.durationMs
+                                if (duration > 0) {
+                                    currentMs = segment.header.startMs + duration
+                                }
+                                val startRange = segment.header.startRange
+                                when {
+                                    startRange + segment.length <= offset -> return@requestOnce
+                                    startRange < offset -> {
+                                        // The segment straddles the requested offset: skip its
+                                        // leading bytes.
+                                        val skip = (offset - startRange).toInt()
+                                        mediaBytes += segment.length - skip
+                                        deliver(segment.data, skip, segment.length - skip)
+                                    }
+                                    else -> {
+                                        mediaBytes += segment.data.size
+                                        deliver(segment.data, 0, segment.data.size)
+                                    }
+                                }
+                            }
+                        }
+                        if (outcome.isFailure) {
+                            val failure = outcome.exceptionOrNull()!!
+                            if (!clientGone) {
+                                Logger.d(
+                                    messageString = "SABR relay round failed: " +
+                                        (failure.message ?: failure.javaClass.simpleName)
+                                )
+                            }
+                            // The stream generation is over (usually YouTube's attestation wall).
+                            // The bytes already delivered stay valid because they all come from
+                            // this one session; the player reconnects for the next generation.
+                            // Restarting the session here instead would splice misaligned segment
+                            // bytes into the response and corrupt the stream for the demuxer.
+                            walled = true
+                            break
+                        }
+                        val result = outcome.getOrThrow()
+                        val backoff = result.backoffMs
+                        if (backoff > 0) Thread.sleep(backoff.toLong())
+                        if (result.segmentCount == 0) {
+                            // The stream only truly ends when the parsed segment timeline is
+                            // exhausted; a few empty rounds in between are the server's pacing.
+                            // They are ridden out with the same session — switching the session
+                            // would splice misaligned bytes into the response — and after that
+                            // the connection ends so the player can reconnect for a fresh
+                            // generation.
+                            val reachedEnd = timeline != null &&
+                                lastSequence >= timeline!!.endSequence &&
+                                lastSequence > 0
+                            if (reachedEnd || emptyRounds >= MAX_EMPTY_ROUNDS) break
+                            emptyRounds++
+                            Thread.sleep(EMPTY_ROUND_DELAY_MS)
+                        } else {
+                            emptyRounds = 0
+                        }
+                    }
+                }
+                if (!walled || clientGone) break@attempt
+                // The session died without the player receiving anything (headers unsent and no
+                // media delivered): nothing has leaked to the demuxer, so restarting is byte
+                // safe. A fresh player response carries a fresh streaming url and host, and a
+                // fresh session regularly gets a generation that streams where the cached one
+                // was walled.
+                if (headersSent || mediaBytes > 0 || freshAttempts >= MAX_FRESH_EXTRACTION_ATTEMPTS) {
+                    break@attempt
+                }
+                freshAttempts++
+                val videoId = activeInfo.videoId
+                if (videoId.isNullOrEmpty()) break@attempt
+                Logger.d(
+                    messageString = "SABR session walled before any media; " +
+                        "fetching a fresh stream info (attempt $freshAttempts/" +
+                        "$MAX_FRESH_EXTRACTION_ATTEMPTS)"
+                )
+                val fresh = runCatching {
+                    org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor
+                        .fetchSabrInfoForReload(videoId, "")
+                }.getOrNull()
+                if (fresh == null || fresh.formats.none { it.itag == format.itag }) break@attempt
+                // The fresh info also becomes the cached track info, so the player's own
+                // reconnects start from it instead of the walled one.
+                activeInfo = fresh
+                tracks[key] = fresh to format
+            }
+            if (!headersSent && !clientGone) {
+                if (mediaBytes > 0) {
+                    // A short track may finish inside the pre-buffer; flush whatever was
+                    // collected.
+                    sendHeaders()
+                    preBuffer.writeTo(body)
+                    preBuffer.reset()
+                } else {
+                    // Not a single media byte could be served: answering an empty stream would
+                    // leave the player demuxing a headerless file forever (an endless black
+                    // screen without an error), so the request fails visibly and the player
+                    // retries or reports the error.
+                    Logger.d(messageString = "SABR relay served no media for $key; answering 502")
+                    exchange.sendResponseHeaders(502, -1)
+                    return
+                }
             }
             // Closing the body signals the end of the file to the player.
             runCatching { body.flush() }
