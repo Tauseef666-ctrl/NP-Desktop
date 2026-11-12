@@ -621,6 +621,9 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                     messageString = "The SABR stream produced no media; switching to the " +
                         "muxed fallback (${request.fallbackQualityLabel ?: "fallback quality"})"
                 )
+                // The rescue is the verdict on this route: record the wall so a fresh quality
+                // pick starts the fallback directly instead of repeating the doomed attempt.
+                SabrMediaServer.markTrackWalled(request.videoUrl)
                 playFallback(request)
                 return
             }

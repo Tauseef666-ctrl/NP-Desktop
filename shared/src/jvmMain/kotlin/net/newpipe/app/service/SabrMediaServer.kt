@@ -128,10 +128,19 @@ object SabrMediaServer {
     /**
      * Records that the video addressed by a relay url path [videoKey] is walled right now.
      */
-    private fun markVideoWalled(videoKey: String) {
+    fun markVideoWalled(videoKey: String) {
         walledVideos.computeIfAbsent(videoKey) {
             java.util.concurrent.atomic.AtomicLong(0L)
         }.set(System.currentTimeMillis())
+    }
+
+    /**
+     * Records that the video addressed by a full relay [url] is walled right now. The
+     * playback controller calls this when its watchdog rescues a walled start: the relay's
+     * own round may still be inside its long retry budget, but the rescue is the verdict.
+     */
+    fun markTrackWalled(url: String) {
+        markVideoWalled(videoKeyOf(url))
     }
 
     /**
