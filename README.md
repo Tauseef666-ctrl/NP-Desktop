@@ -4,7 +4,7 @@
   <img src="assets/np_desktop_chosen.svg" width="120" alt="NP Desktop Logo">
 </p>
 
-<h3 align="center">A free and open-source streaming client for Windows and Android TV</h3>
+<h3 align="center">A free and open-source streaming client for Windows, Linux, and Android TV</h3>
 
 <p align="center">
   <a href="https://github.com/Tauseef666-ctrl/NP-Desktop/releases"><img src="https://img.shields.io/github/v/release/Tauseef666-ctrl/NP-Desktop?label=release&sort=semver" alt="Release"></a>
@@ -35,6 +35,38 @@
 - **Local-first** — no forced account login. Subscriptions, history, and preferences stay local by default
 
 Full keyboard reference: [doc/KEYBOARD-SHORTCUTS.md](doc/KEYBOARD-SHORTCUTS.md)
+
+## Architecture
+
+NP Desktop is a Kotlin Multiplatform project: one shared core drives every platform, and each form factor gets a native shell.
+
+| Layer | Technology | What it does |
+| --- | --- | --- |
+| `shared/` | Kotlin Multiplatform, Compose Multiplatform, Coroutines & Flows | Screens, view models, repositories, the playback engine, and the SABR media relay — everything that is platform-agnostic |
+| `desktopApp/` | Compose Desktop, libVLC via VLCJ, jpackage/jdeb | Windows and Linux windowing, keyboard shortcuts, installer packaging |
+| `androidApp/` | Compose Android, D-pad focus engine | Phone and Android TV shells with remote-control navigation |
+| Extraction | PipePipeExtractor fork | Stream, search, and metadata extraction, including YouTube's SABR session protocol |
+
+The playback stack, end to end:
+
+```
+Compose UI → PlaybackController → libVLC (VLCJ)
+                    ↓
+        SabrMediaServer (in-process HTTP relay, 127.0.0.1)
+                    ↓
+        YouTube SABR/UMP session (PipePipeExtractor)
+```
+
+## Engineering Highlights
+
+A few of the problems this project solves that go beyond wrapping a media player:
+
+- **Bridging YouTube's SABR streaming protocol to libVLC.** Modern YouTube serves media over the SABR/UMP protobuf protocol, which no desktop player speaks. NP Desktop runs an in-process HTTP relay (`SabrMediaServer`) that drives SABR sessions, splices initialization segments and media chunks into a progressive stream, and serves it to libVLC on loopback — with byte-range serving, response pre-buffering so the player never sees a session's slow start, and a dedicated per-track thread pool.
+- **Surviving media-generation handovers.** SABR media generations expire every minute or two mid-video. The player detects the end of a generation, reconnects, and carries the playback position *inside the relay URL*, so the fresh session serves media starting at that exact time server-side — libVLC never has to seek, which its prefetch stream filter cannot do reliably on a generated stream.
+- **A frame-based playback watchdog.** Wall-clock timers lie: a stream can report `playing` while showing a black screen forever. The watchdog treats freshly decoded frames as the only real progress signal, uses differentiated time windows for relay, walled, and direct streams, runs an unkillable ticker coroutine, and rescues stuck playback into a muxed fallback instead of leaving a dead screen.
+- **Honest quality fallback under YouTube's bot wall.** When YouTube blocks a stream route (`attestation required` sessions), the app records the wall per video, switches instantly to the best muxed fallback, greys out blocked quality entries until a retry window expires — and never marks the quality that is actually playing as unavailable.
+- **Secure self-updating.** Release assets are verified by SHA-256 digest against a published checksum file, and the updater only accepts files on an explicit asset allowlist.
+- **Performance work.** Lazy VLC initialization for fast startup, a tuned Home-feed pipeline with extraction performance tracing (`YT_PERF`), and dedicated bounded thread pools for relay and extraction work.
 
 <!--
   Screenshot placeholder — add your launch screenshots here.
