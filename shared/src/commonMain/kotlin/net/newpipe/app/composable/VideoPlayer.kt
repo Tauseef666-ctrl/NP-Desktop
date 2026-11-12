@@ -498,6 +498,7 @@ private fun PlayerTopBar(
             QualityMenu(
                 streams = videoStreams,
                 selected = selectedVideo,
+                playingLabel = state.qualityLabel,
                 onSelect = onSelectVideo,
                 onOpenChange = onMenuOpenChange
             )
@@ -634,6 +635,7 @@ private fun SpeedMenu(
 private fun QualityMenu(
     streams: List<MediaStream>,
     selected: MediaStream?,
+    playingLabel: String?,
     onSelect: (MediaStream) -> Unit,
     onOpenChange: (Boolean) -> Unit
 ) {
@@ -643,7 +645,10 @@ private fun QualityMenu(
 
     Box {
         PlayerChip(
-            text = selected?.quality ?: "Quality",
+            // The button always names the quality that is actually playing: after an
+            // automatic fallback to a lower muxed stream, the selection in the list stays
+            // the picked quality while the player runs the fallback one.
+            text = playingLabel ?: selected?.quality ?: "Quality",
             onClick = { expanded = true }
         )
 

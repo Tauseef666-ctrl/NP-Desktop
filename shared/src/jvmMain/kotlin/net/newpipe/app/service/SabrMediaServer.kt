@@ -110,6 +110,21 @@ object SabrMediaServer {
 
     private val deliveredBytes = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicLong>()
 
+    /**
+     * Whether the most recent connection for a track key ended without serving a single media
+     * byte: YouTube walled the route. The playback controller reads this to fail such a
+     * playback fast instead of waiting out the full watchdog window.
+     */
+    private val walledTracks = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicBoolean>()
+
+    /**
+     * Whether the last connection for the track addressed by a relay [url] was walled.
+     */
+    fun isTrackWalled(url: String): Boolean =
+        url.substringAfter("/sabr/", "").let { key ->
+            walledTracks[key]?.get() ?: false
+        }
+
     private fun ensureStarted() {
         if (started.compareAndSet(false, true)) {
             val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
@@ -368,6 +383,11 @@ object SabrMediaServer {
                 activeInfo = fresh
                 tracks[key] = fresh to format
             }
+            // The honest per-track health signal for the playback controller: whether this
+            // connection ended without serving a single media byte.
+            walledTracks.computeIfAbsent(key) {
+                java.util.concurrent.atomic.AtomicBoolean(false)
+            }.set(mediaBytes <= 0L)
             if (!headersSent && !clientGone) {
                 if (mediaBytes > 0) {
                     // A short track may finish inside the pre-buffer; flush whatever was

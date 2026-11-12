@@ -150,6 +150,21 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     private var stuckChains = 0
 
     /**
+     * When the last new video frame arrived. The only honest progress signal of the player:
+     * libVLC reports `playing` and a growing wall-clock position even when its demuxer is
+     * stuck on a stream that will never yield media, so only a freshly decoded frame proves
+     * that the user is actually seeing something.
+     */
+    @Volatile
+    private var lastFrameAt = 0L
+
+    /**
+     * The last frame object seen by the watchdog, to detect a fresh frame by identity; only
+     * touched from the ticker coroutine.
+     */
+    private var lastWatchdogFrame: VideoFrame? = null
+
+    /**
      * The size of the picture that libVLC was last negotiated to render. These values are only
      * touched from the libVLC format callbacks, and only read from its render callback, which run
      * sequentially on the video output thread.
@@ -287,6 +302,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         playingSinceAt = 0L
         playingBaselineMs = 0L
         playbackStartedAt = now
+        lastFrameAt = now
         stuckChains = 0
         Logger.i(messageString = "Starting playback of '${request.title}'")
 
@@ -360,6 +376,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         val player = player ?: return
         Logger.i(messageString = "Retrying playback of '${request.title}' after an error")
         playbackStartedAt = System.currentTimeMillis()
+        lastFrameAt = playbackStartedAt
         _frame.value = null
         _state.update { it.copy(playing = false, loading = true, error = null) }
         player.submit {
@@ -450,9 +467,17 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
      * a fresh connection starts a fresh stream generation — and played from the position.
      */
     private fun chainSabrPlayback(request: PlaybackRequest, positionMs: Long) {
+        if (activeRequest !== request) {
+            // The playback was replaced meanwhile (the watchdog's fallback switch, a quality
+            // change): this stale chain must not resurrect the dead route over the new media.
+            Logger.i(messageString = "A stale SABR reconnect was dropped; the playback moved on")
+            sabrChainScheduled = false
+            return
+        }
         val player = player ?: return
         Logger.i(messageString = "Reconnecting '${request.title}' at ${positionMs}ms")
         playbackStartedAt = System.currentTimeMillis()
+        lastFrameAt = playbackStartedAt
         _state.update { it.copy(loading = true, error = null) }
         player.submit {
             try {
@@ -510,6 +535,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         }
         // Re-arm first: whatever happens now gets its own full watchdog window.
         playbackStartedAt = System.currentTimeMillis()
+        lastFrameAt = playbackStartedAt
         if (isSabrMedia(request.videoUrl)) {
             val fallbackUrl = request.fallbackVideoUrl
             if (!fallbackUrl.isNullOrEmpty() && fallbackUrl != request.videoUrl) {
@@ -756,19 +782,30 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                     )
                 }
 
-                // Stuck-playback watchdog: when no frame has been decoded and the playback has
-                // not progressed within the watchdog window, the stream is hung — a walled
-                // relay connection can leave libVLC waiting on a headerless stream forever
-                // without ever firing a finished or error event. The watchdog force-reconnects
-                // such a playback a bounded number of times and finally reports the error, so
-                // the user never stares at an endless black screen.
-                val startedAt = playbackStartedAt
-                if (startedAt > 0 &&
-                    System.currentTimeMillis() - startedAt > STUCK_WATCHDOG_MS &&
-                    _frame.value == null &&
-                    estimatedPositionMs(_state.value) <= STUCK_PROGRESS_EPSILON_MS
-                ) {
-                    handleStuckPlayback()
+                // Stuck-playback watchdog: only a freshly decoded frame proves the user is
+                // seeing anything. A walled relay connection leaves libVLC reporting
+                // `playing` while its demuxer waits on a stream that will never yield media
+                // — no finished, no error event, a black screen with a frozen timer. When no
+                // new frame arrives within the watchdog window the playback is hung: a SABR
+                // playback whose route the relay already knows is walled fails fast, any
+                // other gets the full window. The watchdog switches to the muxed fallback,
+                // force-reconnects, and finally reports the error.
+                val nowMs = System.currentTimeMillis()
+                val stateNow = _state.value
+                if (stateNow.loading || stateNow.playing) {
+                    val frame = _frame.value
+                    if (frame !== lastWatchdogFrame) {
+                        lastWatchdogFrame = frame
+                        lastFrameAt = nowMs
+                    }
+                    val request = activeRequest
+                    val walled = request != null &&
+                        isSabrMedia(request.videoUrl) &&
+                        SabrMediaServer.isTrackWalled(request.videoUrl)
+                    val window = if (walled) STUCK_WALLED_WINDOW_MS else STUCK_WATCHDOG_MS
+                    if (nowMs - maxOf(playbackStartedAt, lastFrameAt) > window) {
+                        handleStuckPlayback()
+                    }
                 }
 
                 delay(TICK_INTERVAL_MS)
@@ -840,10 +877,11 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         private const val STUCK_WATCHDOG_MS = 25_000L
 
         /**
-         * How much progress counts as "the media is flowing" for the watchdog; audio-only
-         * playback advances the position without frames and must never be killed by it.
+         * The watchdog window for a SABR playback whose route the relay already knows is
+         * walled (its last connection ended without a single media byte): the failure is
+         * certain, so the muxed fallback is switched to quickly.
          */
-        private const val STUCK_PROGRESS_EPSILON_MS = 1_000L
+        private const val STUCK_WALLED_WINDOW_MS = 6_000L
 
         /**
          * How many watchdog force-reconnects a stuck SABR playback gets before it fails

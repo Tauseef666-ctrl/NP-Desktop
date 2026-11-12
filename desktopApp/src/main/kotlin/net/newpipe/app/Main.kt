@@ -160,11 +160,17 @@ fun main() {
                 val saved = savedWindowPlacement ?: return@LaunchedEffect
                 savedWindowPlacement = null
                 if (saved.first == WindowPlacement.Maximized) {
-                    windowState.placement = WindowPlacement.Maximized
+                    // Re-maximizing straight out of the native Fullscreen->Floating
+                    // transition glitches the frame the same way a geometry restore does;
+                    // let the transition settle first.
+                    delay(400)
+                    if (!appFullscreen) {
+                        windowState.placement = WindowPlacement.Maximized
+                    }
                 } else {
-                    // Leave fullscreen cleanly first; restoring the geometry too early races the
-                    // frame transition and renders a broken, half-sized window.
-                    delay(150)
+                    // Leave fullscreen cleanly first; restoring the geometry too early races
+                    // the frame transition and renders a broken, half-sized window.
+                    delay(400)
                     if (!appFullscreen &&
                         windowState.placement == WindowPlacement.Floating
                     ) {
