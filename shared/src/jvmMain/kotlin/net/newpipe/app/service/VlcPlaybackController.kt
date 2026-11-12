@@ -492,10 +492,12 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
 
     /**
      * The watchdog path for a playback from which no media ever arrived: no decoded frame and
-     * no progress after the watchdog window. A SABR playback is force-reconnected (a fresh
-     * connection, which the relay armours with fresh stream extractions) a bounded number of
-     * times; anything else is retried once. When the budget is spent the playback fails
-     * visibly instead of hanging as a black screen.
+     * no progress after the watchdog window. A SABR playback whose relay connection produced
+     * nothing (the relay already retried with fresh stream extractions) is switched to the
+     * request's muxed fallback, because a route YouTube walls for every session cannot be
+     * summoned back by reconnecting; without a fallback the connection is force-reconnected a
+     * bounded number of times. Non-SABR playbacks are retried once. When the budget is spent
+     * the playback fails visibly instead of hanging as a black screen.
      *
      * Runs on the ticker coroutine; all libVLC work is queued through `player.submit`.
      */
@@ -508,22 +510,32 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         }
         // Re-arm first: whatever happens now gets its own full watchdog window.
         playbackStartedAt = System.currentTimeMillis()
-        if (isSabrMedia(request.videoUrl) && !sabrChainScheduled && stuckChains < STUCK_CHAIN_LIMIT) {
-            stuckChains++
-            sabrChainScheduled = true
-            stoppedByUser = false
-            lastChainPositionMs = 0L
-            Logger.w(
-                messageString = "No media arrived within the watchdog window; forcing a fresh " +
-                    "SABR connection (${stuckChains}/${STUCK_CHAIN_LIMIT})"
-            )
-            scope.launch {
-                delay(SABR_CHAIN_DELAY_MS)
-                chainSabrPlayback(request, 0L)
+        if (isSabrMedia(request.videoUrl)) {
+            val fallbackUrl = request.fallbackVideoUrl
+            if (!fallbackUrl.isNullOrEmpty() && fallbackUrl != request.videoUrl) {
+                Logger.w(
+                    messageString = "The SABR stream produced no media; switching to the " +
+                        "muxed fallback (${request.fallbackQualityLabel ?: "fallback quality"})"
+                )
+                playFallback(request)
+                return
             }
-            return
-        }
-        if (!isSabrMedia(request.videoUrl) && !retriedOnError) {
+            if (!sabrChainScheduled && stuckChains < STUCK_CHAIN_LIMIT) {
+                stuckChains++
+                sabrChainScheduled = true
+                stoppedByUser = false
+                lastChainPositionMs = 0L
+                Logger.w(
+                    messageString = "No media arrived within the watchdog window; forcing a " +
+                        "fresh SABR connection (${stuckChains}/${STUCK_CHAIN_LIMIT})"
+                )
+                scope.launch {
+                    delay(SABR_CHAIN_DELAY_MS)
+                    chainSabrPlayback(request, 0L)
+                }
+                return
+            }
+        } else if (!retriedOnError) {
             retriedOnError = true
             retryPlayback(request)
             return
@@ -537,6 +549,26 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
             player.controls().stop()
             player.media().reset()
         }
+    }
+
+    /**
+     * Switches the current playback to its muxed fallback stream: the same video from a direct
+     * url, without the SABR relay. A full [play] restarts every budget (reconnects, watchdog)
+     * for the fallback, so it gets its own fair chance to play.
+     */
+    private fun playFallback(request: PlaybackRequest) {
+        val fallbackUrl = request.fallbackVideoUrl ?: return
+        play(
+            request.copy(
+                videoUrl = fallbackUrl,
+                audioUrl = request.fallbackAudioUrl,
+                qualityLabel = request.fallbackQualityLabel ?: request.qualityLabel,
+                // The fallback replaces the whole media; there is no fallback behind it.
+                fallbackVideoUrl = null,
+                fallbackAudioUrl = null,
+                fallbackQualityLabel = null
+            )
+        )
     }
 
     /**

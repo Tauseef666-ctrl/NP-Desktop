@@ -22,7 +22,16 @@ data class PlaybackRequest(
     val serviceId: Int = -1,
     val webUrl: String = "",
     val qualityLabel: String? = null,
-    val live: Boolean = false
+    val live: Boolean = false,
+    /**
+     * A muxed progressive stream (video with its audio in one direct url) that the player
+     * switches to when the chosen stream cannot deliver any media at all — the SABR route
+     * walled by YouTube, for example. It must be a direct url, never another stream of the
+     * same delivery route.
+     */
+    val fallbackVideoUrl: String? = null,
+    val fallbackAudioUrl: String? = null,
+    val fallbackQualityLabel: String? = null
 )
 
 /**

@@ -68,6 +68,17 @@ object SabrMediaServer {
     private const val MAX_FRESH_EXTRACTION_ATTEMPTS = 2
 
     /**
+     * The consecutive failed fresh extractions after which the relay stops trying them. When
+     * YouTube's bot wall throttles the player requests themselves, every fresh extraction is
+     * doomed and only burns seconds per connection before the connection can fail; once the
+     * breaker is open the connection answers the player immediately. A success resets it.
+     */
+    private const val FRESH_EXTRACTION_FAILURE_LIMIT = 2
+
+    @Volatile
+    private var freshExtractionFailures = 0
+
+    /**
      * The bytes collected before the response starts: warming a SABR session up takes the
      * engine several seconds of YouTube round trips, so the exchange only answers once enough
      * media is in hand — from then on the stream pours at LAN speed and the player never sees
@@ -329,7 +340,10 @@ object SabrMediaServer {
                 // safe. A fresh player response carries a fresh streaming url and host, and a
                 // fresh session regularly gets a generation that streams where the cached one
                 // was walled.
-                if (headersSent || mediaBytes > 0 || freshAttempts >= MAX_FRESH_EXTRACTION_ATTEMPTS) {
+                if (headersSent || mediaBytes > 0 ||
+                    freshAttempts >= MAX_FRESH_EXTRACTION_ATTEMPTS ||
+                    freshExtractionFailures >= FRESH_EXTRACTION_FAILURE_LIMIT
+                ) {
                     break@attempt
                 }
                 freshAttempts++
@@ -344,7 +358,11 @@ object SabrMediaServer {
                     org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor
                         .fetchSabrInfoForReload(videoId, "")
                 }.getOrNull()
-                if (fresh == null || fresh.formats.none { it.itag == format.itag }) break@attempt
+                if (fresh == null || fresh.formats.none { it.itag == format.itag }) {
+                    freshExtractionFailures++
+                    break@attempt
+                }
+                freshExtractionFailures = 0
                 // The fresh info also becomes the cached track info, so the player's own
                 // reconnects start from it instead of the walled one.
                 activeInfo = fresh

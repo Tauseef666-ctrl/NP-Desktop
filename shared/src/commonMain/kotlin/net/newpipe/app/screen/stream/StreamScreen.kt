@@ -559,6 +559,14 @@ private fun playStream(
     // breaks the muxed playback.
     val playbackAudioUrl = if (details.liveNow) null else selectedAudioUrl
 
+    // The player's emergency fallback: the richest muxed stream of the plain extraction, which
+    // plays from its own direct url without the SABR relay. When the chosen route delivers no
+    // media at all (YouTube walling every relay session, for example), the player switches to
+    // it instead of leaving a dead screen.
+    val fallbackStream = details.videoStreams
+        .filter { !it.isVideoOnly && it.url != selectedVideoUrl }
+        .maxByOrNull { it.height ?: 0 }
+
     controller.play(
         PlaybackRequest(
             title = details.title,
@@ -570,7 +578,9 @@ private fun playStream(
             webUrl = details.url,
             qualityLabel = details.videoStreams
                 .firstOrNull { it.url == selectedVideoUrl }?.quality,
-            live = details.liveNow
+            live = details.liveNow,
+            fallbackVideoUrl = fallbackStream?.url,
+            fallbackQualityLabel = fallbackStream?.quality
         )
     )
 }
