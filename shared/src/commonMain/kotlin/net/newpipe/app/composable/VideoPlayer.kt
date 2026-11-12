@@ -682,12 +682,16 @@ private fun QualityMenu(
                 // letting the user pick it and bounce off it: the entry is disabled until a
                 // fresh attempt is allowed again.
                 val unavailable = isUnavailable(stream.url)
+                // The highlight follows the quality that is actually playing: after an
+                // automatic fallback the picked quality stays selected in the view model
+                // while the player runs the fallback one.
+                val playing = stream.quality == (playingLabel ?: selected?.quality)
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = if (unavailable) "${stream.quality} (unavailable)" else stream.quality,
                             color = when {
-                                stream == selected -> MaterialTheme.colorScheme.primary
+                                playing -> MaterialTheme.colorScheme.primary
                                 unavailable -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                                 else -> MaterialTheme.colorScheme.onSurface
                             }
