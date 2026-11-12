@@ -176,6 +176,14 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     private var watchdogHeartbeatLogged = false
 
     /**
+     * The resume position a direct (non-SABR) stream gets once playback is running. Applied
+     * through the `playing` event instead of a start-time media option, because an open-time
+     * seek can fail inside libVLC's prefetch stream filter and hang the demuxer silently.
+     */
+    @Volatile
+    private var pendingSeekMs = 0L
+
+    /**
      * The size of the picture that libVLC was last negotiated to render. These values are only
      * touched from the libVLC format callbacks, and only read from its render callback, which run
      * sequentially on the video output thread.
@@ -201,6 +209,17 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                     // A `playing` event after an `error` event (libVLC's http access retries
                     // internally) must not leave the state claiming both failure and play.
                     _state.update { it.copy(playing = true, loading = false, error = null) }
+                    val deferredSeek = pendingSeekMs
+                    if (deferredSeek > 0L) {
+                        // The resume position is applied after playback started, never through
+                        // an open-time seek (which can hang the demuxer). Consumed once: later
+                        // `playing` events from buffering cycles or reconnects must not seek
+                        // back to the start position.
+                        pendingSeekMs = 0L
+                        player.submit {
+                            runCatching { player.controls().setTime(deferredSeek) }
+                        }
+                    }
                 }
 
                 override fun paused(mediaPlayer: MediaPlayer) {
@@ -371,11 +390,19 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 player.controls().stop()
                 player.media().reset()
 
-                // Resume support: the media option makes libVLC skip to the position the user
-                // left the stream at, before the first frame is shown.
+                // Resume support. A SABR stream takes the position through the start-time
+                // option: the relay serves byte ranges itself and the reconnects depend on
+                // it. A direct stream must not: an open-time seek makes libVLC's prefetch
+                // stream filter fail (`prefetch stream error: cannot seek`) and the demuxer
+                // hangs silently on a frameless black screen. The direct stream opens at
+                // zero and gets its resume position applied once playback is running.
                 val options = mutableListOf<String>()
-                if (request.startPositionMs > 5_000) {
+                if (request.startPositionMs > 5_000 && isSabrMedia(request.videoUrl)) {
                     options += ":start-time=${request.startPositionMs / 1_000}"
+                    pendingSeekMs = 0L
+                } else {
+                    pendingSeekMs =
+                        if (request.startPositionMs > 5_000) request.startPositionMs else 0L
                 }
 
                 if (!player.media().prepare(request.videoUrl, *options.toTypedArray())) {
@@ -427,8 +454,12 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 player.controls().stop()
                 player.media().reset()
                 val options = mutableListOf<String>()
-                if (request.startPositionMs > 5_000) {
+                if (request.startPositionMs > 5_000 && isSabrMedia(request.videoUrl)) {
                     options += ":start-time=${request.startPositionMs / 1_000}"
+                    pendingSeekMs = 0L
+                } else {
+                    pendingSeekMs =
+                        if (request.startPositionMs > 5_000) request.startPositionMs else 0L
                 }
                 if (!player.media().prepare(request.videoUrl, *options.toTypedArray())) {
                     _state.update {
