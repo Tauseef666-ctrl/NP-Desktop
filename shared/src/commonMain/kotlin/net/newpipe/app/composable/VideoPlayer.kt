@@ -681,11 +681,15 @@ private fun QualityMenu(
                 // A quality whose SABR route YouTube walled moments ago is marked instead of
                 // letting the user pick it and bounce off it: the entry is disabled until a
                 // fresh attempt is allowed again.
-                val unavailable = isUnavailable(stream.url)
                 // The highlight follows the quality that is actually playing: after an
                 // automatic fallback the picked quality stays selected in the view model
                 // while the player runs the fallback one.
                 val playing = stream.quality == (playingLabel ?: selected?.quality)
+                // A quality whose SABR route YouTube walled moments ago is marked instead of
+                // letting the user pick it and bounce off it: the entry is disabled until a
+                // fresh attempt is allowed again. The quality that is playing right now is
+                // never marked: it demonstrably works.
+                val unavailable = !playing && isUnavailable(stream.url)
                 DropdownMenuItem(
                     text = {
                         Text(
