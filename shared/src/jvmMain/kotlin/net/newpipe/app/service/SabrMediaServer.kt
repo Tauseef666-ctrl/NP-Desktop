@@ -445,10 +445,19 @@ object SabrMediaServer {
             }
             // The honest per-video health signal for the playback controller: whether this
             // connection ended without serving a single media byte (a walled route fails for
-            // every track of the video, so the wall is recorded per video).
+            // every track of the video, so the wall is recorded per video). Only a video
+            // track's success clears the mark: an audio track can deliver media while the
+            // video route stays walled, and its bytes would wrongly tell the controller the
+            // route is healthy again.
             walledVideos.computeIfAbsent(videoKeyOf(key)) {
                 java.util.concurrent.atomic.AtomicLong(0L)
-            }.set(if (mediaBytes <= 0L) System.currentTimeMillis() else 0L)
+            }.let { mark ->
+                if (mediaBytes <= 0L) {
+                    mark.set(System.currentTimeMillis())
+                } else if (!format.isAudio) {
+                    mark.set(0L)
+                }
+            }
             if (!headersSent && !clientGone) {
                 if (mediaBytes > 0) {
                     // A short track may finish inside the pre-buffer; flush whatever was
