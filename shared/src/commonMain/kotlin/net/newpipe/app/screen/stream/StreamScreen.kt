@@ -535,6 +535,13 @@ private fun playStream(
         details.liveNow -> 0L
         else -> watchHistory.resumePosition(details.url)
     }
+    // A resume position at (or beyond) the end cannot be served by the media: it dead-loads
+    // the SABR route, dead-loads the fallback's deferred seek and chains pointlessly. An
+    // entry like that comes from a frameless session whose position ran away, or from a
+    // video the user finished; such an open starts over instead.
+    val durationMs = (details.durationSeconds ?: 0L) * 1000L
+    val startPositionMs =
+        if (durationMs > 0 && resumePositionMs >= durationMs - 10_000) 0L else resumePositionMs
 
     watchHistory.record(
         ContentItem(
@@ -573,7 +580,7 @@ private fun playStream(
             videoUrl = selectedVideoUrl,
             audioUrl = playbackAudioUrl,
             thumbnailUrl = details.thumbnailUrl,
-            startPositionMs = resumePositionMs,
+            startPositionMs = startPositionMs,
             serviceId = details.serviceId,
             webUrl = details.url,
             qualityLabel = details.videoStreams
