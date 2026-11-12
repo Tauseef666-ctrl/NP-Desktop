@@ -348,17 +348,27 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         // The relay knows this video's SABR route was just walled: a new attempt would
         // dead-load for the whole watchdog window again before failing over. When the wall
         // was seen moments ago, the muxed fallback starts directly.
-        if (isSabrMedia(request.videoUrl) &&
-            !request.fallbackVideoUrl.isNullOrEmpty() &&
-            request.fallbackVideoUrl != request.videoUrl &&
-            (SabrMediaServer.walledAgeMs(request.videoUrl) ?: Long.MAX_VALUE) < RECENT_WALL_MS
-        ) {
-            Logger.i(
-                messageString = "The SABR route is walled; starting the muxed fallback " +
-                    "(${request.fallbackQualityLabel ?: "fallback quality"}) directly"
+        if (isSabrMedia(request.videoUrl)) {
+            val wallAge = SabrMediaServer.walledAgeMs(request.videoUrl)
+            if (!request.fallbackVideoUrl.isNullOrEmpty() &&
+                request.fallbackVideoUrl != request.videoUrl &&
+                wallAge != null &&
+                wallAge < RECENT_WALL_MS
+            ) {
+                Logger.i(
+                    messageString = "The SABR route is walled; starting the muxed fallback " +
+                        "(${request.fallbackQualityLabel ?: "fallback quality"}) directly"
+                )
+                playFallback(request)
+                return
+            }
+            // Diagnostic for a pick that ran the doomed attempt anyway: names the exact
+            // condition that blocked the instant fallback.
+            Logger.d(
+                messageString = "No instant fallback for the SABR route: " +
+                    "walledAgeMs=$wallAge, " +
+                    "hasFallback=${!request.fallbackVideoUrl.isNullOrEmpty()}"
             )
-            playFallback(request)
-            return
         }
         Logger.i(
             messageString = "play() caller: " +
