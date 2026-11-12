@@ -390,22 +390,14 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 player.controls().stop()
                 player.media().reset()
 
-                // Resume support. A SABR stream takes the position through the start-time
-                // option: the relay serves byte ranges itself and the reconnects depend on
-                // it. A direct stream must not: an open-time seek makes libVLC's prefetch
-                // stream filter fail (`prefetch stream error: cannot seek`) and the demuxer
-                // hangs silently on a frameless black screen. The direct stream opens at
-                // zero and gets its resume position applied once playback is running.
-                val options = mutableListOf<String>()
-                if (request.startPositionMs > 5_000 && isSabrMedia(request.videoUrl)) {
-                    options += ":start-time=${request.startPositionMs / 1_000}"
-                    pendingSeekMs = 0L
-                } else {
-                    pendingSeekMs =
-                        if (request.startPositionMs > 5_000) request.startPositionMs else 0L
-                }
+                // Resume support: every stream opens at zero. An open-time seek through a
+                // start-time media option fails inside libVLC's prefetch stream filter and
+                // hangs the demuxer silently on a frameless black screen — for relay streams
+                // and direct streams alike. The resume position is applied through the
+                // deferred seek once playback is running.
+                pendingSeekMs = if (request.startPositionMs > 5_000) request.startPositionMs else 0L
 
-                if (!player.media().prepare(request.videoUrl, *options.toTypedArray())) {
+                if (!player.media().prepare(request.videoUrl)) {
                     _state.update {
                         it.copy(loading = false, error = "The video stream could not be opened")
                     }
@@ -453,15 +445,8 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
             try {
                 player.controls().stop()
                 player.media().reset()
-                val options = mutableListOf<String>()
-                if (request.startPositionMs > 5_000 && isSabrMedia(request.videoUrl)) {
-                    options += ":start-time=${request.startPositionMs / 1_000}"
-                    pendingSeekMs = 0L
-                } else {
-                    pendingSeekMs =
-                        if (request.startPositionMs > 5_000) request.startPositionMs else 0L
-                }
-                if (!player.media().prepare(request.videoUrl, *options.toTypedArray())) {
+                pendingSeekMs = if (request.startPositionMs > 5_000) request.startPositionMs else 0L
+                if (!player.media().prepare(request.videoUrl)) {
                     _state.update {
                         it.copy(playing = false, loading = false, error = "Playback failed")
                     }
@@ -561,11 +546,10 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
             try {
                 player.controls().stop()
                 player.media().reset()
-                if (!player.media().prepare(
-                        request.videoUrl,
-                        ":start-time=${positionMs / 1_000}"
-                    )
-                ) {
+                // The reconnect resumes through the deferred seek, not an open-time start-time
+                // option, which hangs the demuxer in libVLC's prefetch stream filter.
+                pendingSeekMs = positionMs
+                if (!player.media().prepare(request.videoUrl)) {
                     sabrChainScheduled = false
                     _state.update {
                         it.copy(playing = false, loading = false, error = "Playback failed")
