@@ -104,7 +104,7 @@ object SabrMediaServer {
      * player) and is read by playback diagnostics and the live probes.
      */
     fun deliveredBytesFor(url: String): Long =
-        url.substringAfter("/sabr/", "").let { key ->
+        url.substringAfter("/sabr/", "").substringBefore("?").let { key ->
             deliveredBytes[key]?.get() ?: 0L
         }
 
@@ -179,7 +179,8 @@ object SabrMediaServer {
             val (info, format) = tracks[key]
                 ?: throw IOException("track $key was never registered")
             val offset = requestedOffset(exchange) ?: 0L
-            relay(exchange, key, info, format, offset)
+            val startMs = requestedStartMs(exchange)
+            relay(exchange, key, info, format, offset, startMs)
         } catch (failure: IOException) {
             // The player closed the connection; every relay below already handles its cleanup.
             Logger.d(messageString = "SABR relay closed: ${failure.message}")
@@ -206,7 +207,8 @@ object SabrMediaServer {
         key: String,
         info: YoutubeSabrInfo,
         format: YoutubeSabrInfo.Format,
-        offset: Long
+        offset: Long,
+        startMs: Long
     ) {
         val body = exchange.responseBody
         val byteCounter = deliveredBytes.computeIfAbsent(key) {
@@ -260,7 +262,14 @@ object SabrMediaServer {
             var activeInfo = info
             var freshAttempts = 0
             attempt@ while (true) {
-                var currentMs = (offset * 8_000.0 / bitrate).toLong()
+                // The media start: an explicit player time (the `t` url parameter, used by
+                // playback resumes, quality switches and generation reconnects) wins; a Range
+                // byte offset is estimated from the bitrate as before; otherwise media starts
+                // at zero.
+                var currentMs =
+                    if (offset > 0L) (offset * 8_000.0 / bitrate).toLong()
+                    else if (startMs > 0L) startMs
+                    else 0L
                 var lastSequence = -1
                 var rounds = 0
                 var emptyRounds = 0
@@ -329,6 +338,15 @@ object SabrMediaServer {
                                 val duration = segment.header.durationMs
                                 if (duration > 0) {
                                     currentMs = segment.header.startMs + duration
+                                }
+                                if (startMs > 0L && mediaBytes == 0L) {
+                                    // The verdict on whether YouTube honored the requested
+                                    // player time: the first media segment's own start.
+                                    Logger.d(
+                                        messageString = "SABR relay serves its first media " +
+                                            "segment at ${segment.header.startMs}ms " +
+                                            "(requested $startMs ms)"
+                                    )
                                 }
                                 val startRange = segment.header.startRange
                                 when {
@@ -461,6 +479,12 @@ object SabrMediaServer {
         val match = Regex("bytes=(\\d+)-").find(range) ?: return null
         return match.groupValues[1].toLongOrNull()
     }
+
+    /** The player time of a `t` url parameter, or 0 when the request carries none. */
+    private fun requestedStartMs(exchange: HttpExchange): Long =
+        exchange.requestURI.rawQuery?.let { query ->
+            Regex("(^|&)t=(\\d+)").find(query)?.groupValues?.get(2)?.toLongOrNull()
+        } ?: 0L
 
     /**
      * Installs the callback the engine uses when the server requests a player reload: a fresh

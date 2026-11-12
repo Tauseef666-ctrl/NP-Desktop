@@ -390,21 +390,31 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 player.controls().stop()
                 player.media().reset()
 
-                // Resume support: every stream opens at zero. An open-time seek through a
-                // start-time media option fails inside libVLC's prefetch stream filter and
-                // hangs the demuxer silently on a frameless black screen — for relay streams
-                // and direct streams alike. The resume position is applied through the
-                // deferred seek once playback is running.
-                pendingSeekMs = if (request.startPositionMs > 5_000) request.startPositionMs else 0L
+                // Resume support: no stream is seeked by libVLC at open time — an open-time
+                // seek through a start-time media option fails inside libVLC's prefetch
+                // stream filter and hangs the demuxer silently on a frameless black screen.
+                // A SABR relay stream takes its position in the url instead: the fresh
+                // session serves media from that player time server-side. A direct stream
+                // opens at zero and gets its resume position applied through the deferred
+                // seek once playback is running.
+                val mediaUrl = withSabrStart(request.videoUrl, request.startPositionMs)
+                pendingSeekMs =
+                    if (request.startPositionMs > 5_000 && !isSabrMedia(request.videoUrl)) {
+                        request.startPositionMs
+                    } else {
+                        0L
+                    }
 
-                if (!player.media().prepare(request.videoUrl)) {
+                if (!player.media().prepare(mediaUrl)) {
                     _state.update {
                         it.copy(loading = false, error = "The video stream could not be opened")
                     }
                     return@submit
                 }
 
-                val audioUrl = request.audioUrl
+                // The audio slave carries the same position: its relay track serves the same
+                // content timeline, so both streams start aligned.
+                val audioUrl = withSabrStart(request.audioUrl, request.startPositionMs)
                 if (audioUrl != null &&
                     !player.media().addSlave(MediaSlaveType.AUDIO, audioUrl, true)
                 ) {
@@ -445,14 +455,20 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
             try {
                 player.controls().stop()
                 player.media().reset()
-                pendingSeekMs = if (request.startPositionMs > 5_000) request.startPositionMs else 0L
-                if (!player.media().prepare(request.videoUrl)) {
+                val mediaUrl = withSabrStart(request.videoUrl, request.startPositionMs)
+                pendingSeekMs =
+                    if (request.startPositionMs > 5_000 && !isSabrMedia(request.videoUrl)) {
+                        request.startPositionMs
+                    } else {
+                        0L
+                    }
+                if (!player.media().prepare(mediaUrl)) {
                     _state.update {
                         it.copy(playing = false, loading = false, error = "Playback failed")
                     }
                     return@submit
                 }
-                val audioUrl = request.audioUrl
+                val audioUrl = withSabrStart(request.audioUrl, request.startPositionMs)
                 if (audioUrl != null) {
                     player.media().addSlave(MediaSlaveType.AUDIO, audioUrl, true)
                 }
@@ -546,17 +562,19 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
             try {
                 player.controls().stop()
                 player.media().reset()
-                // The reconnect resumes through the deferred seek, not an open-time start-time
-                // option, which hangs the demuxer in libVLC's prefetch stream filter.
-                pendingSeekMs = positionMs
-                if (!player.media().prepare(request.videoUrl)) {
+                // The reconnect takes its position through the relay url: the fresh session
+                // serves media from that player time server-side, so libVLC never has to
+                // seek the relay stream (its prefetch stream filter cannot seek it and the
+                // demuxer hangs).
+                pendingSeekMs = 0L
+                if (!player.media().prepare(withSabrStart(request.videoUrl, positionMs))) {
                     sabrChainScheduled = false
                     _state.update {
                         it.copy(playing = false, loading = false, error = "Playback failed")
                     }
                     return@submit
                 }
-                val audioUrl = request.audioUrl
+                val audioUrl = withSabrStart(request.audioUrl, positionMs)
                 if (audioUrl != null) {
                     player.media().addSlave(MediaSlaveType.AUDIO, audioUrl, true)
                 }
@@ -683,6 +701,17 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
      */
     private fun isSabrMedia(url: String?): Boolean =
         url != null && url.startsWith("http://127.0.0.1:") && url.contains("/sabr/")
+
+    /**
+     * Appends the player time to a SABR relay url: the fresh session on the next connection
+     * serves media from that player time server-side, so libVLC never has to seek the relay
+     * stream (its prefetch stream filter cannot seek it and the demuxer hangs). Direct urls
+     * pass through unchanged.
+     */
+    private fun withSabrStart(url: String?, positionMs: Long): String? {
+        if (url == null || positionMs <= 0L || !isSabrMedia(url)) return url
+        return url + (if (url.contains('?')) "&" else "?") + "t=$positionMs"
+    }
 
     override fun isQualityTemporarilyUnavailable(url: String): Boolean =
         (SabrMediaServer.walledAgeMs(url) ?: Long.MAX_VALUE) < RECENT_WALL_MS
