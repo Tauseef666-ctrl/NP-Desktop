@@ -370,14 +370,6 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                     "hasFallback=${!request.fallbackVideoUrl.isNullOrEmpty()}"
             )
         }
-        Logger.i(
-            messageString = "play() caller: " +
-                Throwable().stackTrace
-                    .drop(1)
-                    .take(3)
-                    .joinToString(" <- ") { "${it.className.substringAfterLast('.')}.${it.methodName}" }
-        )
-
         ticker?.cancel()
         activeRequest = request
         retriedOnError = false
