@@ -265,6 +265,22 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                             return
                         }
                     }
+                    val request = activeRequest
+                    if (request != null && !request.fallbackVideoUrl.isNullOrEmpty() &&
+                        request.fallbackVideoUrl != request.videoUrl
+                    ) {
+                        // A fast relay failure reaches this path instead of the watchdog: the
+                        // session dies before any media (the relay answers 502 immediately) and
+                        // libVLC raises its error events within seconds. The muxed fallback
+                        // gets the same switch the watchdog would have given a hanging start.
+                        Logger.w(
+                            messageString = "The SABR stream failed to open; switching to the " +
+                                "muxed fallback (${request.fallbackQualityLabel ?: "fallback quality"})"
+                        )
+                        SabrMediaServer.markTrackWalled(request.videoUrl)
+                        scope.launch { playFallback(request) }
+                        return
+                    }
                     _state.update { it.copy(playing = false, loading = false, error = "Playback failed") }
                     // A dead playback keeps its stale audio elementary stream otherwise, which
                     // can keep playing sound in the background; stop and reset kill it.
