@@ -72,6 +72,15 @@ interface PlaybackController {
     fun play(request: PlaybackRequest)
 
     /**
+     * Whether the stream addressed by [url] is temporarily unavailable: its SABR route was
+     * walled by YouTube moments ago, so picking it would only dead-load and fall back. The
+     * player interface uses this to mark such qualities in the quality menu instead of
+     * letting the user bounce off them. The state heals by itself: a fresh attempt is
+     * allowed again shortly after the last walled connection.
+     */
+    fun isQualityTemporarilyUnavailable(url: String): Boolean = false
+
+    /**
      * Resumes playback.
      */
     fun resume()

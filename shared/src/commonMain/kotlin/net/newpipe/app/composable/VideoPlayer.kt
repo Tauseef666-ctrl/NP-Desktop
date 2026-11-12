@@ -499,6 +499,7 @@ private fun PlayerTopBar(
                 streams = videoStreams,
                 selected = selectedVideo,
                 playingLabel = state.qualityLabel,
+                isUnavailable = controller::isQualityTemporarilyUnavailable,
                 onSelect = onSelectVideo,
                 onOpenChange = onMenuOpenChange
             )
@@ -636,6 +637,7 @@ private fun QualityMenu(
     streams: List<MediaStream>,
     selected: MediaStream?,
     playingLabel: String?,
+    isUnavailable: (String) -> Boolean,
     onSelect: (MediaStream) -> Unit,
     onOpenChange: (Boolean) -> Unit
 ) {
@@ -676,17 +678,22 @@ private fun QualityMenu(
                 )
             }
             distinct.forEach { stream ->
+                // A quality whose SABR route YouTube walled moments ago is marked instead of
+                // letting the user pick it and bounce off it: the entry is disabled until a
+                // fresh attempt is allowed again.
+                val unavailable = isUnavailable(stream.url)
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = stream.quality,
-                            color = if (stream == selected) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
+                            text = if (unavailable) "${stream.quality} (unavailable)" else stream.quality,
+                            color = when {
+                                stream == selected -> MaterialTheme.colorScheme.primary
+                                unavailable -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                else -> MaterialTheme.colorScheme.onSurface
                             }
                         )
                     },
+                    enabled = !unavailable,
                     onClick = {
                         expanded = false
                         onSelect(stream)

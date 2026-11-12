@@ -111,24 +111,50 @@ object SabrMediaServer {
     private val deliveredBytes = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicLong>()
 
     /**
-     * Whether the most recent connection for a track key ended without serving a single media
-     * byte: YouTube walled the route. The playback controller reads this to fail such a
-     * playback fast instead of waiting out the full watchdog window.
+     * When the most recent connection for a video ended without serving a single media byte:
+     * YouTube walled the route. The wall is session wide, so it is tracked per video rather
+     * than per track; the timestamp (0 when the route is healthy) lets the playback controller
+     * tell a fresh wall from an old one.
      */
-    private val walledTracks = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicBoolean>()
+    private val walledVideos = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicLong>()
 
     /**
-     * Whether the last connection for the track addressed by a relay [url] was walled.
+     * The video part of a relay [url] path: `videoId_itag` without the itag suffix. The itag
+     * never contains an underscore, so the last segment always is the itag.
+     */
+    private fun videoKeyOf(url: String): String =
+        url.substringAfter("/sabr/", "").substringBeforeLast("_")
+
+    /**
+     * Records that the video addressed by a relay url path [videoKey] is walled right now.
+     */
+    private fun markVideoWalled(videoKey: String) {
+        walledVideos.computeIfAbsent(videoKey) {
+            java.util.concurrent.atomic.AtomicLong(0L)
+        }.set(System.currentTimeMillis())
+    }
+
+    /**
+     * Whether the last connection for the video addressed by a relay [url] was walled.
      */
     fun isTrackWalled(url: String): Boolean =
-        url.substringAfter("/sabr/", "").let { key ->
-            walledTracks[key]?.get() ?: false
-        }
+        walledVideos[videoKeyOf(url)]?.get()?.let { it > 0L } ?: false
+
+    /**
+     * How long ago the video addressed by a relay [url] was walled, or null when its last
+     * connection delivered media (or was never connected).
+     */
+    fun walledAgeMs(url: String): Long? =
+        walledVideos[videoKeyOf(url)]?.get()
+            ?.takeIf { it > 0L }
+            ?.let { System.currentTimeMillis() - it }
 
     private fun ensureStarted() {
         if (started.compareAndSet(false, true)) {
             val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
-            server.executor = Executors.newFixedThreadPool(4) { runnable ->
+            // VLC opens one connection per track (video and audio) and reconnects on hiccups;
+        // four threads stalled on slow upstream responses once starved a fifth connection.
+        server.executor = Executors.newFixedThreadPool(8) { runnable ->
                 Thread(runnable, "sabr-media-relay").apply { isDaemon = true }
             }
             server.createContext("/sabr") { exchange -> handle(exchange) }
@@ -326,6 +352,13 @@ object SabrMediaServer {
                             // Restarting the session here instead would splice misaligned segment
                             // bytes into the response and corrupt the stream for the demuxer.
                             walled = true
+                            // The wall is known the moment a round fails without any media: the
+                            // connection can stay open through a long retry tail, but the
+                            // playback controller needs the health signal immediately (a fresh
+                            // quality pick must fall back instantly instead of dead-loading).
+                            if (mediaBytes <= 0L) {
+                                markVideoWalled(videoKeyOf(key))
+                            }
                             break
                         }
                         val result = outcome.getOrThrow()
@@ -383,11 +416,12 @@ object SabrMediaServer {
                 activeInfo = fresh
                 tracks[key] = fresh to format
             }
-            // The honest per-track health signal for the playback controller: whether this
-            // connection ended without serving a single media byte.
-            walledTracks.computeIfAbsent(key) {
-                java.util.concurrent.atomic.AtomicBoolean(false)
-            }.set(mediaBytes <= 0L)
+            // The honest per-video health signal for the playback controller: whether this
+            // connection ended without serving a single media byte (a walled route fails for
+            // every track of the video, so the wall is recorded per video).
+            walledVideos.computeIfAbsent(videoKeyOf(key)) {
+                java.util.concurrent.atomic.AtomicLong(0L)
+            }.set(if (mediaBytes <= 0L) System.currentTimeMillis() else 0L)
             if (!headersSent && !clientGone) {
                 if (mediaBytes > 0) {
                     // A short track may finish inside the pre-buffer; flush whatever was

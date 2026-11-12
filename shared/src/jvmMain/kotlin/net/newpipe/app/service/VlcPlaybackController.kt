@@ -89,6 +89,10 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
      * quick succession and the second start races the first one inside libVLC.
      */
     private var lastPlayUrl: String? = null
+
+    /** The media url of the last [play] call, the second half of the duplicate-start check. */
+    private var lastPlayMediaUrl: String? = null
+
     private var lastPlayAt = 0L
 
     /**
@@ -165,6 +169,13 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     private var lastWatchdogFrame: VideoFrame? = null
 
     /**
+     * Whether the watchdog already self-reported the current frameless period; reset when a
+     * new frame arrives or a new playback starts, so every hang is reported exactly once.
+     */
+    @Volatile
+    private var watchdogHeartbeatLogged = false
+
+    /**
      * The size of the picture that libVLC was last negotiated to render. These values are only
      * touched from the libVLC format callbacks, and only read from its render callback, which run
      * sequentially on the video output thread.
@@ -187,7 +198,9 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                     playingBaselineMs = _state.value.positionMs
                     playingSinceAt = System.currentTimeMillis()
                     sabrChainScheduled = false
-                    _state.update { it.copy(playing = true, loading = false) }
+                    // A `playing` event after an `error` event (libVLC's http access retries
+                    // internally) must not leave the state claiming both failure and play.
+                    _state.update { it.copy(playing = true, loading = false, error = null) }
                 }
 
                 override fun paused(mediaPlayer: MediaPlayer) {
@@ -279,17 +292,46 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
             return
         }
 
-        // Rapid duplicate starts of the same video race each other inside libVLC (two stop/
+        // Rapid duplicate starts of the same media race each other inside libVLC (two stop/
         // prepare/play sequences interleaved within a second); the second start is ignored.
+        // The media, not just the video, decides: a quality switch or the watchdog's fallback
+        // switch replaces the media of the same video and must never be swallowed here.
         val now = System.currentTimeMillis()
         synchronized(this) {
-            if (request.webUrl == lastPlayUrl && now - lastPlayAt < PLAY_DEDUPE_MS) {
+            if (request.webUrl == lastPlayUrl &&
+                request.videoUrl == lastPlayMediaUrl &&
+                now - lastPlayAt < PLAY_DEDUPE_MS
+            ) {
                 Logger.i(messageString = "Duplicate start of '${request.title}' ignored")
                 return
             }
             lastPlayUrl = request.webUrl
+            lastPlayMediaUrl = request.videoUrl
             lastPlayAt = now
         }
+
+        // The relay knows this video's SABR route was just walled: a new attempt would
+        // dead-load for the whole watchdog window again before failing over. When the wall
+        // was seen moments ago, the muxed fallback starts directly.
+        if (isSabrMedia(request.videoUrl) &&
+            !request.fallbackVideoUrl.isNullOrEmpty() &&
+            request.fallbackVideoUrl != request.videoUrl &&
+            (SabrMediaServer.walledAgeMs(request.videoUrl) ?: Long.MAX_VALUE) < RECENT_WALL_MS
+        ) {
+            Logger.i(
+                messageString = "The SABR route is walled; starting the muxed fallback " +
+                    "(${request.fallbackQualityLabel ?: "fallback quality"}) directly"
+            )
+            playFallback(request)
+            return
+        }
+        Logger.i(
+            messageString = "play() caller: " +
+                Throwable().stackTrace
+                    .drop(1)
+                    .take(3)
+                    .joinToString(" <- ") { "${it.className.substringAfterLast('.')}.${it.methodName}" }
+        )
 
         ticker?.cancel()
         activeRequest = request
@@ -304,6 +346,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         playbackStartedAt = now
         lastFrameAt = now
         stuckChains = 0
+        watchdogHeartbeatLogged = false
         Logger.i(messageString = "Starting playback of '${request.title}'")
 
         // The user settings of the player survive a change of the media.
@@ -433,7 +476,11 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         if (request.live) return false
 
         val state = _state.value
-        val position = estimatedPositionMs(state)
+        // The chain resumes at the position libVLC actually demuxed to. The wall-clock
+        // estimate is not honest here: on a walled or resetting stream libVLC reports
+        // `playing` with a frozen or garbage time, and the estimate would grow far beyond
+        // the media and produce reconnects that start outside the video.
+        val position = state.positionMs
         val duration = state.durationMs
         if (position <= 0) return false
         if (duration > 0 && position >= duration - SABR_END_EPSILON_MS) return false
@@ -619,6 +666,9 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     private fun isSabrMedia(url: String?): Boolean =
         url != null && url.startsWith("http://127.0.0.1:") && url.contains("/sabr/")
 
+    override fun isQualityTemporarilyUnavailable(url: String): Boolean =
+        (SabrMediaServer.walledAgeMs(url) ?: Long.MAX_VALUE) < RECENT_WALL_MS
+
     override fun resume() {
         val player = player ?: return
         player.submit { player.controls().setPause(false) }
@@ -772,43 +822,86 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         ticker?.cancel()
         ticker = scope.launch {
             while (isActive) {
-                val time = status.time()
-                val length = status.length()
+                try {
+                    val time = status.time()
+                    val length = status.length()
 
-                _state.update {
-                    it.copy(
-                        positionMs = if (time > 0) time else it.positionMs,
-                        durationMs = if (length > 0 && !it.live) length else if (it.live) 0 else it.durationMs
-                    )
-                }
-
-                // Stuck-playback watchdog: only a freshly decoded frame proves the user is
-                // seeing anything. A walled relay connection leaves libVLC reporting
-                // `playing` while its demuxer waits on a stream that will never yield media
-                // — no finished, no error event, a black screen with a frozen timer. When no
-                // new frame arrives within the watchdog window the playback is hung: a SABR
-                // playback whose route the relay already knows is walled fails fast, any
-                // other gets the full window. The watchdog switches to the muxed fallback,
-                // force-reconnects, and finally reports the error.
-                val nowMs = System.currentTimeMillis()
-                val stateNow = _state.value
-                if (stateNow.loading || stateNow.playing) {
-                    val frame = _frame.value
-                    if (frame !== lastWatchdogFrame) {
-                        lastWatchdogFrame = frame
-                        lastFrameAt = nowMs
+                    _state.update {
+                        it.copy(
+                            positionMs = if (time > 0) time else it.positionMs,
+                            durationMs = if (length > 0 && !it.live) length else if (it.live) 0 else it.durationMs
+                        )
                     }
+
+                    // Stuck-playback watchdog: only a freshly decoded frame proves the user is
+                    // seeing anything. A walled relay connection leaves libVLC reporting
+                    // `playing` while its demuxer waits on a stream that will never yield media
+                    // — no finished, no error event, a black screen with a frozen timer. When
+                    // no new frame arrives within the watchdog window the playback is hung: a
+                    // SABR playback whose route the relay already knows is walled fails fast,
+                    // any other gets the full window. The watchdog switches to the muxed
+                    // fallback, force-reconnects, and finally reports the error.
+                    //
+                    // The gate is the active request, not the player state: a walled start can
+                    // end up in contradictory states (an `error` event followed by a `playing`
+                    // event, both false for loading and playing) in which a state gate would
+                    // silence the watchdog forever while the user stares at a black screen.
+                    // An error state is excluded because the failure path has already acted.
+                    val nowMs = System.currentTimeMillis()
                     val request = activeRequest
-                    val walled = request != null &&
-                        isSabrMedia(request.videoUrl) &&
-                        SabrMediaServer.isTrackWalled(request.videoUrl)
-                    val window = if (walled) STUCK_WALLED_WINDOW_MS else STUCK_WATCHDOG_MS
-                    if (nowMs - maxOf(playbackStartedAt, lastFrameAt) > window) {
-                        handleStuckPlayback()
+                    val stateNow = _state.value
+                    if (request != null && stateNow.error == null) {
+                        val frame = _frame.value
+                        if (frame !== lastWatchdogFrame) {
+                            lastWatchdogFrame = frame
+                            lastFrameAt = nowMs
+                            watchdogHeartbeatLogged = false
+                        }
+                        val walled = isSabrMedia(request.videoUrl) &&
+                            SabrMediaServer.isTrackWalled(request.videoUrl)
+                        val window = when {
+                            walled -> STUCK_WALLED_WINDOW_MS
+                            isSabrMedia(request.videoUrl) -> STUCK_SABR_WATCHDOG_MS
+                            else -> STUCK_WATCHDOG_MS
+                        }
+                        val silentMs = nowMs - maxOf(playbackStartedAt, lastFrameAt)
+                        if (silentMs > window / 2 && !watchdogHeartbeatLogged) {
+                            // Self-report: a hung playback must never be silent in the log.
+                            watchdogHeartbeatLogged = true
+                            Logger.i(
+                                messageString = "The player has produced no frame for " +
+                                    "${silentMs / 1000}s (walled=$walled, window=${window}ms);" +
+                                    " the watchdog is watching '${request.title}'"
+                            )
+                        }
+                        if (silentMs > window) {
+                            handleStuckPlayback()
+                        }
+                    } else if (request == null && stateNow.playing) {
+                        // Diagnostics: the player reports playing while no playback is active.
+                        // Whatever nulls the request mid-playback shows up here by name.
+                        if (!watchdogHeartbeatLogged) {
+                            watchdogHeartbeatLogged = true
+                            Logger.w(
+                                messageString = "The player reports playing but no playback is" +
+                                    " active; the watchdog cannot watch it (state error=" +
+                                    "${stateNow.error}, webUrl=${stateNow.webUrl})"
+                            )
+                        }
                     }
-                }
 
-                delay(TICK_INTERVAL_MS)
+                    delay(TICK_INTERVAL_MS)
+                } catch (exception: kotlinx.coroutines.CancellationException) {
+                    throw exception
+                } catch (exception: Throwable) {
+                    // A status poll racing a media reset must never kill the watchdog: log it
+                    // and keep ticking.
+                    Logger.w(
+                        messageString = "The playback ticker hit an error and keeps running",
+                        throwable = exception
+                    )
+                    delay(TICK_INTERVAL_MS)
+                }
             }
         }
     }
@@ -839,6 +932,14 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
          * video within a second race each other inside libVLC.
          */
         private const val PLAY_DEDUPE_MS = 1_000L
+
+        /**
+         * How long a video's walled route is remembered: within this window a new quality pick
+         * of the same video starts the muxed fallback directly instead of dead-loading through
+         * another walled SABR attempt. After the window a fresh attempt is allowed, so a wall
+         * that lifted is discovered again.
+         */
+        private const val RECENT_WALL_MS = 60_000L
 
         /**
          * The delay before the automatic retry after a libVLC error event.
@@ -875,6 +976,15 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
          * relay's pre-buffer before the first frame can appear.
          */
         private const val STUCK_WATCHDOG_MS = 25_000L
+
+        /**
+         * The watchdog window for any SABR playback: shorter than the general window, because
+         * a SABR start needs no extraction (the details are loaded before the player starts)
+         * — only session creation, the first media round and the pre-buffer, normally a few
+         * seconds. The relay's own wall signal lands only after its internal retry budget,
+         * so the first attempt of a video cannot use the fast walled window.
+         */
+        private const val STUCK_SABR_WATCHDOG_MS = 12_000L
 
         /**
          * The watchdog window for a SABR playback whose route the relay already knows is
