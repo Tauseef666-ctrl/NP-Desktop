@@ -5,18 +5,20 @@
 
 package net.newpipe.app.service
 
+import androidx.compose.ui.graphics.ImageBitmap
 import kotlinx.coroutines.flow.StateFlow
 
 /**
  * One decoded video frame.
  *
- * The pixels are stored as 32 bit ARGB values, which is the buffer format libVLC delivers. The
- * array is immutable from the point of view of the consumer: every frame is a new instance.
+ * The frame carries a ready-to-draw [ImageBitmap]: the pixel conversion is done on the libVLC
+ * render thread, so the user interface only swaps a reference and draws. Every frame is a new
+ * instance, which lets a consumer compare frames by identity to detect real progress.
  */
 class VideoFrame(
     val width: Int,
     val height: Int,
-    val pixels: IntArray
+    val image: ImageBitmap
 )
 
 /**

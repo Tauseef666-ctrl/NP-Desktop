@@ -26,7 +26,13 @@ import uk.co.caprica.vlcj.player.embedded.videosurface.callback.BufferFormat
 import uk.co.caprica.vlcj.player.embedded.videosurface.callback.BufferFormatCallback
 import uk.co.caprica.vlcj.player.embedded.videosurface.callback.RenderCallbackAdapter
 import uk.co.caprica.vlcj.player.embedded.videosurface.callback.format.RV32BufferFormat
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
+import org.jetbrains.skia.ColorAlphaType
+import org.jetbrains.skia.ColorType
+import org.jetbrains.skia.ImageInfo
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * Plays media with libVLC, using the VLCJ bindings.
@@ -388,7 +394,11 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
 
         // The user settings of the player survive a change of the media.
         val previous = _state.value
-        _frame.value = null
+        // A quality or audio switch of the running video keeps its last frame on screen, so the
+        // switch does not flash black; a genuinely new video starts with a black surface.
+        if (request.webUrl != previous.webUrl) {
+            _frame.value = null
+        }
         _state.value = PlaybackState(
             title = request.title,
             loading = true,
@@ -467,7 +477,9 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         Logger.i(messageString = "Retrying playback of '${request.title}' after an error")
         playbackStartedAt = System.currentTimeMillis()
         lastFrameAt = playbackStartedAt
-        _frame.value = null
+        // The last frame stays on screen: the retry re-opens the same media, and clearing the
+        // frame here would only flash black while the new attempt loads. The watchdog's frame
+        // identity compare is unaffected - a new attempt's frames are new instances.
         _state.update { it.copy(playing = false, loading = true, error = null) }
         player.submit {
             try {
@@ -830,17 +842,19 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
 
         val renderCallback = object : RenderCallbackAdapter(buffer) {
             override fun onDisplay(mediaPlayer: MediaPlayer, rgbBuffer: IntArray) {
-                // The render callback runs on a libVLC thread. A copied buffer is handed to the
-                // user interface, so that libVLC can reuse its own buffer immediately.
+                // The render callback runs on a libVLC thread. The frame is converted into a
+                // ready-to-draw image here, so the user interface only swaps a reference and
+                // draws - the per-frame pixel work never touches the UI thread, which keeps
+                // the whole interface smooth while video plays.
                 val width = negotiatedFormatWidth
                 val height = negotiatedFormatHeight
                 val validPixels = width * height
                 if (width > 0 && height > 0 && rgbBuffer.size >= validPixels) {
-                    _frame.value = VideoFrame(
-                        width,
-                        height,
-                        rgbBuffer.copyOf(validPixels)
-                    )
+                    // A failed conversion keeps the previous frame on screen instead of
+                    // crashing the render thread.
+                    runCatching { VideoFrame(width, height, rgbBuffer.toVideoImage(width, height)) }
+                        .getOrNull()
+                        ?.let { _frame.value = it }
                 }
             }
         }
@@ -875,6 +889,28 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
             .withRenderCallback(renderCallback)
             .withBufferFormatCallback(bufferFormatCallback)
             .callbackMediaPlayer()
+    }
+
+    /**
+     * Converts the ARGB pixels of a libVLC frame into an [ImageBitmap].
+     *
+     * libVLC stores the pixels as `0x00RRGGBB` integers. Skia expects the raw bytes of a
+     * [ColorType.BGRA_8888] image, so the int array has to be written in little endian byte
+     * order; writing it in the default big endian order swaps the red and blue channels and
+     * gives the picture a strong blue tint. The conversion runs on the libVLC render thread.
+     */
+    private fun IntArray.toVideoImage(width: Int, height: Int): ImageBitmap {
+        val info = ImageInfo(
+            width = width,
+            height = height,
+            colorType = ColorType.BGRA_8888,
+            alphaType = ColorAlphaType.OPAQUE
+        )
+        val bytes = ByteArray(width * height * 4)
+        ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().put(this, 0, width * height)
+        return org.jetbrains.skia.Image
+            .makeRaster(info, bytes, width * 4)
+            .toComposeImageBitmap()
     }
 
     /**
