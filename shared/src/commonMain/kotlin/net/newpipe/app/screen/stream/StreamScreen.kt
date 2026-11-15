@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,6 +91,10 @@ fun StreamScreen(
     val loadingMoreRelated by viewModel.loadingMoreRelated.collectAsState()
     val hasMoreRelated by viewModel.hasMoreRelated.collectAsState()
     val playbackState by playbackController.state.collectAsState()
+    // Derived so the four-times-a-second position tick never recomposes this screen: only the
+    // small seek row inside the player handles the moving position.
+    val playbackPlaying by remember(playbackState) { derivedStateOf { playbackState.playing } }
+    val playbackHasTitle by remember(playbackState) { derivedStateOf { playbackState.title.isNotEmpty() } }
     val queueItems by queueRepository.queue.collectAsState()
     val immersive by playerUiState.immersive.collectAsState()
     val audioOnly by playerUiState.audioOnly.collectAsState()
@@ -160,8 +165,8 @@ fun StreamScreen(
 
     // Persists the playback position periodically, so "continue where you left off" works even
     // when the app or the player is closed without an explicit stop.
-    LaunchedEffect(playbackState.playing, url) {
-        if (!playbackState.playing) return@LaunchedEffect
+    LaunchedEffect(playbackPlaying, url) {
+        if (!playbackPlaying) return@LaunchedEffect
         while (true) {
             delay(5_000)
             val now = playbackController.state.value
@@ -341,7 +346,7 @@ fun StreamScreen(
                     }
                 }
 
-                if (immersive && playbackState.title.isNotEmpty()) {
+                if (immersive && playbackHasTitle) {
                     VideoPlayer(
                         controller = playbackController,
                         thumbnailUrl = streamDetails.thumbnailUrl,

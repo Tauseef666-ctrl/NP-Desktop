@@ -47,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -222,7 +223,14 @@ fun ModernShell(
             return@LaunchedEffect
         }
 
-        if (edgeHovered || railHovered) {
+        if (railHovered) {
+            revealed = true
+        } else if (edgeHovered) {
+            // A deliberate gesture: the pointer must rest on the edge for a moment before the
+            // rail reveals. An accidental brush toward the video area, the seek bar or a card
+            // near the left edge is cancelled when the pointer moves on, because this effect
+            // restarts on every hover change.
+            delay(RAIL_REVEAL_DWELL_MS)
             revealed = true
         } else {
             delay(RAIL_HIDE_DELAY_MS)
@@ -231,7 +239,8 @@ fun ModernShell(
     }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val playbackState by controller.state.collectAsState()
+        val shellState = controller.state.collectAsState()
+        val hasMedia by remember(shellState) { derivedStateOf { shellState.value.title.isNotEmpty() } }
         val popupState by PopupPlayer.state.collectAsState()
 
         // The layout split between desktop (Windows/Linux, hover driven) and television
@@ -241,7 +250,7 @@ fun ModernShell(
 
         // Only one player surface at a time: while the popup player is open the mini player
         // bar is hidden, so the video is never playing twice on the same screen.
-        val showMiniPlayer = playbackState.title.isNotEmpty() && popupState == null && !immersive &&
+        val showMiniPlayer = hasMedia && popupState == null && !immersive &&
             currentDestination !is Destination.Stream
 
         val contentStartPadding = when {
@@ -631,6 +640,13 @@ private fun NavigationRailItem(
 
 /** How long the pointer may leave the rail before it hides. */
 private const val RAIL_HIDE_DELAY_MS = 1200L
+
+/**
+ * How long the pointer must rest on the window edge before the navigation rail reveals.
+ * Instant reveal made every accidental brush of the left edge pop a panel over the video
+ * or the content; a short dwell keeps the reveal deliberate.
+ */
+private const val RAIL_REVEAL_DWELL_MS = 280L
 
 /** Width of the invisible hover strip at the left window edge. */
 private val RAIL_EDGE_WIDTH = 10.dp

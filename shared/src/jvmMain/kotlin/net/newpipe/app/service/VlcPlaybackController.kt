@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.media.MediaSlaveType
 import uk.co.caprica.vlcj.player.base.MediaPlayer
@@ -67,6 +69,21 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
 
     private val _frame = MutableStateFlow<VideoFrame?>(null)
     override val frame = _frame.asStateFlow()
+
+    /**
+     * The delivery counter of the render callback: a conversion publishes only when it is the
+     * newest copied frame, so a lagging conversion never repaints an older picture.
+     */
+    private val frameSequence = AtomicLong(0)
+
+    /**
+     * Converts the copied render buffers into draw-ready images away from the libVLC video
+     * output thread. Single threaded to keep conversions ordered; daemon so it never blocks
+     * the application from exiting.
+     */
+    private val frameExecutor = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "np-frame-converter").apply { isDaemon = true }
+    }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -815,6 +832,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         ticker?.cancel()
         scope.coroutineContext[Job]?.cancel()
         _frame.value = null
+        frameExecutor.shutdownNow()
         if (componentDelegate.isInitialized()) {
             componentDelegate.value?.release()
         }
@@ -842,19 +860,29 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
 
         val renderCallback = object : RenderCallbackAdapter(buffer) {
             override fun onDisplay(mediaPlayer: MediaPlayer, rgbBuffer: IntArray) {
-                // The render callback runs on a libVLC thread. The frame is converted into a
-                // ready-to-draw image here, so the user interface only swaps a reference and
-                // draws - the per-frame pixel work never touches the UI thread, which keeps
-                // the whole interface smooth while video plays.
+                // The render callback runs on a libVLC video output thread: it must return as
+                // fast as possible, because a slow callback backs up the picture queue and the
+                // decoder then starves for buffers (get_buffer failures, growing pts delays).
+                // The callback is therefore only a single array copy; the pixel conversion
+                // runs on its own thread and publishes frames in delivery order.
                 val width = negotiatedFormatWidth
                 val height = negotiatedFormatHeight
                 val validPixels = width * height
-                if (width > 0 && height > 0 && rgbBuffer.size >= validPixels) {
-                    // A failed conversion keeps the previous frame on screen instead of
-                    // crashing the render thread.
-                    runCatching { VideoFrame(width, height, rgbBuffer.toVideoImage(width, height)) }
-                        .getOrNull()
-                        ?.let { _frame.value = it }
+                if (width <= 0 || height <= 0 || rgbBuffer.size < validPixels) {
+                    return
+                }
+                val sequence = frameSequence.incrementAndGet()
+                val pixels = rgbBuffer.copyOf(validPixels)
+                runCatching {
+                    frameExecutor.execute {
+                        // Only the newest copied frame is worth converting: if conversions
+                        // lag behind delivery, the intermediate ones are already stale.
+                        if (sequence == frameSequence.get()) {
+                            runCatching { pixels.toVideoImage(width, height) }.getOrNull()?.let {
+                                _frame.value = VideoFrame(width, height, it)
+                            }
+                        }
+                    }
                 }
             }
         }

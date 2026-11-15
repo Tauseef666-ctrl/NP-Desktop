@@ -26,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -79,18 +80,17 @@ fun PlayerControls(
     onNext: (() -> Unit)? = null,
     onPrevious: (() -> Unit)? = null
 ) {
-    val state by controller.state.collectAsState()
-
-    var seekPosition by remember { mutableFloatStateOf(0f) }
-    var isSeeking by remember { mutableStateOf(false) }
-
-    LaunchedEffect(state.positionMs) {
-        if (!isSeeking) {
-            seekPosition = state.positionMs.toFloat()
-        }
-    }
-
-    val durationMs = state.durationMs.coerceAtLeast(1L)
+    val state = controller.state.collectAsState()
+    // Only rare facts of the player state are needed at this level; the position lives in the
+    // seek row below, so the four-times-a-second position tick never recomposes the whole
+    // controls column.
+    val live by remember(state) { derivedStateOf { state.value.live } }
+    val durationMs by remember(state) { derivedStateOf { state.value.durationMs.coerceAtLeast(1L) } }
+    val playing by remember(state) { derivedStateOf { state.value.playing } }
+    val loading by remember(state) { derivedStateOf { state.value.loading } }
+    val muted by remember(state) { derivedStateOf { state.value.muted } }
+    val volume by remember(state) { derivedStateOf { state.value.volume } }
+    val error by remember(state) { derivedStateOf { state.value.error } }
 
     Column(
         modifier = modifier
@@ -106,7 +106,7 @@ fun PlayerControls(
         // Live streams have no fixed duration; libVLC keeps reporting the size of the currently
         // buffered segment as the length, so a scrubber would show a meaningless position and
         // duration. They show a live badge instead.
-        if (state.live) {
+        if (live) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 LiveBadge(
                     modifier = Modifier
@@ -115,36 +115,7 @@ fun PlayerControls(
                 )
             }
         } else {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = formatDuration(seekPosition.toLong() / 1000),
-                    color = PlayerForeground,
-                    style = MaterialTheme.typography.bodySmall
-                )
-
-                Slider(
-                    value = seekPosition.coerceIn(0f, durationMs.toFloat()),
-                    onValueChange = {
-                        seekPosition = it
-                        isSeeking = true
-                    },
-                    onValueChangeFinished = {
-                        isSeeking = false
-                        controller.seekTo(seekPosition.toLong())
-                    },
-                    valueRange = 0f..durationMs.toFloat(),
-                    colors = playerSliderColors(),
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = Spacing.sm)
-                )
-
-                Text(
-                    text = formatDuration(state.durationMs / 1000),
-                    color = PlayerForeground,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+            SeekRow(controller)
         }
 
         Row(
@@ -165,19 +136,19 @@ fun PlayerControls(
 
             TextButton(
                 onClick = {
-                    controller.seekTo((state.positionMs - SKIP_STEP_MS).coerceAtLeast(0L))
+                    controller.seekTo((state.value.positionMs - SKIP_STEP_MS).coerceAtLeast(0L))
                 },
-                enabled = !state.live
+                enabled = !live
             ) {
                 Text("-10s", color = PlayerForeground)
             }
 
             IconButton(
                 onClick = {
-                    if (state.playing) controller.pause() else controller.resume()
+                    if (playing) controller.pause() else controller.resume()
                 }
             ) {
-                if (state.loading) {
+                if (loading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = PlayerForeground,
@@ -186,9 +157,9 @@ fun PlayerControls(
                 } else {
                     Icon(
                         painter = painterResource(
-                            if (state.playing) Res.drawable.ic_pause else Res.drawable.ic_play_arrow
+                            if (playing) Res.drawable.ic_pause else Res.drawable.ic_play_arrow
                         ),
-                        contentDescription = if (state.playing) "Pause" else "Play",
+                        contentDescription = if (playing) "Pause" else "Play",
                         tint = PlayerForeground,
                         modifier = Modifier.size(32.dp)
                     )
@@ -198,10 +169,10 @@ fun PlayerControls(
             TextButton(
                 onClick = {
                     controller.seekTo(
-                        (state.positionMs + SKIP_STEP_MS).coerceAtMost(state.durationMs)
+                        (state.value.positionMs + SKIP_STEP_MS).coerceAtMost(state.value.durationMs)
                     )
                 },
-                enabled = !state.live
+                enabled = !live
             ) {
                 Text("+10s", color = PlayerForeground)
             }
@@ -219,18 +190,18 @@ fun PlayerControls(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            IconButton(onClick = { controller.setMuted(!state.muted) }) {
+            IconButton(onClick = { controller.setMuted(!muted) }) {
                 Icon(
                     painter = painterResource(
-                        if (state.muted) Res.drawable.ic_volume_off else Res.drawable.ic_volume_up
+                        if (muted) Res.drawable.ic_volume_off else Res.drawable.ic_volume_up
                     ),
-                    contentDescription = if (state.muted) "Unmute" else "Mute",
+                    contentDescription = if (muted) "Unmute" else "Mute",
                     tint = PlayerForeground
                 )
             }
 
             Slider(
-                value = state.volume.toFloat(),
+                value = volume.toFloat(),
                 onValueChange = { controller.setVolume(it.toInt()) },
                 valueRange = 0f..100f,
                 colors = playerSliderColors(),
@@ -268,14 +239,66 @@ fun PlayerControls(
             }
         }
 
-        val error = state.error
-        if (error != null) {
+        val errorText = error
+        if (errorText != null) {
             Text(
-                text = error,
+                text = errorText,
                 style = MaterialTheme.typography.bodySmall,
                 color = PlayerError
             )
         }
+    }
+}
+
+/**
+ * The seek bar row: position label, scrubber and duration.
+ *
+ * It collects the player state itself, so the four-times-a-second position tick recomposes
+ * only this small row instead of the whole controls column.
+ */
+@Composable
+private fun SeekRow(controller: PlaybackController) {
+    val state = controller.state.collectAsState()
+    var seekPosition by remember { mutableFloatStateOf(0f) }
+    var isSeeking by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.value.positionMs) {
+        if (!isSeeking) {
+            seekPosition = state.value.positionMs.toFloat()
+        }
+    }
+
+    val durationMs = state.value.durationMs.coerceAtLeast(1L)
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = formatDuration(seekPosition.toLong() / 1000),
+            color = PlayerForeground,
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Slider(
+            value = seekPosition.coerceIn(0f, durationMs.toFloat()),
+            onValueChange = {
+                seekPosition = it
+                isSeeking = true
+            },
+            onValueChangeFinished = {
+                isSeeking = false
+                controller.seekTo(seekPosition.toLong())
+            },
+            valueRange = 0f..durationMs.toFloat(),
+            colors = playerSliderColors(),
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = Spacing.sm)
+        )
+
+        Text(
+            text = formatDuration(state.value.durationMs / 1000),
+            color = PlayerForeground,
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }
 

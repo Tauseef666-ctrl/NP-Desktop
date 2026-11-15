@@ -9,6 +9,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -119,10 +122,25 @@ fun VideoPlayer(
     audioOnly: Boolean = false,
     isPopupWindow: Boolean = false
 ) {
-    val state by controller.state.collectAsState()
+    val state = controller.state.collectAsState()
     val popupState by PopupPlayer.state.collectAsState()
     val displacedByPopup = !isPopupWindow && popupState != null
-    val hasMedia = state.title.isNotEmpty()
+    // The player state ticks four times a second with the playback position; reading the
+    // whole state here would recompose this entire subtree with every tick. The screen only
+    // needs a few rarely-changing facts, so they are derived: the composition stays flat
+    // while the position moves, and the seek bar keeps its own collection.
+    val hasMedia by remember(state) { derivedStateOf { state.value.title.isNotEmpty() } }
+    val playing by remember(state) { derivedStateOf { state.value.playing } }
+    val loading by remember(state) { derivedStateOf { state.value.loading } }
+    val popupTitle by remember(state) { derivedStateOf { state.value.title } }
+    val nearEnd by remember(state) {
+        derivedStateOf {
+            val snapshot = state.value
+            snapshot.durationMs > 0 &&
+                snapshot.positionMs >= snapshot.durationMs - END_OF_VIDEO_GRACE_MS &&
+                !snapshot.playing && !snapshot.loading && snapshot.error == null
+        }
+    }
 
     var controlsVisible by remember(hasMedia) { mutableStateOf(true) }
     var interactions by remember { mutableIntStateOf(0) }
@@ -135,8 +153,8 @@ fun VideoPlayer(
     // the same position; comparing positions makes those fake moves identifiable.
     var lastPointerPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
 
-    LaunchedEffect(controlsVisible, interactions, state.playing, hasMedia, menuOpen) {
-        if (hasMedia && controlsVisible && state.playing && !menuOpen) {
+    LaunchedEffect(controlsVisible, interactions, playing, hasMedia, menuOpen) {
+        if (hasMedia && controlsVisible && playing && !menuOpen) {
             delay(CONTROLS_HIDE_DELAY_MS)
             controlsVisible = false
         }
@@ -146,7 +164,7 @@ fun VideoPlayer(
     // controls; the first real pointer movement brings both back.
     val playerUiState: PlayerUiState = koinInject()
     val hideCursor = immersive && !isPopupWindow && !displacedByPopup &&
-        hasMedia && state.playing && !controlsVisible
+        hasMedia && playing && !controlsVisible
     LaunchedEffect(hideCursor) {
         playerUiState.setHideCursor(hideCursor)
     }
@@ -164,13 +182,13 @@ fun VideoPlayer(
         if (hasMedia) {
             if (displacedByPopup) {
                 PopupPlaceholder(
-                    title = state.title,
+                    title = popupTitle,
                     onReturn = { PopupPlayer.close() }
                 )
             } else {
                 if (audioOnly) {
                     AudioOnlyPanel(
-                        title = state.title,
+                        title = popupTitle,
                         heading = "Playing audio only"
                     )
                 } else {
@@ -229,8 +247,10 @@ fun VideoPlayer(
 
             AnimatedVisibility(
                 visible = controlsVisible,
-                enter = fadeIn(animationSpec = tween(Motion.fast)),
-                exit = fadeOut(animationSpec = tween(Motion.medium)),
+                enter = fadeIn(animationSpec = tween(Motion.fast)) +
+                    slideInVertically(animationSpec = tween(Motion.medium)) { -it / 3 },
+                exit = fadeOut(animationSpec = tween(Motion.medium)) +
+                    slideOutVertically(animationSpec = tween(Motion.medium)) { -it / 3 },
                 modifier = Modifier.align(Alignment.TopCenter)
             ) {
                 PlayerTopBar(
@@ -254,8 +274,10 @@ fun VideoPlayer(
 
             AnimatedVisibility(
                 visible = controlsVisible,
-                enter = fadeIn(animationSpec = tween(Motion.fast)),
-                exit = fadeOut(animationSpec = tween(Motion.medium)),
+                enter = fadeIn(animationSpec = tween(Motion.fast)) +
+                    slideInVertically(animationSpec = tween(Motion.medium)) { it / 3 },
+                exit = fadeOut(animationSpec = tween(Motion.medium)) +
+                    slideOutVertically(animationSpec = tween(Motion.medium)) { it / 3 },
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {
                 Box(
@@ -288,18 +310,13 @@ fun VideoPlayer(
                 }
             }
 
-            if (state.loading) {
+            if (loading) {
                 CircularProgressIndicator(color = Color.White)
             }
 
             // The video has run to its end: a centered replay button lets the user watch it
             // again without going through the play/pause toggle in the controls.
-            if (state.durationMs > 0 &&
-                state.positionMs >= state.durationMs - END_OF_VIDEO_GRACE_MS &&
-                !state.playing &&
-                !state.loading &&
-                state.error == null
-            ) {
+            if (nearEnd) {
                 FilledIconButton(
                     onClick = {
                         controller.seekTo(0)
@@ -459,7 +476,11 @@ private fun PlayerTopBar(
     onInteraction: () -> Unit,
     onMenuOpenChange: (Boolean) -> Unit
 ) {
-    val state by controller.state.collectAsState()
+    val state = controller.state.collectAsState()
+    // Only rare facts of the player state are shown here; deriving them keeps this bar out
+    // of the four-times-a-second position recomposition.
+    val playingLabel by remember(state) { derivedStateOf { state.value.qualityLabel } }
+    val speed by remember(state) { derivedStateOf { state.value.speed } }
 
     Row(
         modifier = Modifier
@@ -498,7 +519,7 @@ private fun PlayerTopBar(
             QualityMenu(
                 streams = videoStreams,
                 selected = selectedVideo,
-                playingLabel = state.qualityLabel,
+                playingLabel = playingLabel,
                 isUnavailable = controller::isQualityTemporarilyUnavailable,
                 onSelect = onSelectVideo,
                 onOpenChange = onMenuOpenChange
@@ -515,7 +536,7 @@ private fun PlayerTopBar(
         }
 
         SpeedMenu(
-            speed = state.speed,
+            speed = speed,
             onSpeedChange = controller::setSpeed,
             onOpenChange = onMenuOpenChange
         )
