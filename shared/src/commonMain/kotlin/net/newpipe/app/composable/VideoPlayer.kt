@@ -68,6 +68,8 @@ import newpipe.shared.generated.resources.ic_headset
 import newpipe.shared.generated.resources.ic_link
 import newpipe.shared.generated.resources.ic_picture_in_picture
 import newpipe.shared.generated.resources.ic_play_arrow
+import newpipe.shared.generated.resources.ic_volume_off
+import newpipe.shared.generated.resources.ic_volume_up
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
@@ -153,6 +155,19 @@ fun VideoPlayer(
     // stationary cursor redraws with every frame, and the platform then replays Move events for
     // the same position; comparing positions makes those fake moves identifiable.
     var lastPointerPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    // The mouse-wheel volume indicator: every wheel action bumps the tick, which restarts the
+    // visibility timer, so the pill stays up while the user keeps scrolling and fades shortly
+    // after the last notch.
+    var volumePillTick by remember { mutableIntStateOf(0) }
+    var volumePillVolume by remember { mutableIntStateOf(0) }
+    var volumePillVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(volumePillTick) {
+        if (volumePillTick == 0) return@LaunchedEffect
+        volumePillVisible = true
+        delay(VOLUME_PILL_VISIBLE_MS)
+        volumePillVisible = false
+    }
 
     LaunchedEffect(controlsVisible, interactions, playing, hasMedia, menuOpen) {
         if (hasMedia && controlsVisible && playing && !menuOpen) {
@@ -238,6 +253,29 @@ fun VideoPlayer(
                                             lastPointerPosition = position
                                             controlsVisible = true
                                             interactions++
+                                        }
+                                    }
+                                    PointerEventType.Scroll -> {
+                                        // The wheel over the video means volume, not page
+                                        // scroll: scrolling up makes it louder (and unmutes),
+                                        // scrolling down quieter, and the event is consumed so
+                                        // it does not also scroll the page under the player.
+                                        val delta = event.changes.firstOrNull()
+                                            ?.scrollDelta?.y ?: 0f
+                                        if (delta != 0f) {
+                                            val current = controller.state.value
+                                            val target = (current.volume - delta * VOLUME_WHEEL_STEP)
+                                                .toInt()
+                                                .coerceIn(0, 100)
+                                            if (target != current.volume) {
+                                                controller.setVolume(target)
+                                                if (target > current.volume && current.muted) {
+                                                    controller.setMuted(false)
+                                                }
+                                            }
+                                            volumePillVolume = target
+                                            volumePillTick++
+                                            event.changes.forEach { change -> change.consume() }
                                         }
                                     }
                                 }
@@ -331,6 +369,47 @@ fun VideoPlayer(
                         tint = PlayerForeground,
                         modifier = Modifier.size(44.dp)
                     )
+                }
+            }
+
+            // The mouse-wheel volume indicator: a small centered pill that shows the level
+            // while the user scrolls the wheel over the video and fades after the last notch.
+            AnimatedVisibility(
+                visible = volumePillVisible,
+                enter = fadeIn(animationSpec = tween(Motion.fast)),
+                exit = fadeOut(animationSpec = tween(Motion.medium)),
+                modifier = Modifier.align(Alignment.Center)
+            ) {
+                Surface(
+                    color = Color.Black.copy(alpha = 0.72f),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(
+                            horizontal = Spacing.md,
+                            vertical = Spacing.sm
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (volumePillVolume <= 0) {
+                                    Res.drawable.ic_volume_off
+                                } else {
+                                    Res.drawable.ic_volume_up
+                                }
+                            ),
+                            contentDescription = "Volume",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "$volumePillVolume%",
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.padding(start = Spacing.xs)
+                        )
+                    }
                 }
             }
             }
@@ -827,3 +906,9 @@ private const val END_OF_VIDEO_GRACE_MS = 1_000
  * stationary cursor over a changing surface stay below this.
  */
 private const val POINTER_MOVE_THRESHOLD_PX = 6f
+
+/** How many volume points one notch of the mouse wheel over the video changes. */
+private const val VOLUME_WHEEL_STEP = 5f
+
+/** How long the mouse-wheel volume pill stays visible after the last notch. */
+private const val VOLUME_PILL_VISIBLE_MS = 1_200L

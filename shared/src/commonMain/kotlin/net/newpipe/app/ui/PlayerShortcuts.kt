@@ -5,11 +5,27 @@
 
 package net.newpipe.app.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
@@ -19,6 +35,10 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import net.newpipe.app.navigation.Destination
 import net.newpipe.app.navigation.Navigator
 import net.newpipe.app.preferences.VideoAudioPreferences
@@ -116,6 +136,14 @@ fun PlayerShortcuts(
         }
     }
 
+    // The `?` shortcut opens the cheat sheet from anywhere; the sheet is hosted here at the
+    // root of the application, so the hook can always reach it.
+    var showSheet by remember { mutableStateOf(false) }
+    DisposableEffect(Unit) {
+        PlayerShortcutHooks.showShortcuts = { showSheet = true }
+        onDispose { PlayerShortcutHooks.showShortcuts = null }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -138,6 +166,10 @@ fun PlayerShortcuts(
             onDispose { PlayerShortcutDispatcher.handler = null }
         }
         content()
+    }
+
+    if (showSheet) {
+        ShortcutSheet(onDismiss = { showSheet = false })
     }
 }
 /**
@@ -398,6 +430,143 @@ fun handleShortcut(
 }
 
 private const val FRAME_STEP_MS = 40L
+
+/** The width of the keyboard shortcut cheat sheet. */
+private val SHORTCUT_SHEET_WIDTH = 640.dp
+
+/**
+ * One entry of the cheat sheet: the keys and what they do.
+ */
+private data class ShortcutEntry(val keys: String, val description: String)
+
+/**
+ * The shortcuts that work everywhere, with or without a playing video.
+ */
+private val generalShortcuts = listOf(
+    ShortcutEntry("?", "Show or hide this sheet"),
+    ShortcutEntry("/", "Search"),
+    ShortcutEntry("Esc", "Leave full screen · close the popup")
+)
+
+/**
+ * The shortcuts that act on the playback. Only shortcuts that are actually wired are listed;
+ * planned ones appear here when they start working.
+ */
+private val playerShortcuts = listOf(
+    ShortcutEntry("K / Space", "Play or pause"),
+    ShortcutEntry("J / L", "Seek backward / forward"),
+    ShortcutEntry("\u2190 / \u2192", "Seek in smaller steps"),
+    ShortcutEntry("\u2191 / \u2193", "Volume up / down"),
+    ShortcutEntry("M", "Mute"),
+    ShortcutEntry("F", "Full screen video"),
+    ShortcutEntry("T", "Immersive player"),
+    ShortcutEntry("I", "Popup player"),
+    ShortcutEntry(", / .", "Previous / next frame (paused)"),
+    ShortcutEntry("Shift + , / .", "Slower / faster"),
+    ShortcutEntry("0\u20139", "Jump to 0\u201390%"),
+    ShortcutEntry("Home / End", "Start / end"),
+    ShortcutEntry("Shift + N / P", "Next / previous video")
+)
+
+/**
+ * The keyboard shortcut cheat sheet, opened with `?` from anywhere in the application. It closes
+ * on the click outside, on `Esc` and on pressing `?` again.
+ */
+@Composable
+private fun ShortcutSheet(onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        // The dialog is its own window: its keys never reach the root dispatcher, so the two
+        // closing keys are handled right here on the sheet itself.
+        Surface(
+            modifier = Modifier
+                .width(SHORTCUT_SHEET_WIDTH)
+                .onPreviewKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown) {
+                        false
+                    } else if (event.key == Key.Escape ||
+                        (event.key == Key.Slash && event.isShiftPressed)
+                    ) {
+                        onDismiss()
+                        true
+                    } else {
+                        false
+                    }
+                },
+            color = Glass.color(0.92f),
+            border = Glass.borderStroke(),
+            shape = RoundedCornerShape(Radius.lg)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(Spacing.lg)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                Column {
+                    Text(
+                        text = "Keyboard shortcuts",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "Press ? to open or close this sheet",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = Spacing.xs)
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    ShortcutColumn("General", generalShortcuts, Modifier.weight(1f))
+                    ShortcutColumn("Player", playerShortcuts, Modifier.weight(1.4f))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * One titled column of shortcut entries.
+ */
+@Composable
+private fun ShortcutColumn(
+    label: String,
+    entries: List<ShortcutEntry>,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold
+        )
+        entries.forEach { entry ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = entry.keys,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs)
+                    )
+                }
+                Text(
+                    text = entry.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = Spacing.sm)
+                )
+            }
+        }
+    }
+}
 
 /**
  * Maps the number keys to their digit.
