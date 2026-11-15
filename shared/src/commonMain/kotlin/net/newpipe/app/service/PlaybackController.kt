@@ -59,6 +59,51 @@ data class PlaybackState(
 )
 
 /**
+ * The result of a frame capture attempt.
+ */
+sealed interface FrameCapture {
+
+    /**
+     * The frame was saved to the given file path.
+     */
+    data class Saved(val path: String) : FrameCapture
+
+    /**
+     * There was no frame to capture: nothing has been played yet, or the media has no video.
+     */
+    data object NoFrame : FrameCapture
+
+    /**
+     * The capture failed.
+     */
+    data class Failed(val reason: String) : FrameCapture
+}
+
+/**
+ * The engine statistics of the running playback, published a few times a second and shown by
+ * the stats overlay.
+ */
+data class PlayerStatistics(
+    /** The size of the picture that the decoder renders, `0` while unknown. */
+    val videoWidth: Int = 0,
+    val videoHeight: Int = 0,
+    /** The frame rate of the video track in frames per second, `0` while unknown. */
+    val frameRateFps: Float = 0f,
+    /** The video frames the decoder has produced so far. */
+    val decodedVideoFrames: Int = 0,
+    /** The frames that were actually shown. */
+    val displayedFrames: Int = 0,
+    /** The frames that were late and never shown. */
+    val lostPictures: Int = 0,
+    /** The bitrate of the demuxed media, in kilobit per second. */
+    val demuxBitrateKbps: Float = 0f,
+    /** The bitrate of the input as it is read, in kilobit per second. */
+    val inputBitrateKbps: Float = 0f,
+    /** The media bytes the SABR relay has delivered for this playback, `0` for other sources. */
+    val relayDeliveredBytes: Long = 0
+)
+
+/**
  * Controls the media playback.
  *
  * The implementation is platform specific: the desktop uses libVLC through VLCJ, the other
@@ -70,6 +115,12 @@ interface PlaybackController {
      * The current state of the player.
      */
     val state: StateFlow<PlaybackState>
+
+    /**
+     * The engine statistics of the running playback, refreshed a few times a second. Used by
+     * the stats overlay; implementations without engine statistics publish empty values.
+     */
+    val statistics: StateFlow<PlayerStatistics>
 
     /**
      * Starts playing the given request, replacing whatever is playing at the moment.
@@ -132,6 +183,12 @@ interface PlaybackController {
      * first video starts without an engine setup delay. Implementations may ignore this.
      */
     fun warmUp() {}
+
+    /**
+     * Saves the newest video frame as a PNG picture and reports where it went. Implementations
+     * without a video pipeline always report that there is no frame.
+     */
+    fun saveFrame(): FrameCapture = FrameCapture.NoFrame
 
     /**
      * Releases the native resources that are held by the controller.

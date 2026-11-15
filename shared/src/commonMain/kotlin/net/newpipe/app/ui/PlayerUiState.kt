@@ -109,6 +109,27 @@ class PlayerUiState {
         _audioOnly.value = !_audioOnly.value
     }
 
+    private val _showStats = MutableStateFlow(false)
+
+    /**
+     * Whether the stats-for-nerds overlay is shown over the video.
+     */
+    val showStats = _showStats.asStateFlow()
+
+    /**
+     * Shows or hides the stats overlay.
+     */
+    fun setShowStats(value: Boolean) {
+        _showStats.value = value
+    }
+
+    /**
+     * Switches between the hidden and the visible stats overlay.
+     */
+    fun toggleStats() {
+        _showStats.value = !_showStats.value
+    }
+
     private val _hideCursor = MutableStateFlow(false)
 
     /**

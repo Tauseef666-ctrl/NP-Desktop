@@ -36,6 +36,12 @@ import org.jetbrains.skia.ColorType
 import org.jetbrains.skia.ImageInfo
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import javax.imageio.ImageIO
+import java.awt.image.BufferedImage
 
 /**
  * Plays media with libVLC, using the VLCJ bindings.
@@ -233,6 +239,25 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
 
     @Volatile
     private var negotiatedFormatHeight: Int = initialFormat.second
+
+    /**
+     * The newest raw video frame, kept for the frame capture. The array is an owned copy that
+     * the render callback makes for the conversion anyway; storing the reference costs nothing
+     * and lets `saveFrame` run without touching the video output thread.
+     */
+    @Volatile
+    private var screenshotPixels: IntArray? = null
+
+    @Volatile
+    private var screenshotWidth = 0
+
+    @Volatile
+    private var screenshotHeight = 0
+
+    /**
+     * The engine statistics for the stats overlay, refreshed by the ticker.
+     */
+    override val statistics = MutableStateFlow(PlayerStatistics())
 
     /**
      * Subscribes the player state to the libVLC events; runs once when the player is created.
@@ -470,6 +495,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         // switch does not flash black; a genuinely new video starts with a black surface.
         if (request.webUrl != previous.webUrl) {
             _frame.value = null
+            clearRawFrame()
         }
         _state.value = PlaybackState(
             title = request.title,
@@ -844,6 +870,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         val player = player ?: return
         ticker?.cancel()
         _frame.value = null
+        clearRawFrame()
         stoppedByUser = true
         player.submit {
             player.controls().stop()
@@ -862,6 +889,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         val player = player ?: return
         ticker?.cancel()
         _frame.value = null
+        clearRawFrame()
         stoppedByUser = true
         val previous = _state.value
         _state.value = PlaybackState(
@@ -899,6 +927,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         ticker?.cancel()
         scope.coroutineContext[Job]?.cancel()
         _frame.value = null
+        clearRawFrame()
         frameExecutor.shutdownNow()
         if (componentDelegate.isInitialized()) {
             componentDelegate.value?.release()
@@ -940,6 +969,12 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                 }
                 val sequence = frameSequence.incrementAndGet()
                 val pixels = rgbBuffer.copyOf(validPixels)
+                // The screenshot feature keeps a reference to this already owned copy; the
+                // conversion task below reads it without mutating it, so both consumers of the
+                // array only ever read.
+                screenshotPixels = pixels
+                screenshotWidth = width
+                screenshotHeight = height
                 runCatching {
                     frameExecutor.execute {
                         // Only the newest copied frame is worth converting: if conversions
@@ -1009,6 +1044,87 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     }
 
     /**
+     * Drops the newest raw frame together with its dimensions. Called where the rendered last
+     * frame is dropped too, so both stay in step.
+     */
+    private fun clearRawFrame() {
+        screenshotPixels = null
+        screenshotWidth = 0
+        screenshotHeight = 0
+    }
+
+    /**
+     * Saves the newest video frame as a PNG picture in the pictures folder and reports where
+     * it went.
+     */
+    override fun saveFrame(): FrameCapture {
+        val pixels = screenshotPixels ?: return FrameCapture.NoFrame
+        val width = screenshotWidth
+        val height = screenshotHeight
+        if (width <= 0 || height <= 0 || pixels.size < width * height) {
+            return FrameCapture.NoFrame
+        }
+        return try {
+            val folder = Paths.get(System.getProperty("user.home"), "Pictures", "NP Desktop")
+            Files.createDirectories(folder)
+            val stamp = DateTimeFormatter
+                .ofPattern("yyyy-MM-dd_HH-mm-ss-SSS")
+                .format(LocalDateTime.now())
+            val file = folder.resolve("${screenshotTitle(state.value.title)}-$stamp.png")
+            val image = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+            image.raster.setDataElements(0, 0, width, height, pixels)
+            ImageIO.write(image, "png", file.toFile())
+            Logger.i(messageString = "Saved the current frame to ${file.fileName}")
+            FrameCapture.Saved(file.toString())
+        } catch (exception: Exception) {
+            Logger.e(messageString = "The frame capture failed", throwable = exception)
+            FrameCapture.Failed(exception.message ?: exception.javaClass.simpleName)
+        }
+    }
+
+    /**
+     * Makes a [title] safe for a picture file name.
+     */
+    private fun screenshotTitle(title: String): String = title
+        .replace(Regex("[\\\\/:*?\"<>|]"), " ")
+        .replace(Regex("\\s+"), " ")
+        .trim()
+        .take(48)
+        .ifEmpty { "frame" }
+
+    /**
+     * Publishes the engine statistics for the stats overlay. Runs on the ticker, a few times
+     * a second; the libVLC statistics call is only a native struct copy.
+     */
+    private fun refreshStatistics() {
+        val activePlayer = player ?: return
+        val info = activePlayer.media().info()
+        val engineStats = info?.statistics()
+        val videoTrack = info?.videoTracks()?.firstOrNull()
+        val request = activeRequest
+        val relayBytes = if (request != null && isSabrMedia(request.videoUrl)) {
+            SabrMediaServer.deliveredBytesFor(request.videoUrl)
+        } else {
+            0L
+        }
+        statistics.value = PlayerStatistics(
+            videoWidth = negotiatedFormatWidth,
+            videoHeight = negotiatedFormatHeight,
+            frameRateFps = if (videoTrack != null && videoTrack.frameRateBase() != 0) {
+                videoTrack.frameRate().toFloat() / videoTrack.frameRateBase()
+            } else {
+                0f
+            },
+            decodedVideoFrames = engineStats?.decodedVideo() ?: 0,
+            displayedFrames = engineStats?.picturesDisplayed() ?: 0,
+            lostPictures = engineStats?.picturesLost() ?: 0,
+            demuxBitrateKbps = engineStats?.demuxBitrate() ?: 0f,
+            inputBitrateKbps = engineStats?.inputBitrate() ?: 0f,
+            relayDeliveredBytes = relayBytes
+        )
+    }
+
+    /**
      * Keeps the position and the duration of the player up to date.
      */
     private fun startTicker() {
@@ -1028,6 +1144,8 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                             durationMs = if (length > 0 && !it.live) length else if (it.live) 0 else it.durationMs
                         )
                     }
+
+                    refreshStatistics()
 
                     // Stuck-playback watchdog: only a freshly decoded frame proves the user is
                     // seeing anything. A walled relay connection leaves libVLC reporting

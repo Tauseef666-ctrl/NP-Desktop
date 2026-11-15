@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -45,6 +46,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,13 +59,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.newpipe.app.model.MediaStream
+import net.newpipe.app.service.FrameCapture
 import net.newpipe.app.service.PlaybackController
 import net.newpipe.app.service.PopupPlayer
+import net.newpipe.app.service.SleepTimer
 import net.newpipe.app.ui.Motion
 import net.newpipe.app.ui.PlayerUiState
+import net.newpipe.app.ui.Radius
 import net.newpipe.app.ui.Spacing
 import newpipe.shared.generated.resources.Res
+import newpipe.shared.generated.resources.ic_bedtime
+import newpipe.shared.generated.resources.ic_camera
 import newpipe.shared.generated.resources.ic_headset
 import newpipe.shared.generated.resources.ic_link
 import newpipe.shared.generated.resources.ic_picture_in_picture
@@ -169,6 +177,30 @@ fun VideoPlayer(
         volumePillVisible = false
     }
 
+    // The feedback pill for a frame capture: the capture itself runs off the composition
+    // thread, because encoding a PNG picture takes a moment, and the pill reports the
+    // outcome for a while after.
+    var flashPillTick by remember { mutableIntStateOf(0) }
+    var flashPillText by remember { mutableStateOf("") }
+    var flashPillVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(flashPillTick) {
+        if (flashPillTick == 0) return@LaunchedEffect
+        flashPillVisible = true
+        delay(FLASH_PILL_VISIBLE_MS)
+        flashPillVisible = false
+    }
+    val captureScope = rememberCoroutineScope()
+    val captureFrame: () -> Unit = {
+        captureScope.launch {
+            flashPillText = when (val result = controller.saveFrame()) {
+                is FrameCapture.Saved -> "Frame saved to ${result.path}"
+                FrameCapture.NoFrame -> "Nothing to capture yet"
+                is FrameCapture.Failed -> "Could not save the frame: ${result.reason}"
+            }
+            flashPillTick++
+        }
+    }
+
     LaunchedEffect(controlsVisible, interactions, playing, hasMedia, menuOpen) {
         if (hasMedia && controlsVisible && playing && !menuOpen) {
             delay(CONTROLS_HIDE_DELAY_MS)
@@ -179,6 +211,7 @@ fun VideoPlayer(
     // The fullscreen player hides the mouse pointer together with the automatically hidden
     // controls; the first real pointer movement brings both back.
     val playerUiState: PlayerUiState = koinInject()
+    val showStats by playerUiState.showStats.collectAsState()
     val hideCursor = immersive && !isPopupWindow && !displacedByPopup &&
         hasMedia && playing && !controlsVisible
     LaunchedEffect(hideCursor) {
@@ -260,11 +293,13 @@ fun VideoPlayer(
                                         // scroll: scrolling up makes it louder (and unmutes),
                                         // scrolling down quieter, and the event is consumed so
                                         // it does not also scroll the page under the player.
+                                        // On the desktop a wheel notch up arrives as a
+                                        // positive vertical delta, so the delta is added.
                                         val delta = event.changes.firstOrNull()
                                             ?.scrollDelta?.y ?: 0f
                                         if (delta != 0f) {
                                             val current = controller.state.value
-                                            val target = (current.volume - delta * VOLUME_WHEEL_STEP)
+                                            val target = (current.volume + delta * VOLUME_WHEEL_STEP)
                                                 .toInt()
                                                 .coerceIn(0, 100)
                                             if (target != current.volume) {
@@ -307,8 +342,21 @@ fun VideoPlayer(
                         controlsVisible = true
                         interactions++
                     },
-                    onMenuOpenChange = { menuOpen = it }
+                    onMenuOpenChange = { menuOpen = it },
+                    onScreenshot = captureFrame
                 )
+            }
+
+            // The stats-for-nerds overlay: a small panel in the top left corner with the facts
+            // of the running playback. The panel has no pointer handling of its own, so clicks
+            // pass through it to the video underneath.
+            AnimatedVisibility(
+                visible = showStats && hasMedia,
+                enter = fadeIn(animationSpec = tween(Motion.medium)),
+                exit = fadeOut(animationSpec = tween(Motion.medium)),
+                modifier = Modifier.align(Alignment.TopStart)
+            ) {
+                StatsOverlay(controller)
             }
 
             AnimatedVisibility(
@@ -410,6 +458,32 @@ fun VideoPlayer(
                             modifier = Modifier.padding(start = Spacing.xs)
                         )
                     }
+                }
+            }
+
+            // The one-shot feedback pill, for example the outcome of a frame capture. It sits
+            // a little above the center, so it does not collide with the volume pill.
+            AnimatedVisibility(
+                visible = flashPillVisible,
+                enter = fadeIn(animationSpec = tween(Motion.fast)),
+                exit = fadeOut(animationSpec = tween(Motion.medium)),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(bottom = 120.dp)
+            ) {
+                Surface(
+                    color = Color.Black.copy(alpha = 0.72f),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(
+                        text = flashPillText,
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .widthIn(max = 480.dp)
+                            .padding(horizontal = Spacing.md, vertical = Spacing.sm)
+                    )
                 }
             }
             }
@@ -554,7 +628,8 @@ private fun PlayerTopBar(
     aspect: PlayerAspect,
     onCycleAspect: () -> Unit,
     onInteraction: () -> Unit,
-    onMenuOpenChange: (Boolean) -> Unit
+    onMenuOpenChange: (Boolean) -> Unit,
+    onScreenshot: () -> Unit
 ) {
     val state = controller.state.collectAsState()
     // Only rare facts of the player state are shown here; deriving them keeps this bar out
@@ -624,6 +699,17 @@ private fun PlayerTopBar(
         PlayerChip(
             text = aspect.label,
             onClick = onCycleAspect
+        )
+
+        PlayerIconButton(
+            icon = Res.drawable.ic_camera,
+            contentDescription = "Save the current frame as a picture",
+            onClick = onScreenshot
+        )
+
+        SleepTimerMenu(
+            controller = controller,
+            onOpenChange = onMenuOpenChange
         )
     }
 }
@@ -728,6 +814,178 @@ private fun SpeedMenu(
             }
         }
     }
+}
+
+/**
+ * The sleep timer, which opens the list of the timer presets.
+ *
+ * While a timer runs, the button becomes a countdown chip; picking a preset replaces the
+ * running timer and the chip switches to the new countdown.
+ */
+@Composable
+private fun SleepTimerMenu(
+    controller: PlaybackController,
+    onOpenChange: (Boolean) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    LaunchedEffect(expanded) { onOpenChange(expanded) }
+
+    val remainingSeconds by SleepTimer.remainingSeconds.collectAsState()
+
+    Box {
+        if (remainingSeconds != null) {
+            PlayerChip(
+                text = formatCountdown(remainingSeconds!!),
+                onClick = { expanded = true }
+            )
+        } else {
+            PlayerIconButton(
+                icon = Res.drawable.ic_bedtime,
+                contentDescription = "Sleep timer",
+                onClick = { expanded = true }
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            Column(
+                modifier = Modifier
+                    .width(260.dp)
+                    .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                Text(
+                    text = "Sleep timer",
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                val remaining = remainingSeconds
+                Text(
+                    text = if (remaining != null) {
+                        "Pauses the playback in ${formatCountdown(remaining)}"
+                    } else {
+                        "Pauses the playback after the chosen time"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    SLEEP_TIMER_PRESETS.forEach { minutes ->
+                        TextButton(onClick = {
+                            SleepTimer.start(minutes, controller)
+                            expanded = false
+                        }) {
+                            Text("$minutes")
+                        }
+                    }
+                }
+
+                if (remaining != null) {
+                    TextButton(onClick = {
+                        SleepTimer.cancel()
+                        expanded = false
+                    }) {
+                        Text("Turn off")
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Formats a count of seconds as minutes and seconds, for example 5400 becomes `90:00`.
+ */
+private fun formatCountdown(totalSeconds: Int): String {
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    val padded = if (seconds < 10) "0$seconds" else "$seconds"
+    return "$minutes:$padded"
+}
+
+/**
+ * The stats-for-nerds overlay: a small translucent panel in the top left corner of the video
+ * with the facts of the running playback. The panel collects its data on its own, so the rest
+ * of the composition stays out of the four-times-a-second refresh.
+ */
+@Composable
+private fun StatsOverlay(controller: PlaybackController, modifier: Modifier = Modifier) {
+    val state by controller.state.collectAsState()
+    val stats by controller.statistics.collectAsState()
+
+    Surface(
+        color = Color.Black.copy(alpha = 0.62f),
+        shape = RoundedCornerShape(Radius.md),
+        modifier = modifier
+            .padding(Spacing.md)
+            .widthIn(max = 380.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+        ) {
+            StatsRow("Stream", state.title.take(48))
+            state.qualityLabel?.let { StatsRow("Quality", it) }
+            if (stats.videoWidth > 0) {
+                StatsRow(
+                    "Video",
+                    "${stats.videoWidth}×${stats.videoHeight} · ${"%.2f".format(stats.frameRateFps)}fps"
+                )
+            }
+            StatsRow(
+                "Frames",
+                "decoded ${stats.decodedVideoFrames} · shown ${stats.displayedFrames} · " +
+                    "dropped ${stats.lostPictures}"
+            )
+            StatsRow(
+                "Bitrate",
+                "input ${"%.0f".format(stats.inputBitrateKbps)}kbps · " +
+                    "demux ${"%.0f".format(stats.demuxBitrateKbps)}kbps"
+            )
+            StatsRow(
+                "Relay",
+                if (stats.relayDeliveredBytes > 0) {
+                    formatBytes(stats.relayDeliveredBytes)
+                } else {
+                    "—"
+                }
+            )
+            StatsRow("Player", "${formatSpeed(state.speed)} · volume ${state.volume}%")
+        }
+    }
+}
+
+/**
+ * One labeled row of the stats overlay.
+ */
+@Composable
+private fun StatsRow(label: String, value: String) {
+    Row {
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.65f),
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.width(56.dp)
+        )
+        Text(
+            text = value,
+            color = Color.White,
+            style = MaterialTheme.typography.labelSmall
+        )
+    }
+}
+
+/**
+ * Formats a byte count for the stats overlay, for example 1_536_000 becomes `1.5 MB`.
+ */
+private fun formatBytes(bytes: Long): String = when {
+    bytes >= 1_000_000_000L -> "%.2f GB".format(bytes / 1_000_000_000.0)
+    bytes >= 1_000_000L -> "%.1f MB".format(bytes / 1_000_000.0)
+    bytes >= 1_000L -> "%.0f KB".format(bytes / 1_000.0)
+    else -> "$bytes B"
 }
 
 /**
@@ -887,6 +1145,9 @@ private const val MAX_SPEED = 3.0f
 private const val SPEED_INTERVALS = 11
 private const val SPEED_STEPS = SPEED_INTERVALS - 1
 
+/** The sleep timer presets, in minutes. */
+private val SLEEP_TIMER_PRESETS = listOf(15, 30, 45, 60, 90)
+
 private val PlayerForeground = Color(0xFFF5F5F5)
 
 /**
@@ -912,3 +1173,6 @@ private const val VOLUME_WHEEL_STEP = 5f
 
 /** How long the mouse-wheel volume pill stays visible after the last notch. */
 private const val VOLUME_PILL_VISIBLE_MS = 1_200L
+
+/** How long the one-shot feedback pill stays visible. */
+private const val FLASH_PILL_VISIBLE_MS = 2_400L

@@ -21,6 +21,9 @@ class IosPlaybackController : PlaybackController {
     )
     override val state = _state.asStateFlow()
 
+    override val statistics: StateFlow<PlayerStatistics> =
+        MutableStateFlow(PlayerStatistics())
+
     override fun play(request: PlaybackRequest) = Unit
 
     override fun resume() = Unit

@@ -286,6 +286,11 @@ fun handleShortcut(
                 return true
             }
 
+            Key.I -> {
+                playerUiState.toggleStats()
+                return true
+            }
+
             Key.Comma -> {
                 controller.setSpeed((state.speed - 0.25f).coerceAtLeast(0.25f))
                 return true
@@ -464,6 +469,7 @@ private val playerShortcuts = listOf(
     ShortcutEntry("F", "Full screen video"),
     ShortcutEntry("T", "Immersive player"),
     ShortcutEntry("I", "Popup player"),
+    ShortcutEntry("Shift + I", "Stats for nerds"),
     ShortcutEntry(", / .", "Previous / next frame (paused)"),
     ShortcutEntry("Shift + , / .", "Slower / faster"),
     ShortcutEntry("0\u20139", "Jump to 0\u201390%"),
