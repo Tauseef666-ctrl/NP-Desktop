@@ -22,6 +22,7 @@ import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.media.MediaSlaveType
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
+import uk.co.caprica.vlcj.player.base.State
 import uk.co.caprica.vlcj.player.component.CallbackMediaPlayerComponent
 import uk.co.caprica.vlcj.player.component.MediaPlayerSpecs
 import uk.co.caprica.vlcj.player.embedded.videosurface.callback.BufferFormat
@@ -343,6 +344,40 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         }
     }
 
+    /**
+     * Stops the current media and lets its decoder pipeline finish tearing down before a new
+     * media is prepared on the same player.
+     *
+     * A stop of a running playback followed immediately by a new prepare/play races libVLC's
+     * asynchronous decoder-output teardown: the log of a restart-while-playing session showed
+     * h264 get_buffer failures, video converter creation failures and a prevented buffer
+     * deadlock exactly in that window — the visible symptom is the picture freezing while the
+     * audio keeps playing. A pipeline that was not active pays nothing: the state is sampled
+     * before the stop, so a first start never settles.
+     */
+    private fun stopAndSettle(player: MediaPlayer) {
+        val wasActive = player.status().state().let { state ->
+            state == State.PLAYING || state == State.PAUSED ||
+                state == State.BUFFERING || state == State.OPENING
+        }
+        player.controls().stop()
+        if (!wasActive) return
+        // The stop reports stopped synchronously while libVLC's decoder output threads drain
+        // in the background. A short fixed settle closes the churn window; the bounded poll
+        // only extends it when libVLC itself is still busy.
+        val deadline = System.currentTimeMillis() + TEARDOWN_SETTLE_TIMEOUT_MS
+        Thread.sleep(TEARDOWN_SETTLE_MS)
+        while (System.currentTimeMillis() < deadline) {
+            val state = player.status().state()
+            if (state != State.PLAYING && state != State.PAUSED &&
+                state != State.BUFFERING && state != State.OPENING
+            ) {
+                return
+            }
+            Thread.sleep(TEARDOWN_SETTLE_POLL_MS)
+        }
+    }
+
     override fun play(request: PlaybackRequest) {
         val player = player
         if (player == null) {
@@ -432,7 +467,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         // its own event thread is not allowed.
         player.submit {
             try {
-                player.controls().stop()
+                stopAndSettle(player)
                 player.media().reset()
 
                 // Resume support: no stream is seeked by libVLC at open time — an open-time
@@ -500,7 +535,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         _state.update { it.copy(playing = false, loading = true, error = null) }
         player.submit {
             try {
-                player.controls().stop()
+                stopAndSettle(player)
                 player.media().reset()
                 val mediaUrl = withSabrStart(request.videoUrl, request.startPositionMs)
                 pendingSeekMs =
@@ -607,7 +642,7 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         _state.update { it.copy(loading = true, error = null) }
         player.submit {
             try {
-                player.controls().stop()
+                stopAndSettle(player)
                 player.media().reset()
                 // The reconnect takes its position through the relay url: the fresh session
                 // serves media from that player time server-side, so libVLC never has to
@@ -1086,6 +1121,23 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
          * elementary streams of the ended generation shut down first.
          */
         private const val SABR_CHAIN_DELAY_MS = 400L
+
+        /**
+         * How long the decoder pipeline of a stopped playback settles before the next media is
+         * prepared on the same player, so the new decoder never races the old pipeline's
+         * asynchronous teardown (the h264 get_buffer failures, the video converter failures
+         * and the buffer deadlocks of a restart-while-playing session). Hidden under the
+         * loading state of a start or a switch; a first start pays nothing.
+         */
+        private const val TEARDOWN_SETTLE_MS = 150L
+
+        /**
+         * The upper bound of the teardown settle: the bounded poll for a quiet player state
+         * never waits longer than this even when libVLC is stuck busy.
+         */
+        private const val TEARDOWN_SETTLE_TIMEOUT_MS = 2_000L
+
+        private const val TEARDOWN_SETTLE_POLL_MS = 10L
 
         /**
          * A position this close to the known duration is the real end of the media, not a
