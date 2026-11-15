@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -479,7 +482,12 @@ private fun ShortcutSheet(onDismiss: () -> Unit) {
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         // The dialog is its own window: its keys never reach the root dispatcher, so the two
-        // closing keys are handled right here on the sheet itself.
+        // closing keys are handled right here on the sheet itself. The sheet grabs the focus
+        // of its window, because key events only travel along the focus path.
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) {
+            focusRequester.requestFocus()
+        }
         Surface(
             modifier = Modifier
                 .width(SHORTCUT_SHEET_WIDTH)
@@ -494,7 +502,9 @@ private fun ShortcutSheet(onDismiss: () -> Unit) {
                     } else {
                         false
                     }
-                },
+                }
+                .focusRequester(focusRequester)
+                .focusable(),
             color = Glass.color(0.92f),
             border = Glass.borderStroke(),
             shape = RoundedCornerShape(Radius.lg)

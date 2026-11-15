@@ -131,7 +131,13 @@ object SabrMediaServer {
     fun markVideoWalled(videoKey: String) {
         walledVideos.computeIfAbsent(videoKey) {
             java.util.concurrent.atomic.AtomicLong(0L)
-        }.set(System.currentTimeMillis())
+        }.let { mark ->
+            // Only the transition to walled is logged: the mark is refreshed by every
+            // failing connection of the video, which must not flood the log.
+            if (mark.getAndSet(System.currentTimeMillis()) == 0L) {
+                Logger.i(messageString = "The SABR route of '$videoKey' is walled")
+            }
+        }
     }
 
     /**
@@ -368,7 +374,7 @@ object SabrMediaServer {
                         if (outcome.isFailure) {
                             val failure = outcome.exceptionOrNull()!!
                             if (!clientGone) {
-                                Logger.d(
+                                Logger.i(
                                     messageString = "SABR relay round failed: " +
                                         (failure.message ?: failure.javaClass.simpleName)
                                 )
@@ -389,6 +395,21 @@ object SabrMediaServer {
                             break
                         }
                         val result = outcome.getOrThrow()
+                        // A session that has never delivered a single media byte is not
+                        // pacing through its empty rounds and backoffs — it is the silent
+                        // variant of the attestation wall: no error, no segments, only
+                        // waiting. Riding those out would keep the player frozen on the
+                        // last frame for the whole retry budget, so such a session ends the
+                        // connection at once; the fresh-extraction rescue takes over and
+                        // the connection ends in a visible 502 for the controller.
+                        if (result.segmentCount == 0 && mediaBytes <= 0L) {
+                            Logger.i(
+                                messageString = "The SABR session of '$key' served no media; " +
+                                    "ending the connection for the fresh-extraction rescue"
+                            )
+                            walled = true
+                            break
+                        }
                         val backoff = result.backoffMs
                         if (backoff > 0) Thread.sleep(backoff.toLong())
                         if (result.segmentCount == 0) {
@@ -424,7 +445,7 @@ object SabrMediaServer {
                 freshAttempts++
                 val videoId = activeInfo.videoId
                 if (videoId.isNullOrEmpty()) break@attempt
-                Logger.d(
+                Logger.i(
                     messageString = "SABR session walled before any media; " +
                         "fetching a fresh stream info (attempt $freshAttempts/" +
                         "$MAX_FRESH_EXTRACTION_ATTEMPTS)"
@@ -470,7 +491,7 @@ object SabrMediaServer {
                     // leave the player demuxing a headerless file forever (an endless black
                     // screen without an error), so the request fails visibly and the player
                     // retries or reports the error.
-                    Logger.d(messageString = "SABR relay served no media for $key; answering 502")
+                    Logger.i(messageString = "SABR relay served no media for $key; answering 502")
                     exchange.sendResponseHeaders(502, -1)
                     return
                 }
