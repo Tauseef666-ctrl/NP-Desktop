@@ -193,6 +193,22 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
     private var lastWatchdogFrame: VideoFrame? = null
 
     /**
+     * When the playback position last moved, and the furthest position it reached. Only the
+     * ticker touches them. A media without a video track (a downloaded audio file, for
+     * example) never produces a frame, so its moving position is the honest progress signal;
+     * a walled start keeps its position frozen at zero, which stays a hang.
+     */
+    private var lastProgressAt = 0L
+    private var everProgressedMs = 0L
+
+    /**
+     * Whether the current playback was recognised as a media without a video track, so the
+     * interface shows the audio-only panel instead of an empty video surface; only touched
+     * from the ticker coroutine.
+     */
+    private var audioOnlyMediaLogged = false
+
+    /**
      * Whether the watchdog already self-reported the current frameless period; reset when a
      * new frame arrives or a new playback starts, so every hang is reported exactly once.
      */
@@ -440,6 +456,10 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         playingBaselineMs = 0L
         playbackStartedAt = now
         lastFrameAt = now
+        lastWatchdogFrame = null
+        lastProgressAt = 0L
+        everProgressedMs = 0L
+        audioOnlyMediaLogged = false
         stuckChains = 0
         watchdogHeartbeatLogged = false
         Logger.i(messageString = "Starting playback of '${request.title}'")
@@ -529,6 +549,10 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         Logger.i(messageString = "Retrying playback of '${request.title}' after an error")
         playbackStartedAt = System.currentTimeMillis()
         lastFrameAt = playbackStartedAt
+        lastWatchdogFrame = null
+        lastProgressAt = 0L
+        everProgressedMs = 0L
+        audioOnlyMediaLogged = false
         // The last frame stays on screen: the retry re-opens the same media, and clearing the
         // frame here would only flash black while the new attempt loads. The watchdog's frame
         // identity compare is unaffected - a new attempt's frames are new instances.
@@ -639,6 +663,10 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         Logger.i(messageString = "Reconnecting '${request.title}' at ${positionMs}ms")
         playbackStartedAt = System.currentTimeMillis()
         lastFrameAt = playbackStartedAt
+        lastWatchdogFrame = null
+        lastProgressAt = 0L
+        everProgressedMs = 0L
+        audioOnlyMediaLogged = false
         _state.update { it.copy(loading = true, error = null) }
         player.submit {
             try {
@@ -698,6 +726,10 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         // Re-arm first: whatever happens now gets its own full watchdog window.
         playbackStartedAt = System.currentTimeMillis()
         lastFrameAt = playbackStartedAt
+        lastWatchdogFrame = null
+        lastProgressAt = 0L
+        everProgressedMs = 0L
+        audioOnlyMediaLogged = false
         if (isSabrMedia(request.videoUrl)) {
             val fallbackUrl = request.fallbackVideoUrl
             if (!fallbackUrl.isNullOrEmpty() && fallbackUrl != request.videoUrl) {
@@ -1012,14 +1044,36 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                     // silence the watchdog forever while the user stares at a black screen.
                     // An error state is excluded because the failure path has already acted.
                     val nowMs = System.currentTimeMillis()
+                    if (time > everProgressedMs) {
+                        // The media is moving: a media without a video track (a downloaded
+                        // audio file, for example) never produces a frame, so its moving
+                        // position is the honest progress signal.
+                        everProgressedMs = time
+                        lastProgressAt = nowMs
+                    }
                     val request = activeRequest
                     val stateNow = _state.value
-                    if (request != null && stateNow.error == null) {
+                    // A paused playback is not stuck: the user chose the silence. The playing
+                    // state alone cannot gate this (a walled start reports not-playing as
+                    // well), so a pause is recognised by its history: a position that left
+                    // zero and then froze while neither playing nor loading.
+                    val paused = !stateNow.playing && !stateNow.loading && everProgressedMs > 0L
+                    if (request != null && stateNow.error == null && !paused) {
                         val frame = _frame.value
                         if (frame !== lastWatchdogFrame) {
                             lastWatchdogFrame = frame
                             lastFrameAt = nowMs
                             watchdogHeartbeatLogged = false
+                        }
+                        // A running playback that has never shown a video frame gets a gentle
+                        // verdict after a short grace: the media most likely has no video
+                        // track, and the interface switches to the audio-only panel.
+                        if (stateNow.playing && !stateNow.loading && !audioOnlyMediaLogged &&
+                            lastWatchdogFrame == null &&
+                            nowMs - playbackStartedAt > NO_VIDEO_DETECT_MS
+                        ) {
+                            audioOnlyMediaLogged = true
+                            _state.update { it.copy(audioOnlyMedia = true) }
                         }
                         val walled = isSabrMedia(request.videoUrl) &&
                             SabrMediaServer.isTrackWalled(request.videoUrl)
@@ -1028,7 +1082,15 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
                             isSabrMedia(request.videoUrl) -> STUCK_SABR_WATCHDOG_MS
                             else -> STUCK_WATCHDOG_MS
                         }
-                        val silentMs = nowMs - maxOf(playbackStartedAt, lastFrameAt)
+                        // A media that has already shown a video is judged by its frames; one
+                        // that never showed one is judged by its position, so an audio-only
+                        // playback is not mistaken for a hung video.
+                        val activityAt = if (lastWatchdogFrame != null) {
+                            lastFrameAt
+                        } else {
+                            lastProgressAt
+                        }
+                        val silentMs = nowMs - maxOf(playbackStartedAt, activityAt)
                         if (silentMs > window / 2 && !watchdogHeartbeatLogged) {
                             // Self-report: a hung playback must never be silent in the log.
                             watchdogHeartbeatLogged = true
@@ -1138,6 +1200,12 @@ class VlcPlaybackController : PlaybackController, VideoFrameProvider {
         private const val TEARDOWN_SETTLE_TIMEOUT_MS = 2_000L
 
         private const val TEARDOWN_SETTLE_POLL_MS = 10L
+
+        /**
+         * How long a running playback may go without a first video frame before it is treated
+         * as a media without a video track and the interface switches to the audio-only panel.
+         */
+        private const val NO_VIDEO_DETECT_MS = 3_000L
 
         /**
          * A position this close to the known duration is the real end of the media, not a

@@ -50,7 +50,12 @@ data class PlaybackState(
     val serviceId: Int = -1,
     val webUrl: String = "",
     val qualityLabel: String? = null,
-    val live: Boolean = false
+    val live: Boolean = false,
+    /**
+     * The playback runs without a video track (a downloaded audio file, for example): the
+     * player shows the audio-only panel instead of an empty video surface.
+     */
+    val audioOnlyMedia: Boolean = false
 )
 
 /**

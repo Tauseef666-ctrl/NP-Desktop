@@ -133,6 +133,7 @@ fun VideoPlayer(
     val playing by remember(state) { derivedStateOf { state.value.playing } }
     val loading by remember(state) { derivedStateOf { state.value.loading } }
     val popupTitle by remember(state) { derivedStateOf { state.value.title } }
+    val audioOnlyMedia by remember(state) { derivedStateOf { state.value.audioOnlyMedia } }
     val nearEnd by remember(state) {
         derivedStateOf {
             val snapshot = state.value
@@ -186,7 +187,7 @@ fun VideoPlayer(
                     onReturn = { PopupPlayer.close() }
                 )
             } else {
-                if (audioOnly) {
+                if (audioOnly || audioOnlyMedia) {
                     AudioOnlyPanel(
                         title = popupTitle,
                         heading = "Playing audio only"
